@@ -1,0 +1,90 @@
+# ---------------------------------------------------------
+# NEXT.JS / NODE / TYPESCRIPT – BULLETPROOF .gitignore
+# ---------------------------------------------------------
+
+### ENVIRONMENT VARIABLES
+.env
+.env.*
+!.env.example
+
+### NODE MODULES
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+.bun-*
+
+### NEXT BUILD OUTPUT
+.next/
+out/
+dist/
+.next/cache/
+
+# Turbopack
+.turbo/
+.turbopack/
+
+### LOGS
+logs/
+*.log
+log/
+debug.log
+error.log
+*.stackdump
+
+### SYSTEM FILES
+.DS_Store
+Thumbs.db
+
+### EDITOR FOLDERS
+.vscode/
+.vscode/*
+!.vscode/settings.json   # if you want shared settings
+!.vscode/extensions.json
+.idea/
+*.swp
+
+### TYPESCRIPT
+*.tsbuildinfo
+
+### TESTING
+coverage/
+.nyc_output/
+jest-test-results.json
+
+### LINT / FORMAT
+.eslintcache
+.prettier-cache
+
+### NEXT AUTH / SESSIONS (if any)
+.next-auth/
+next-auth.d.ts
+
+### RUNTIME OUTPUT
+*.pid
+*.seed
+*.pid.lock
+
+### PUBLIC FILES TO IGNORE
+public/uploads/*
+public/temp/*
+
+### SENTRY / ERROR MONITORING
+.sentryclirc
+
+### FIREBASE / AUTH (if ever used)
+.firebase/
+*.firebaserc
+
+### DOCKER
+docker-compose.override.yml
+docker-data/
+*.dockerfile.local
+
+### MISC
+*.local
+*.bak
+*.tmp
+
