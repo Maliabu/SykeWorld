@@ -9,11 +9,13 @@ export default function AboutPage() {
   const [form, setForm] = useState({ name: "", email: "", message: "" });
    const [reviews, setReviews] = useState<Review[]>([]);
   const [loadingReviews, setLoadingReviews] = useState(true);
+  const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL
+
 
   useEffect(() => {
     async function fetchReviews() {
       try {
-        const res = await fetch("http://localhost:8000/api/rooms/reviews/");
+        const res = await fetch(`${BACKEND_URL}/api/rooms/reviews/`);
         if (!res.ok) throw new Error("Failed to fetch reviews");
         const data = await res.json();
 
@@ -40,7 +42,7 @@ export default function AboutPage() {
   e.preventDefault();
 
   try {
-    const res = await fetch("http://localhost:8000/api/contact/", {
+    const res = await fetch(`${BACKEND_URL}/api/contact/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form),

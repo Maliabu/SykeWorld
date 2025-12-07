@@ -5,11 +5,12 @@ import { useSession, signIn } from "next-auth/react";
 import { toast, Toaster } from "sonner";
 import { FaStar, FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import Container from "../Home/Container";
+import Link from "next/link";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL!;
 
 // helpers
-const formatMoney = (n: number) => `$${n.toFixed(2)}`;
+const formatMoney = (n: number) => `UGX ${n.toFixed(2)}`;
 
 /* ---------------- Multistep Booking Component ---------------- */
 
@@ -59,7 +60,7 @@ export default function BookingPage() {
             id: r.id,
             title: r.room_type.name,
             priceValue: Number(r.room_type.base_price),
-            price: `$${Number(r.room_type.base_price)}/night`,
+            price: `UGX ${Number(r.room_type.base_price)}/night`,
             maxGuests: r.room_type.max_guests,
             image: r.images?.[0]?.image || "/placeholder.jpg",
           }))
@@ -287,6 +288,7 @@ export default function BookingPage() {
             <div className="space-y-6">
               <div className=" rounded-xl">
                 <h3 className="font-semibold mb-4">Recommended Rooms</h3>
+                <Link href='/rooms'>
                 <div className="relative">
                   <div className="flex gap-4 overflow-hidden">
                     {displayedRooms.map((room, i) => (
@@ -303,6 +305,7 @@ export default function BookingPage() {
                   <button onClick={prevCarousel} className="absolute top-1/2 left-0 -translate-y-1/2 bg-white p-2 rounded-full shadow"><FaArrowLeft/></button>
                   <button onClick={nextCarousel} className="absolute top-1/2 right-0 -translate-y-1/2 bg-white p-2 rounded-full shadow"><FaArrowRight/></button>
                 </div>
+                </Link>
               </div>
 
               {/* quick price box */}

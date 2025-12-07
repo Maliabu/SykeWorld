@@ -12,11 +12,13 @@ interface GalleryCategory {
 export default function GalleryPage() {
   const [categories, setCategories] = useState<GalleryCategory[]>([]);
   const [activeCategory, setActiveCategory] = useState<string>("");
+  const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL
+
 
   useEffect(() => {
     const fetchGallery = async () => {
       try {
-        const res = await fetch("http://localhost:8000/api/gallery/");
+        const res = await fetch(`${BACKEND_URL}/api/gallery/`);
         if (!res.ok) throw new Error("Failed to fetch gallery");
         const data: GalleryCategory[] = await res.json();
         setCategories(data);

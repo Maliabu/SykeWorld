@@ -18,6 +18,8 @@ export default function Footer() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
+  const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL
+
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -31,7 +33,7 @@ export default function Footer() {
 
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:8000/api/subscribe/", {
+      const res = await fetch(`${BACKEND_URL}/api/subscribe/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email }),

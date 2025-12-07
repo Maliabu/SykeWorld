@@ -27,13 +27,13 @@ export default function Hero() {
   return (
     <section className="relative h-[90vh] w-full">
       <Image
-        src="/images/room2.jpg"
+        src="/images/syke.png"
         alt="Horizone Hotel"
         fill
         className="object-cover"
       />
 
-      <div className="absolute inset-0 bg-black/50 text-white px-6 py-6">
+      <div className="absolute inset-0 text-white px-6 py-6">
 
         <div className="absolute top-10 left-35 space-y-3">
 

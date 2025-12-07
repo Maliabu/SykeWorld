@@ -57,17 +57,19 @@ export default function Page() {
   const [sortPrice, setSortPrice] = useState<"none" | "low" | "high">("none");
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [allServices, setAllServices] = useState<RoomService[]>([]);
+  const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL
+
 
   // Fetch rooms
   useEffect(() => {
     setLoading(true);
-    fetch("http://localhost:8000/api/rooms/")
+    fetch(`${BACKEND_URL}/api/rooms/`)
       .then((res) => res.json())
       .then((data) => {
         const formatted = data.map((r: any) => ({
           ...r,
           images: (r.images || []).map((img: any) => img.image),
-          price: `$${r.room_type?.base_price ?? 0}/night`,
+          price: `UGX ${r.room_type?.base_price ?? 0}/night`,
           priceValue: r.room_type?.base_price ?? 0,
           services: r.room_type?.services || [],
           reviews: { stars: 4.5, count: 10 },
@@ -83,7 +85,7 @@ export default function Page() {
 
   // Fetch services dynamically
   useEffect(() => {
-    fetch("http://localhost:8000/api/rooms/services/")
+    fetch(`${BACKEND_URL}/api/rooms/services/`)
       .then((res) => res.json())
       .then((data) => setAllServices(data))
       .catch(console.error);
@@ -183,11 +185,10 @@ export default function Page() {
 
                   <p className="text-gray-600">{room.room_type?.description}</p>
 
-                  <div className="grid grid-cols-2 gap-3 mt-4">
+                  <div className="flex gap-3">
                     {room.services.map((service, idx) => (
-                      <div key={idx} className="flex items-center gap-2">
-                        <span className="text-orange-600">{service.icon}</span>
-                        <span className="text-gray-800">{service.name}</span>
+                      <div key={idx} className="">
+                        <span className="text-gray-800 bg-gray-300 rounded py-1 px-2">{service.name}</span>
                       </div>
                     ))}
                   </div>

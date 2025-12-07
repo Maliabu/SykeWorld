@@ -14,17 +14,17 @@ interface Service {
   name: string;
   description?: string;
   icon?: string;
-  image?: string;
 }
 
 export default function Home() {
   const [services, setServices] = useState<Service[]>([]);
   const router = useRouter();
+  const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL
 
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        const res = await fetch("http://localhost:8000/api/rooms/services/");
+        const res = await fetch(`${BACKEND_URL}/api/rooms/services/`);
         if (!res.ok) throw new Error("Failed to fetch services");
         const data: Service[] = await res.json();
         setServices(data.slice(0, 4)); // first 4 services
@@ -55,7 +55,7 @@ export default function Home() {
           <div className="py-10 rounded-2xl grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="relative cursor-pointer group overflow-hidden rounded-lg">
               <img
-                src="/images/room1.jpg"
+                src="/images/pexels-creative-vix-370984.jpg"
                 alt="Luxury Image 1"
                 className="w-full h-96 object-cover transition-transform duration-300 group-hover:scale-105"
               />
@@ -67,7 +67,7 @@ export default function Home() {
 
             <div className="relative cursor-pointer group overflow-hidden rounded-lg">
               <img
-                src="/images/room2.jpg"
+                src="/images/lobby.png"
                 alt="Luxury Image 2"
                 className="w-full h-96 object-cover transition-transform duration-300 group-hover:scale-105"
               />
@@ -79,7 +79,7 @@ export default function Home() {
 
             <div className="relative cursor-pointer group overflow-hidden rounded-lg">
               <img
-                src="/images/room3.jpg"
+                src="/images/bg-3.jpg"
                 alt="Luxury Image 3"
                 className="w-full h-96 object-cover transition-transform duration-300 group-hover:scale-105"
               />
@@ -101,14 +101,10 @@ export default function Home() {
               services.map((service) => (
                 <FeatureCard
                   key={service.id}
-                  icon={
-                    service.icon ? (
-                      <img src={service.icon} alt={service.name} className="w-6 h-6 object-contain" />
-                    ) : null
+                  icon={service.icon
                   }
                   title={service.name}
                   description={service.description || ""}
-                  image={service.image || "/images/room1.jpg"}
                 />
               ))
             ) : (

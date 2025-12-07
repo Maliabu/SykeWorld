@@ -4,6 +4,7 @@ import Container from "../Home/Container";
 import { useState, useEffect } from "react";
 import { FaSwimmingPool, FaSpa, FaConciergeBell, FaWifi, FaUtensils, FaDumbbell, FaCocktail, FaCar, FaBus, FaCoffee, FaTv, FaBed } from "react-icons/fa";
 import FeatureCard from "../(cards)/FeatureCard";
+import Link from "next/link";
 
 interface RoomService {
   id: number;
@@ -52,10 +53,12 @@ export default function ServicesPage() {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [loadingServices, setLoadingServices] = useState(true);
   const [loadingRooms, setLoadingRooms] = useState(true);
+  const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL
+
 
   // Fetch services
   useEffect(() => {
-    fetch("http://localhost:8000/api/rooms/services/")
+    fetch(`${BACKEND_URL}/api/rooms/services/`)
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch services");
         return res.json();
@@ -72,7 +75,7 @@ export default function ServicesPage() {
 
   // Fetch rooms
   useEffect(() => {
-    fetch("http://localhost:8000/api/rooms/")
+    fetch(`${BACKEND_URL}/api/rooms/`)
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch rooms");
         return res.json();
@@ -81,7 +84,7 @@ export default function ServicesPage() {
         const formattedRooms: Room[] = data.map((r: any) => ({
           ...r,
           images: r.images || [],
-          price: `$${r.room_type?.base_price ?? 0}/night`,
+          price: `UGX ${r.room_type?.base_price ?? 0}/night`,
           priceValue: r.room_type?.base_price ?? 0,
           services: r.room_type?.services || [],
           reviews: r.reviews || { stars: 4.5, count: 10 },
@@ -109,30 +112,21 @@ export default function ServicesPage() {
 
         {/* Services Grid */}
         <div className="py-10 rounded-2xl grid grid-cols-1 md:grid-cols-4 gap-6">
-  {services.map((service) => (
-    <FeatureCard
-      key={service.id}
-      icon={
-        service.icon ? (
-          <img
-            src={service.icon}
-            alt={service.name}
-            className="w-6 h-6 object-contain"
-          />
-        ) : (
-          <div className="w-6 h-6 bg-gray-300 rounded-full" />
-        )
-      }
-      title={service.name}
-      description={service.description || ""}
-      image={service.image || "/images/default.jpg"}
-    />
-  ))}
-</div>
+          {services.map((service) => (
+            <FeatureCard
+              key={service.id}
+              icon={service.icon
+              }
+              title={service.name}
+              description={service.description || ""}
+            />
+          ))}
+        </div>
 
 
         {/* Recommended Rooms */}
         <h2 className="text-2xl mt-16 mb-6 text-center">Recommended Rooms</h2>
+        <Link href='/rooms'>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {topRooms.map((room) => (
             <div
@@ -151,6 +145,7 @@ export default function ServicesPage() {
             </div>
           ))}
         </div>
+        </Link>
       </Container>
     </div>
   );

@@ -17,39 +17,40 @@ interface CategoryMap {
 }
 
 /* ------------------------- MOCK DATA ------------------------- */
-const bannerImages: string[] = ["/images/bar1.jpg", "/images/bar2.jpg", "/images/bar3.jpg"];
+const bannerImages: string[] = ["/images/pexels-creative-vix-370984.jpg", "/images/bg-3.jpg", "/images/counter.png"];
 
 const drinks: CategoryMap = {
   Cocktails: [
-    { name: "Mojito", description: "Minty refreshing cocktail", price: "$12", image: "/images/drink1.jpg" },
-    { name: "Margarita", description: "Classic tequila delight", price: "$14", image: "/images/drink2.jpg" },
+    { name: "Mojito", description: "Minty refreshing cocktail", price: "UGX 12", image: "/images/Mojito.jpeg" },
+    { name: "Margarita", description: "Classic tequila delight", price: "UGX 14", image: "/images/juice.png" },
   ],
   Wine: [
-    { name: "Chardonnay", description: "White wine, crisp and fruity", price: "$18", image: "/images/drink3.jpg" },
-    { name: "Merlot", description: "Rich red wine", price: "$20", image: "/images/drink4.jpg" },
+    { name: "Wines", description: "White wine, crisp and fruity", price: "UGX 18", image: "/images/wine.jpeg" },
   ],
   Beers: [
-    { name: "Lager", description: "Crisp and light beer", price: "$8", image: "/images/drink5.jpg" },
-    { name: "IPA", description: "Hoppy and aromatic", price: "$9", image: "/images/drink6.jpg" },
+    { name: "Lagers", description: "Crisp and light beer", price: "UGX 8", image: "/images/I Tasted Heineken's New Non-Alcoholic Beer and It Was Fine, I Guess.jpeg" },
+  ],
+  "Spirits & Whiskeys": [
+    { name: "Uganda Waragi", description: "Hoppy and aromatic", price: "UGX 9", image: "/images/Uganda Waragi.jpeg" },
   ],
   "Soft Drinks": [
-    { name: "Coke", description: "Classic soft drink", price: "$3", image: "/images/drink7.jpg" },
-    { name: "Orange Juice", description: "Freshly squeezed", price: "$4", image: "/images/drink8.jpg" },
+    { name: "sodas", description: "Classic soft drink", price: "UGX 3", image: "/images/coke.jpeg" },
+    { name: "Orange Juice", description: "Freshly squeezed", price: "UGX 4", image: "/images/juice.png" },
   ],
 };
 
 const menu: CategoryMap = {
-  Starters: [
-    { name: "Bruschetta", description: "Toasted bread with tomato and basil", price: "$10", image: "/images/menu1.jpg" },
-    { name: "Garlic Prawns", description: "Served with garlic butter sauce", price: "$14", image: "/images/menu2.jpg" },
+  "Breakfast": [
+    { name: "Coffee", description: "Toasted bread with tomato and basil", price: "UGX 10", image: "/images/coffee.png" },
+    { name: "Tea", description: "Served with garlic butter sauce", price: "UGX 14", image: "/images/tea.png" },
   ],
-  "Main Course": [
-    { name: "Grilled Salmon", description: "Served with seasonal vegetables", price: "$25", image: "/images/menu3.jpg" },
-    { name: "Steak", description: "Juicy ribeye with sides", price: "$30", image: "/images/menu4.jpg" },
+  "Brunch": [
+    { name: "Pilau", description: "Served with seasonal vegetables", price: "UGX 25", image: "/images/pilao.png" },
+    { name: "Katogo", description: "Juicy ribeye with sides", price: "UGX 30", image: "/images/katogo.jpeg" },
+    { name: "Gnuts", description: "From our gardens to you", price: "UGX 30", image: "/images/Gnuts.png" },
   ],
-  Desserts: [
-    { name: "Chocolate Cake", description: "Rich and moist", price: "$8", image: "/images/menu5.jpg" },
-    { name: "Cheesecake", description: "Classic creamy delight", price: "$9", image: "/images/menu6.jpg" },
+  "Desserts": [
+    { name: "cup cakes", description: "Rich and moist", price: "UGX 8", image: "/images/pastry.png" },
   ],
 };
 
@@ -81,7 +82,7 @@ function Carousel({ images }: CarouselProps) {
         />
       ))}
       <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-        <h1 className="text-white text-4xl md:text-6xl ">Bar & Restaurant</h1>
+        <h1 className="text-white text-4xl md:text-6xl hidden">Bar & Restaurant</h1>
       </div>
       <button
         onClick={() => setCurrent((p) => (p - 1 + images.length) % images.length)}
@@ -132,7 +133,7 @@ export default function BarRestaurantPage() {
                 key={idx}
                 className="bg-white rounded-xl  overflow-hidden hover:scale-105 transition-all"
               >
-                <img src={item.image} alt={item.name} className="w-full h-40 object-cover" />
+                <img src={item.image} alt={item.name} className="w-full h-64 object-contain" />
                 <div className="p-4">
                   <h3 className="font-semibold text-lg">{item.name}</h3>
                   <p className="text-gray-600 mt-1">{item.description}</p>

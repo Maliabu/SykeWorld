@@ -6,17 +6,20 @@ import RoomCard from "./(cards)/RoomCard";
 import Container from "./Home/Container";
 import { Room } from "./types/types";
 import RoomModal from "./rooms/roomModal";
+import Link from "next/link";
 
 export default function RoomsSection() {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+    const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL
+
 
   useEffect(() => {
     const fetchRooms = async () => {
       try {
-        const res = await fetch("http://localhost:8000/api/rooms/");
+        const res = await fetch(`${BACKEND_URL}/api/rooms/`);
         if (!res.ok) throw new Error("Failed to fetch rooms");
         const data = await res.json();
 
@@ -64,9 +67,10 @@ export default function RoomsSection() {
           <div className="text-3xl tracking-tight font-semibold pt-12">
             The Rooms!
           </div>
+          <Link href='/roomservice'>
             <div className="bg-orange-600 text-white rounded-md py-3 flex px-8 items-center">
               Services <FaChevronCircleRight className="ml-2" />
-            </div>
+            </div></Link>
           </div>
         </div>
 

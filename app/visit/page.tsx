@@ -7,7 +7,7 @@ export default function VisitPaidha() {
       {/* HERO SECTION */}
       <section className="relative w-full h-[60vh] md:h-[75vh] overflow-hidden">
         <img
-          src="/images/weather.jpg"
+          src="/images/town.jpg"
           alt="Paidha town view Uganda"
           className="w-full h-full object-cover"
         />
@@ -38,9 +38,7 @@ export default function VisitPaidha() {
         title="Scenery & Nature"
         description="From the hills of Zombo to the rivers of Paidha, nature around Paidha is dramatic and peaceful."
         images={[
-          "https://upload.wikimedia.org/wikipedia/commons/0/0d/Paidha.jpg",
-          "https://upload.wikimedia.org/wikipedia/commons/3/32/Weather_in_Paidha_Zombo_District.jpg",
-          "https://upload.wikimedia.org/wikipedia/commons/0/0d/Paidha.jpg",
+          "images/v1.jpg",
         ]}
       />
 
@@ -48,9 +46,7 @@ export default function VisitPaidha() {
         title="Culture & Community"
         description="Explore markets, crafts, and the deep Alur heritage alive in Paidha."
         images={[
-          "https://upload.wikimedia.org/wikipedia/commons/0/0d/Paidha.jpg",
-          "https://upload.wikimedia.org/wikipedia/commons/3/32/Weather_in_Paidha_Zombo_District.jpg",
-          "https://upload.wikimedia.org/wikipedia/commons/0/0d/Paidha.jpg",
+          "/images/craft.jpg",
         ]}
       />
 
@@ -58,9 +54,8 @@ export default function VisitPaidha() {
         title="Adventure & Exploration"
         description="Hike hills, explore valleys, and walk scenic riverside paths."
         images={[
-          "https://upload.wikimedia.org/wikipedia/commons/3/32/Weather_in_Paidha_Zombo_District.jpg",
-          "https://upload.wikimedia.org/wikipedia/commons/0/0d/Paidha.jpg",
-          "https://upload.wikimedia.org/wikipedia/commons/3/32/Weather_in_Paidha_Zombo_District.jpg",
+          "/images/lei.jpg",
+          "/images/lyec.png",
         ]}
       />
 
@@ -68,9 +63,7 @@ export default function VisitPaidha() {
         title="Music & Entertainment"
         description="Immerse yourself in Alur rhythms, local beats, and vibrant community nightlife."
         images={[
-          "https://upload.wikimedia.org/wikipedia/commons/0/0d/Paidha.jpg",
-          "https://upload.wikimedia.org/wikipedia/commons/3/32/Weather_in_Paidha_Zombo_District.jpg",
-          "https://upload.wikimedia.org/wikipedia/commons/0/0d/Paidha.jpg",
+          "/images/music.jpg",
         ]}
       />
 
@@ -78,9 +71,7 @@ export default function VisitPaidha() {
         title="Food & Culinary Delights"
         description="Taste West Nile specialties like malakwang, acholi chicken stew, and fresh market foods."
         images={[
-          "https://upload.wikimedia.org/wikipedia/commons/0/0d/Paidha.jpg",
-          "https://upload.wikimedia.org/wikipedia/commons/3/32/Weather_in_Paidha_Zombo_District.jpg",
-          "https://upload.wikimedia.org/wikipedia/commons/0/0d/Paidha.jpg",
+          "/images/mkt.jpg",
         ]}
       />
 
@@ -88,9 +79,9 @@ export default function VisitPaidha() {
         title="Sights & Sounds"
         description="From market chatter to birdsong, Paidha has a relaxing and vibrant soundtrack."
         images={[
-          "https://upload.wikimedia.org/wikipedia/commons/3/32/Weather_in_Paidha_Zombo_District.jpg",
-          "https://upload.wikimedia.org/wikipedia/commons/0/0d/Paidha.jpg",
-          "https://upload.wikimedia.org/wikipedia/commons/3/32/Weather_in_Paidha_Zombo_District.jpg",
+          "/images/lei.jpg",
+          "images/v1.jpg",
+          "/images/lyec.png",
         ]}
       />
 

@@ -159,9 +159,9 @@ export default function Navbar() {
       </Container>
 
       {/* Center Logo */}
-      <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2">
+      <div className="absolute left-1/2 top-2/3 transform -translate-x-1/2 -translate-y-1/2">
         <Link href="/">
-          <FaSpa className="text-orange-600 text-3xl" />
+          <img src='/images/logo.png' className="h-8 w-12"/>
         </Link>
       </div>
 

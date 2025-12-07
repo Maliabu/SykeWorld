@@ -13,11 +13,12 @@ interface Review {
 export default function ReviewsColumn() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
+  const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL
 
   useEffect(() => {
     async function fetchReviews() {
       try {
-        const res = await fetch("http://localhost:8000/api/rooms/reviews/"); // adjust your endpoint
+        const res = await fetch(`${BACKEND_URL}/api/rooms/reviews/`); // adjust your endpoint
         if (!res.ok) throw new Error("Failed to fetch reviews");
         const data = await res.json();
 
