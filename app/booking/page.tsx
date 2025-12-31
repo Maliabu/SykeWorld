@@ -1,13 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useSession, signIn } from "next-auth/react";
+import { useState, useEffect, useRef } from "react";
 import { toast, Toaster } from "sonner";
 import { FaStar, FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import Container from "../Home/Container";
 import Link from "next/link";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL!;
+import { getAllRooms, createBooking } from "@/lib/actions/bookings";
+import { useSession as useCustomSession } from "@/lib/hooks/useSession";
+import { useSession as useNextAuthSession } from "next-auth/react";
+import { AlertCircle } from "lucide-react";
+import { initiatePesapalPayment } from "@/lib/actions/pesapal";
+import { useRouter } from "next/navigation";
 
 // helpers
 const formatMoney = (n: number) => `UGX ${n.toFixed(2)}`;
@@ -15,10 +18,17 @@ const formatMoney = (n: number) => `UGX ${n.toFixed(2)}`;
 /* ---------------- Multistep Booking Component ---------------- */
 
 export default function BookingPage() {
-  const { data: session, status } = useSession();
+  const { user, loading: sessionLoading } = useCustomSession();
+  const { data: nextAuthSession, status: nextAuthStatus } = useNextAuthSession();
+  const router = useRouter();
+  
+  // Check if user is signed in via either NextAuth or custom session
+  const isSignedIn = !!user || nextAuthStatus === "authenticated";
+  const isLoadingSession = sessionLoading || nextAuthStatus === "loading";
 
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const isSubmittingRef = useRef(false); // Prevent double submissions
 
   // rooms list (fetched)
   const [rooms, setRooms] = useState<any[]>([]);
@@ -38,31 +48,41 @@ export default function BookingPage() {
   });
 
   useEffect(() => {
-    // prefill name/email from NextAuth session if present
-    if (session?.user) {
+    // prefill name/email from session if present
+    if (user) {
       setForm((p) => ({
         ...p,
-        name: session.user.name ?? p.name,
-        email: session.user.email ?? p.email,
+        name: user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.username || p.name,
+        email: user.email ?? p.email,
+      }));
+    } else if (nextAuthSession?.user) {
+      // Also check NextAuth session
+      setForm((p) => ({
+        ...p,
+        name: nextAuthSession.user?.name || p.name,
+        email: nextAuthSession.user?.email || p.email,
       }));
     }
-  }, [session]);
+  }, [user, nextAuthSession]);
 
   useEffect(() => {
-    // fetch rooms
+    // fetch rooms using server actions
     (async () => {
       try {
-        const res = await fetch(`${API_URL}/api/rooms/`);
-        if (!res.ok) throw new Error("Failed to fetch rooms");
-        const data = await res.json();
+        const result = await getAllRooms();
+        if (result.error) {
+          console.error(result.error);
+          toast.error("Could not load rooms");
+          return;
+        }
         setRooms(
-          data.map((r: any) => ({
+          (result.rooms || []).map((r: any) => ({
             id: r.id,
-            title: r.room_type.name,
-            priceValue: Number(r.room_type.base_price),
-            price: `UGX ${Number(r.room_type.base_price)}/night`,
-            maxGuests: r.room_type.max_guests,
-            image: r.images?.[0]?.image || "/placeholder.jpg",
+            title: r.roomType?.name || "",
+            priceValue: Number(r.roomType?.basePrice || 0),
+            price: `UGX ${Number(r.roomType?.basePrice || 0)}/night`,
+            maxGuests: r.roomType?.maxGuests || 2,
+            image: r.images?.[0]?.image || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Crect fill='%23e5e7eb' width='400' height='300'/%3E%3Ctext fill='%239ca3af' font-family='sans-serif' font-size='18' x='50%25' y='50%25' text-anchor='middle' dy='.3em'%3ENo Image%3C/text%3E%3C/svg%3E",
           }))
         );
         setCarouselIndex(0);
@@ -113,11 +133,21 @@ export default function BookingPage() {
   const displayedRooms = rooms.concat(rooms).slice(carouselIndex, carouselIndex + 3);
 
   // submit booking (multistep final)
-  const handleSubmit = async () => {
-    // ensure user signed in with NextAuth
-    if (status !== "authenticated") {
+  const handleSubmit = async (e?: React.FormEvent) => {
+    // Prevent default form submission if called from form
+    if (e) {
+      e.preventDefault();
+    }
+
+    // Prevent double submissions
+    if (isSubmittingRef.current || loading) {
+      return;
+    }
+
+    // ensure user signed in (either NextAuth or custom session)
+    if (!isSignedIn) {
       toast.error("Please sign in before booking");
-      signIn(); // opens NextAuth sign-in
+      window.location.href = "/auth";
       return;
     }
 
@@ -135,188 +165,566 @@ export default function BookingPage() {
       return;
     }
 
+    // Set both state and ref to prevent double submissions
+    isSubmittingRef.current = true;
     setLoading(true);
+    
     try {
-      const payload = {
-        name: form.name,
-        email: form.email,
-        phone: form.phone,
-        room_id: form.room,
-        check_in: form.checkIn,
-        check_out: form.checkOut,
+      const result = await createBooking({
+        roomId: form.room,
+        checkIn: form.checkIn,
+        checkOut: form.checkOut,
         guests: form.guests,
         specialRequests: form.specialRequests,
-        paymentMethod: form.paymentMethod,
-      };
-
-      // Retrieve Django JWT issued after sign-in (Google or email)
-      let access: string | null = null;
-      if (typeof window !== "undefined") {
-        // guard against `"undefined"` stored as a string
-        const raw = localStorage.getItem("access");
-        if (raw && raw !== "undefined") access = raw;
-      }
-
-      // Build headers conditionally. Always include credentials so
-      // cookie-based auth still works; add Authorization only if token exists.
-      const headers: Record<string,string> = { "Content-Type": "application/json" };
-      if (access) headers["Authorization"] = `Bearer ${access}`;
-
-      const res = await fetch(`${API_URL}/api/rooms/bookings/create/`, {
-        method: "POST",
-        headers,
-        credentials: "include",
-        body: JSON.stringify(payload),
       });
 
-      // helpful debug when backend returns 401
-      if (res.status === 401) {
-        // give a clear message so you know whether token was missing/invalid
-        toast.error("Unauthorized. Your JWT is missing or expired — please sign in again.");
-        setLoading(false);
+      if (result.error) {
+        toast.error(result.error);
         return;
       }
 
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err?.error || "Booking creation failed");
-      }
+      toast.success("Booking created successfully!");
+      
+      // Redirect to payment if needed (all online payments)
+      if (form.paymentMethod && result.booking?.id) {
+        try {
+          // Initiate Pesapal payment
+          const paymentResult = await initiatePesapalPayment({
+            bookingId: result.booking.id,
+            amount: totalAmount,
+          });
 
-      const data = await res.json();
-      toast.success("Booking created");
-
-      // If backend returned a pesapal redirect URL, go there
-      if (data?.pesapal_url) {
-        // slight delay to show toast
-        setTimeout(() => {
-          window.location.href = data.pesapal_url;
-        }, 600);
+          if (paymentResult.success && paymentResult.redirectUrl) {
+            toast.info("Redirecting to payment...");
+            // Redirect to Pesapal payment page
+            window.location.href = paymentResult.redirectUrl;
+            return; // Don't reset loading since we're redirecting
+          } else {
+            toast.error(paymentResult.error || "Failed to initiate payment");
+          }
+        } catch (paymentError) {
+          console.error("Payment initiation error:", paymentError);
+          toast.error("Failed to process payment. Booking created but payment not initiated.");
+        }
       } else {
-        toast.success("Booking completed (no online payment required)");
+        // If cash payment or no payment method, redirect to home
+        setTimeout(() => {
+          router.push("/");
+        }, 2000);
       }
     } catch (err: any) {
       console.error(err);
       toast.error(err.message || "Booking failed");
     } finally {
+      isSubmittingRef.current = false;
       setLoading(false);
     }
   };
 
   return (
     <>
-      <div className="py-16 bg-gray-50">
+      <div className="py-24 md:py-32 bg-[#fafafa] min-h-screen">
         <Container>
-          <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-8">
-            <div className="bg-white p-8 rounded-xl space-y-6">
-              <h1 className="text-2xl font-semibold">Book Your Stay</h1>
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-16">
+              <div className="flex items-center justify-center gap-3 mb-4">
+                <div className="h-px w-12 bg-black/20"></div>
+                <p className="text-xs uppercase tracking-widest text-black/60 font-medium" style={{ fontFamily: 'var(--font-inter)' }}>
+                  Reservation
+                </p>
+                <div className="h-px w-12 bg-black/20"></div>
+              </div>
+              <h1 
+                className="text-4xl md:text-5xl font-bold text-[#1a1c1e] mb-4"
+                style={{ fontFamily: 'var(--font-playfair)' }}
+              >
+                Book Your Stay
+              </h1>
+              <p 
+                className="text-sm md:text-base text-stone-300 max-w-2xl mx-auto leading-relaxed"
+                style={{ fontFamily: 'var(--font-inter)' }}
+              >
+                Experience luxury and comfort at Syke World Hotel
+              </p>
+            </div>
+
+                {/* Sign-in suggestion banner - only show when user is NOT signed in */}
+                {!isLoadingSession && !isSignedIn && (
+                  <div className="mb-8 p-4 bg-amber-600/20 border-l-4 border-amber-600 rounded-r-lg flex items-center gap-3 border border-black/10">
+                    <AlertCircle className="h-5 w-5 text-amber-400 flex-shrink-0" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-[#1a1c1e]" style={{ fontFamily: 'var(--font-inter)' }}>
+                        Sign in to save your booking details and access exclusive offers
+                      </p>
+                    </div>
+                    <Link
+                      href="/auth"
+                      className="px-4 py-3 bg-amber-600 text-white text-sm font-medium hover:bg-amber-700 transition whitespace-nowrap uppercase tracking-wide"
+                      style={{ fontFamily: 'var(--font-inter)' }}
+                    >
+                      Sign In
+                    </Link>
+                  </div>
+                )}
+
+            <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-12">
+            <div className="space-y-8">
 
               {/* STEPS NAV */}
-              <div className="flex gap-2 text-sm">
-                <div className={`px-3 py-1 rounded ${step === 1 ? "bg-orange-600 text-white" : "bg-gray-100"}`}>1. Details</div>
-                <div className={`px-3 py-1 rounded ${step === 2 ? "bg-orange-600 text-white" : "bg-gray-100"}`}>2. Payment</div>
-                <div className={`px-3 py-1 rounded ${step === 3 ? "bg-orange-600 text-white" : "bg-gray-100"}`}>3. Review</div>
+              <div className="flex gap-0 mb-8">
+                <div className={`flex-1 px-6 py-4 text-center font-medium transition-all border-t border-b ${
+                  step === 1 
+                    ? "bg-amber-600 text-white" 
+                    : step > 1 
+                    ? "bg-amber-600/20 text-amber-400 border-amber-600/30" 
+                    : "bg-black/5 text-gray-500 border-black/10"
+                }`} style={{ fontFamily: 'var(--font-inter)' }}>
+                  <div className="text-sm font-semibold">Step 1</div>
+                  <div className="text-xs mt-1">Details</div>
+                </div>
+                <div className={`flex-1 px-6 py-4 text-center font-medium transition-all border-t border-b border-l ${
+                  step === 2 
+                    ? "bg-amber-600 text-white border-amber-600" 
+                    : step > 2 
+                    ? "bg-amber-600/20 text-amber-400 border-amber-600/30" 
+                    : "bg-black/5 text-gray-500 border-black/10"
+                }`} style={{ fontFamily: 'var(--font-inter)' }}>
+                  <div className="text-sm font-semibold">Step 2</div>
+                  <div className="text-xs mt-1">Payment</div>
+                </div>
+                <div className={`flex-1 px-6 py-4 text-center font-medium transition-all border-t border-b border-l ${
+                  step === 3 
+                    ? "bg-amber-600 text-white border-amber-600" 
+                    : "bg-black/5 text-gray-500 border-black/10"
+                }`} style={{ fontFamily: 'var(--font-inter)' }}>
+                  <div className="text-sm font-semibold">Step 3</div>
+                  <div className="text-xs mt-1">Review</div>
+                </div>
               </div>
 
               {/* STEP 1: DETAILS */}
               {step === 1 && (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <input className="p-3 border rounded" placeholder="Full name" value={form.name} onChange={(e) => update("name", e.target.value)} />
-                    <input className="p-3 border rounded" placeholder="Email" value={form.email} onChange={(e) => update("email", e.target.value)} />
-                    <input className="p-3 border rounded" placeholder="Phone" value={form.phone} onChange={(e) => update("phone", e.target.value)} />
-                    <select className="p-3 border rounded" value={form.room} onChange={(e) => update("room", e.target.value)}>
-                      <option value="">Select room</option>
-                      {rooms.map((r) => <option key={r.id} value={r.id}>{r.title} — {r.price}</option>)}
-                    </select>
-                    <input className="p-3 border rounded" type="date" value={form.checkIn} onChange={(e) => update("checkIn", e.target.value)} />
-                    <input className="p-3 border rounded" type="date" value={form.checkOut} onChange={(e) => update("checkOut", e.target.value)} />
-                    <input className="p-3 border rounded" type="number" min={1} value={form.guests} onChange={(e) => update("guests", Number(e.target.value))} />
-                    <textarea className="col-span-3 p-3 border rounded" placeholder="Special requests" rows={3} value={form.specialRequests} onChange={(e) => update("specialRequests", e.target.value)} />
+                <div className="space-y-6 p-8 border-l border-r border-black/10">
+                  <h2 
+                    className="text-2xl md:text-3xl font-bold text-[#1a1c1e] mb-6"
+                    style={{ fontFamily: 'var(--font-playfair)' }}
+                  >
+                    Booking Details
+                  </h2>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div>
+                      <label 
+                        className="block text-xs uppercase tracking-widest text-black/60 font-medium mb-2"
+                        style={{ fontFamily: 'var(--font-inter)' }}
+                      >
+                        Check-in Date
+                      </label>
+                      <input 
+                        className="w-full bg-transparent border-b border-gray-400/50 px-0 py-3 text-[#1a1c1e] placeholder-gray-500 focus:outline-none focus:border-b-amber-600 transition-all" 
+                        type="date" 
+                        value={form.checkIn} 
+                        onChange={(e) => update("checkIn", e.target.value)} 
+                        style={{ fontFamily: 'var(--font-inter)' }}
+                      />
+                    </div>
+                    <div>
+                      <label 
+                        className="block text-xs uppercase tracking-widest text-black/60 font-medium mb-2"
+                        style={{ fontFamily: 'var(--font-inter)' }}
+                      >
+                        Check-out Date
+                      </label>
+                      <input 
+                        className="w-full bg-transparent border-b border-gray-400/50 px-0 py-3 text-[#1a1c1e] placeholder-gray-500 focus:outline-none focus:border-b-amber-600 transition-all" 
+                        type="date" 
+                        value={form.checkOut} 
+                        onChange={(e) => update("checkOut", e.target.value)} 
+                        style={{ fontFamily: 'var(--font-inter)' }}
+                      />
+                    </div>
+                    <div>
+                      <label 
+                        className="block text-xs uppercase tracking-widest text-black/60 font-medium mb-2"
+                        style={{ fontFamily: 'var(--font-inter)' }}
+                      >
+                        Number of Guests
+                      </label>
+                      <input 
+                        className="w-full bg-transparent border-b border-gray-400/50 px-0 py-3 text-[#1a1c1e] placeholder-gray-500 focus:outline-none focus:border-b-amber-600 transition-all" 
+                        type="number" 
+                        min="1" 
+                        value={form.guests} 
+                        onChange={(e) => update("guests", parseInt(e.target.value) || 1)} 
+                        style={{ fontFamily: 'var(--font-inter)' }}
+                      />
+                    </div>
                   </div>
+                  
+                  <button 
+                    onClick={() => {
+                      const err = validateStep1();
+                      if (err) {
+                        toast.error(err);
+                      } else {
+                        setStep(2);
+                      }
+                    }} 
+                    className="w-full bg-amber-600 text-white px-6 py-3 text-base font-semibold hover:bg-amber-700 transition uppercase tracking-wide"
+                    style={{ fontFamily: 'var(--font-inter)' }}
+                  >
+                    Continue to Payment
+                  </button>
 
-                  <div className="flex gap-2">
-                    <button onClick={() => setStep(2)} className="ml-auto bg-orange-600 text-white px-4 py-2 rounded">Next: Payment</button>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                    <div>
+                      <label 
+                        className="block text-xs uppercase tracking-widest text-black/60 font-medium mb-2"
+                        style={{ fontFamily: 'var(--font-inter)' }}
+                      >
+                        Full Name
+                      </label>
+                      <input 
+                        className="w-full bg-transparent border-b border-gray-400/50 px-0 py-3 text-[#1a1c1e] placeholder-gray-500 focus:outline-none focus:border-b-amber-600 transition-all" 
+                        placeholder="Enter your full name" 
+                        value={form.name} 
+                        onChange={(e) => update("name", e.target.value)} 
+                        style={{ fontFamily: 'var(--font-inter)' }}
+                      />
+                    </div>
+                    <div>
+                      <label 
+                        className="block text-xs uppercase tracking-widest text-black/60 font-medium mb-2"
+                        style={{ fontFamily: 'var(--font-inter)' }}
+                      >
+                        Email Address
+                      </label>
+                      <input 
+                        className="w-full bg-transparent border-b border-gray-400/50 px-0 py-3 text-[#1a1c1e] placeholder-gray-500 focus:outline-none focus:border-b-amber-600 transition-all" 
+                        placeholder="your.email@example.com" 
+                        type="email"
+                        value={form.email} 
+                        onChange={(e) => update("email", e.target.value)} 
+                        style={{ fontFamily: 'var(--font-inter)' }}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label 
+                      className="block text-xs uppercase tracking-widest text-white/70 font-medium mb-2"
+                      style={{ fontFamily: 'var(--font-inter)' }}
+                    >
+                      Phone Number
+                    </label>
+                    <input 
+                      className="w-full bg-transparent border-b border-gray-400/50 px-0 py-3 text-white placeholder-stone-400 focus:outline-none focus:border-b-amber-600 transition-all" 
+                      placeholder="+256 XXX XXX XXX" 
+                      value={form.phone} 
+                      onChange={(e) => update("phone", e.target.value)} 
+                      style={{ fontFamily: 'var(--font-inter)' }}
+                    />
+                  </div>
+                  
+                  <div>
+                    <label 
+                      className="block text-xs uppercase tracking-widest text-white/70 font-medium mb-2"
+                      style={{ fontFamily: 'var(--font-inter)' }}
+                    >
+                      Select Room
+                    </label>
+                    <select 
+                      className="w-full bg-transparent border-b border-gray-400/50 px-0 py-3 text-white focus:outline-none focus:border-b-amber-600 transition-all" 
+                      value={form.room} 
+                      onChange={(e) => update("room", e.target.value)}
+                      style={{ fontFamily: 'var(--font-inter)' }}
+                    >
+                      <option value="" className="bg-white">Choose your preferred room</option>
+                      {rooms.map((r) => <option key={r.id} value={r.id} className="bg-white">{r.title} — {r.price}</option>)}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label 
+                      className="block text-xs uppercase tracking-widest text-white/70 font-medium mb-2"
+                      style={{ fontFamily: 'var(--font-inter)' }}
+                    >
+                      Special Requests
+                    </label>
+                    <textarea 
+                      className="w-full bg-transparent border-b border-gray-400/50 px-0 py-3 text-white placeholder-stone-400 focus:outline-none focus:border-b-amber-600 transition-all resize-none" 
+                      placeholder="Any special requests or preferences..." 
+                      rows={4} 
+                      value={form.specialRequests} 
+                      onChange={(e) => update("specialRequests", e.target.value)} 
+                      style={{ fontFamily: 'var(--font-inter)' }}
+                    />
                   </div>
                 </div>
               )}
 
               {/* STEP 2: PAYMENT */}
               {step === 2 && (
-                <div className="space-y-4">
-                  <h3 className="font-medium">Payment Method</h3>
-                  <select className="p-3 border rounded w-full" value={form.paymentMethod} onChange={(e) => update("paymentMethod", e.target.value)}>
-                    <option value="">Select payment method</option>
-                    <option>MTN Mobile Money</option>
-                    <option>Airtel Money</option>
-                    <option>Visa</option>
-                    <option>Mastercard</option>
-                  </select>
+                <div className="space-y-6 p-8 border-l border-r border-black/10">
+                  <h2 
+                    className="text-2xl md:text-3xl font-bold text-[#1a1c1e] mb-6"
+                    style={{ fontFamily: 'var(--font-playfair)' }}
+                  >
+                    Payment Method
+                  </h2>
+                  
+                  <div>
+                    <label 
+                      className="block text-xs uppercase tracking-widest text-white/70 font-medium mb-2"
+                      style={{ fontFamily: 'var(--font-inter)' }}
+                    >
+                      Choose Payment Method
+                    </label>
+                    <select 
+                      className="w-full bg-transparent border-b border-gray-400/50 px-0 py-3 text-white focus:outline-none focus:border-b-amber-600 transition-all" 
+                      value={form.paymentMethod} 
+                      onChange={(e) => update("paymentMethod", e.target.value)}
+                      style={{ fontFamily: 'var(--font-inter)' }}
+                    >
+                      <option value="" className="bg-white">Select a payment method</option>
+                      <option className="bg-white">MTN Mobile Money</option>
+                      <option className="bg-white">Airtel Money</option>
+                      <option className="bg-white">Visa</option>
+                      <option className="bg-white">Mastercard</option>
+                    </select>
+                  </div>
 
-                  <div className="flex gap-2">
-                    <button onClick={() => setStep(1)} className="bg-gray-200 px-4 py-2 rounded">Back</button>
-                    <button onClick={() => { const err = validateStep2(); if (err) toast.error(err); else setStep(3); }} className="ml-auto bg-orange-600 text-white px-4 py-2 rounded">Next: Review</button>
+                  <div className="flex gap-4 pt-4">
+                    <button 
+                      onClick={() => setStep(1)} 
+                      className="flex-1 bg-amber-700 hover:bg-amber-800 text-white px-6 py-3 text-base font-semibold transition uppercase tracking-wide"
+                      style={{ fontFamily: 'var(--font-inter)' }}
+                    >
+                      Back
+                    </button>
+                    <button 
+                      onClick={() => { 
+                        const err = validateStep2(); 
+                        if (err) toast.error(err); 
+                        else setStep(3); 
+                      }} 
+                      className="flex-1 bg-amber-600 text-white px-6 py-3 text-base font-semibold hover:bg-amber-700 transition uppercase tracking-wide"
+                      style={{ fontFamily: 'var(--font-inter)' }}
+                    >
+                      Continue to Review
+                    </button>
                   </div>
                 </div>
               )}
 
               {/* STEP 3: REVIEW */}
               {step === 3 && (
-                <div className="space-y-4">
-                  <h3 className="font-medium">Review & Confirm</h3>
+                <form 
+                  onSubmit={handleSubmit}
+                  className="space-y-6 p-8 border-l border-r border-black/10"
+                >
+                  <h2 
+                    className="text-2xl md:text-3xl font-bold text-[#1a1c1e] mb-6"
+                    style={{ fontFamily: 'var(--font-playfair)' }}
+                  >
+                    Review & Confirm
+                  </h2>
 
-                  <div className="border p-4 rounded space-y-2">
-                    <div><strong>Name:</strong> {form.name}</div>
-                    <div><strong>Email:</strong> {form.email}</div>
-                    <div><strong>Phone:</strong> {form.phone}</div>
-                    <div><strong>Room:</strong> {selectedRoom?.title ?? "—"}</div>
-                    <div><strong>Dates:</strong> {form.checkIn} → {form.checkOut} ({nights} nights)</div>
-                    <div><strong>Guests:</strong> {form.guests}</div>
-                    <div><strong>Payment:</strong> {form.paymentMethod}</div>
-                    <div><strong>Total:</strong> {formatMoney(totalAmount)}</div>
+                  <div className="p-6 space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <div className="text-sm text-gray-500 mb-1">Name</div>
+                        <div className="font-semibold text-[#1a1c1e]">{form.name || "—"}</div>
+                      </div>
+                      <div>
+                        <div className="text-sm text-stone-400 mb-1">Email</div>
+                        <div className="font-semibold text-white">{form.email || "—"}</div>
+                      </div>
+                      <div>
+                        <div className="text-sm text-stone-400 mb-1">Phone</div>
+                        <div className="font-semibold text-white">{form.phone || "—"}</div>
+                      </div>
+                      <div>
+                        <div className="text-sm text-stone-400 mb-1">Guests</div>
+                        <div className="font-semibold text-white">{form.guests}</div>
+                      </div>
+                      <div className="col-span-2">
+                        <div className="text-sm text-stone-400 mb-1">Room</div>
+                        <div className="font-semibold text-white">{selectedRoom?.title ?? "—"}</div>
+                      </div>
+                      <div>
+                        <div className="text-sm text-stone-400 mb-1">Check-in</div>
+                        <div className="font-semibold text-white">{form.checkIn || "—"}</div>
+                      </div>
+                      <div>
+                        <div className="text-sm text-stone-400 mb-1">Check-out</div>
+                        <div className="font-semibold text-white">{form.checkOut || "—"}</div>
+                      </div>
+                      <div>
+                        <div className="text-sm text-stone-400 mb-1">Nights</div>
+                        <div className="font-semibold text-white">{nights}</div>
+                      </div>
+                      <div>
+                        <div className="text-sm text-stone-400 mb-1">Payment Method</div>
+                        <div className="font-semibold text-white">{form.paymentMethod || "—"}</div>
+                      </div>
+                    </div>
+                    
+                    <div className="pt-4 border-t border-black/10">
+                      <div className="flex justify-between items-center">
+                        <div className="text-lg font-semibold text-[#1a1c1e]">Total Amount</div>
+                        <div 
+                          className="text-2xl font-bold text-amber-600"
+                          style={{ fontFamily: 'var(--font-inter)' }}
+                        >
+                          {formatMoney(totalAmount)}
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="flex gap-2">
-                    <button onClick={() => setStep(2)} className="bg-gray-200 px-4 py-2 rounded">Back</button>
-                    <button disabled={loading} onClick={handleSubmit} className="ml-auto bg-black text-white px-4 py-2 rounded">{loading ? "Processing..." : "Confirm & Pay"}</button>
+                  <div className="flex gap-4 pt-4">
+                    <button 
+                      type="button"
+                      onClick={() => setStep(2)} 
+                      className="flex-1 bg-amber-700 hover:bg-amber-800 text-white px-6 py-3 text-base font-semibold transition uppercase tracking-wide"
+                      style={{ fontFamily: 'var(--font-inter)' }}
+                    >
+                      Back
+                    </button>
+                    <button 
+                      type="submit"
+                      disabled={loading} 
+                      className="flex-1 bg-amber-600 text-white px-6 py-3 text-base font-semibold hover:bg-amber-700 transition uppercase tracking-wide disabled:opacity-50 disabled:cursor-not-allowed"
+                      style={{ fontFamily: 'var(--font-inter)' }}
+                    >
+                      {loading ? "Processing..." : "Confirm & Pay"}
+                    </button>
                   </div>
-                </div>
+                </form>
               )}
 
             </div>
 
             {/* RIGHT: Recommended rooms carousel */}
             <div className="space-y-6">
-              <div className=" rounded-xl">
-                <h3 className="font-semibold mb-4">Recommended Rooms</h3>
+              <div className="border-t border-b border-black/10 p-6">
+                <div className="mb-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="h-px w-12 bg-black/20"></div>
+                    <p className="text-xs uppercase tracking-widest text-black/60 font-medium" style={{ fontFamily: 'var(--font-inter)' }}>
+                      Rooms
+                    </p>
+                    <div className="h-px w-12 bg-black/20"></div>
+                  </div>
+                  <h3 
+                    className="text-2xl md:text-3xl font-bold text-[#1a1c1e] mb-4"
+                    style={{ fontFamily: 'var(--font-playfair)' }}
+                  >
+                    Recommended Rooms
+                  </h3>
+                </div>
                 <Link href='/rooms'>
-                <div className="relative">
+                <div className="relative group">
                   <div className="flex gap-4 overflow-hidden">
                     {displayedRooms.map((room, i) => (
-                      <div key={i} className="min-w-[200px] rounded-xl overflow-hidden bg-white">
-                        <img src={room.image} className="w-full h-36 object-cover" />
+                      <div key={i} className="min-w-[200px] bg-black/2 border border-black/10 cursor-pointer hover:border-black/20 transition-all">
+                        <div className="relative w-full h-48 overflow-hidden">
+                          <img src={room.image} className="w-full h-full object-cover transition-transform duration-700 hover:scale-110" />
+                        </div>
                         <div className="p-3">
-                          <div className="font-semibold">{room.title}</div>
-                          <div className="text-orange-600 mt-1">{formatMoney(room.priceValue)}/night</div>
+                          <div 
+                            className="font-semibold text-[#1a1c1e]"
+                            style={{ fontFamily: 'var(--font-playfair)' }}
+                          >
+                            {room.title}
+                          </div>
+                          <div 
+                            className="text-sm text-gray-600 mt-1"
+                            style={{ fontFamily: 'var(--font-inter)' }}
+                          >
+                            1 bed | {room.maxGuests} sleeps
+                          </div>
                         </div>
                       </div>
                     ))}
                   </div>
 
-                  <button onClick={prevCarousel} className="absolute top-1/2 left-0 -translate-y-1/2 bg-white p-2 rounded-full shadow"><FaArrowLeft/></button>
-                  <button onClick={nextCarousel} className="absolute top-1/2 right-0 -translate-y-1/2 bg-white p-2 rounded-full shadow"><FaArrowRight/></button>
+                  <button 
+                    onClick={prevCarousel} 
+                    className="absolute top-1/2 left-0 -translate-y-1/2 bg-white/90 backdrop-blur-sm text-[#1a1c1e] p-2 hover:bg-white transition opacity-0 group-hover:opacity-100"
+                  >
+                    <FaArrowLeft/>
+                  </button>
+                  <button 
+                    onClick={nextCarousel} 
+                    className="absolute top-1/2 right-0 -translate-y-1/2 bg-black/50 backdrop-blur-sm text-white p-2 hover:bg-black/70 transition opacity-0 group-hover:opacity-100"
+                  >
+                    <FaArrowRight/>
+                  </button>
                 </div>
                 </Link>
               </div>
 
               {/* quick price box */}
-              <div className="bg-white p-6 rounded-xl">
-                <div className="text-sm text-gray-600">Nights: {nights}</div>
-                <div className="text-lg font-semibold">Total: {formatMoney(totalAmount)}</div>
-                <div className="text-xs text-gray-500 mt-2">Prices shown are per night.</div>
+              <div className="border-t border-b border-black/10 p-6">
+                <div className="mb-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="h-px w-12 bg-black/20"></div>
+                    <p className="text-xs uppercase tracking-widest text-black/60 font-medium" style={{ fontFamily: 'var(--font-inter)' }}>
+                      Summary
+                    </p>
+                    <div className="h-px w-12 bg-black/20"></div>
+                  </div>
+                  <h3 
+                    className="text-2xl md:text-3xl font-bold text-[#1a1c1e] mb-4"
+                    style={{ fontFamily: 'var(--font-playfair)' }}
+                  >
+                    Booking Summary
+                  </h3>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <div 
+                      className="text-sm text-gray-600"
+                      style={{ fontFamily: 'var(--font-inter)' }}
+                    >
+                      Nights:
+                    </div>
+                    <div 
+                      className="text-sm font-semibold text-[#1a1c1e]"
+                      style={{ fontFamily: 'var(--font-inter)' }}
+                    >
+                      {nights}
+                    </div>
+                  </div>
+                  <div className="pt-3 border-t border-black/10">
+                    <div className="flex justify-between items-center">
+                      <div 
+                        className="text-base font-medium text-[#1a1c1e]"
+                        style={{ fontFamily: 'var(--font-inter)' }}
+                      >
+                        Total:
+                      </div>
+                      <div 
+                        className="text-xl font-bold text-amber-600"
+                        style={{ fontFamily: 'var(--font-inter)' }}
+                      >
+                        {formatMoney(totalAmount)}
+                      </div>
+                    </div>
+                  </div>
+                  <div 
+                    className="text-xs text-gray-500 mt-2"
+                    style={{ fontFamily: 'var(--font-inter)' }}
+                  >
+                    Prices shown are per night.
+                  </div>
+                </div>
               </div>
             </div>
-
           </div>
+        </div>
         </Container>
       </div>
     </>

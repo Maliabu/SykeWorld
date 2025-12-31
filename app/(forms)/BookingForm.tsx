@@ -69,38 +69,73 @@ toast.success("Booking request sent successfully!");
   return (
     <form
       onSubmit={handleSubmit}
-      className="bg-white rounded-2xl p-6 flex flex-col md:flex-row gap-4"
+      className="bg-transparent p-6 md:p-8 flex flex-col justify-center items-center gap-4 md:gap-6 w-full h-full"
     >
-      <div className="flex-1">
-        <label className="block text-sm font-medium">Check-in</label>
+      {/* Title Section */}
+      <div className="text-center mb-6">
+        <div className="flex items-center justify-center gap-3 mb-4">
+          <div className="h-px w-12 bg-black/20"></div>
+          <p className="text-xs uppercase tracking-widest text-black/60 font-medium" style={{ fontFamily: 'var(--font-inter)' }}>
+            Reservation
+          </p>
+          <div className="h-px w-12 bg-black/20"></div>
+        </div>
+        <h2 
+          className="text-3xl md:text-4xl font-bold text-[#1a1c1e] mb-2"
+          style={{ fontFamily: 'var(--font-playfair)' }}
+        >
+          Check Availability
+        </h2>
+      </div>
+
+      <div className="flex flex-col items-center">
+        <label 
+          className="block text-xs uppercase tracking-widest text-black/60 mb-2 font-medium w-fit"
+          style={{ fontFamily: 'var(--font-inter)' }}
+        >
+          CHECK-IN
+        </label>
         <input
           type="date"
           value={checkIn}
           onChange={(e) => setCheckIn(e.target.value)}
-          className="mt-1 bg-gray-100 rounded px-3 py-2 w-full"
+          className="bg-transparent border-b border-gray-400/50 px-0 py-3 text-[#1a1c1e] placeholder-gray-500 focus:outline-none focus:border-b-amber-600 transition-all"
+          style={{ fontFamily: 'var(--font-inter)' }}
           required
         />
       </div>
 
-      <div className="flex-1">
-        <label className="block text-sm font-medium">Check-out</label>
+      <div className="flex flex-col items-center">
+        <label 
+          className="block text-xs uppercase tracking-widest text-black/60 mb-2 font-medium w-fit"
+          style={{ fontFamily: 'var(--font-inter)' }}
+        >
+          CHECK-OUT
+        </label>
         <input
           type="date"
           value={checkOut}
           onChange={(e) => setCheckOut(e.target.value)}
-          className="mt-1 bg-gray-100 rounded px-3 py-2 w-full"
+          className="bg-transparent border-b border-gray-400/50 px-0 py-3 text-[#1a1c1e] placeholder-gray-500 focus:outline-none focus:border-b-amber-600 transition-all"
+          style={{ fontFamily: 'var(--font-inter)' }}
           required
         />
       </div>
 
-      <div className="flex-1">
-        <label className="block text-sm font-medium">Guests</label>
+      <div className="flex flex-col items-center">
+        <label 
+          className="block text-xs uppercase tracking-widest text-black/60 mb-2 font-medium w-fit"
+          style={{ fontFamily: 'var(--font-inter)' }}
+        >
+          GUESTS
+        </label>
         <input
           type="number"
           min={1}
           value={guests}
           onChange={(e) => setGuests(parseInt(e.target.value))}
-          className="mt-1 bg-gray-100 rounded px-3 py-2 w-full"
+          className="bg-transparent border-b border-gray-400/50 px-0 py-3 text-[#1a1c1e] placeholder-gray-500 focus:outline-none focus:border-b-amber-600 transition-all"
+          style={{ fontFamily: 'var(--font-inter)' }}
           required
         />
       </div>
@@ -109,11 +144,12 @@ toast.success("Booking request sent successfully!");
         <button
           type="submit"
           disabled={loading}
-          className={`bg-orange-600 text-white px-6 py-2 rounded-md transition ${
+          className={`bg-amber-600 hover:bg-amber-700 text-white px-6 md:px-8 py-3 md:py-4 font-medium tracking-wide uppercase transition-all duration-300 ${
             loading ? "opacity-50 cursor-not-allowed" : ""
           }`}
+          style={{ fontFamily: 'var(--font-inter)' }}
         >
-          {loading ? "Booking..." : "Check Availability"}
+          {loading ? "Checking..." : "CHECK AVAILABILITY"}
         </button>
       </div>
     </form>

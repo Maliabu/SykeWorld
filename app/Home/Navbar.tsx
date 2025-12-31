@@ -1,195 +1,333 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { HiOutlineMenu, HiOutlineX } from "react-icons/hi";
-import { motion, AnimatePresence } from "framer-motion";
-import Container from "./Container";
-import { FaFacebook, FaInstagram, FaPlus, FaSpa } from "react-icons/fa";
 import { useSession, signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import { FaX } from "react-icons/fa6";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { User } from "lucide-react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import Container from "./Container";
 
 export default function Navbar() {
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [sheetOpen, setSheetOpen] = useState(false); // control desktop sheet
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [kitchenCardClosed, setKitchenCardClosed] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const { data: session } = useSession();
   const pathname = usePathname();
 
-  const menuItems = [
-    { name: "Home", href: "/" },
-    { name: "Rooms", href: "/rooms" },
-    { name: "Bar & Restaurant", href: "/kitchen" },
-    { name: "Gallery", href: "/gallery" },
-    { name: "Services", href: "/roomservice" },
-    { name: "Menu", href: "/kitchen" },
-    { name: "About", href: "/about" },
-    { name: "Contact Us", href: "/about" },
+  const visitImages = [
+    "/images/weather.jpg",
+    "/images/music.jpg",
+    "/images/craft.jpg",
+    "/images/pba.jpg"
   ];
 
-  const firstFew = menuItems.filter((_, i) => i < 4);
-  const isActive = (href: string) => pathname === href;
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % visitImages.length);
+    }, 3000); // Change image every 3 seconds
+
+    return () => clearInterval(interval);
+  }, [visitImages.length]);
+
+  const menuItems = [
+    { name: "Hotel", href: "/" },
+    { name: "Rooms", href: "/rooms" },
+    { name: "Restaurant", href: "/kitchen" },
+    { name: "Gallery", href: "/gallery" },
+    { name: "About", href: "/about" },
+  ];
+
+  // Generate breadcrumbs based on pathname
+  const getBreadcrumbs = () => {
+    const paths = pathname.split('/').filter(Boolean);
+    const breadcrumbs = [{ name: "Home", href: "/" }];
+    
+    if (paths.length > 0) {
+      paths.forEach((path, index) => {
+        const href = '/' + paths.slice(0, index + 1).join('/');
+        const name = path.charAt(0).toUpperCase() + path.slice(1);
+        breadcrumbs.push({ name, href });
+      });
+    }
+    
+    return breadcrumbs;
+  };
+
+  const breadcrumbs = getBreadcrumbs();
 
   return (
-    <nav className="relative z-10 bg-stone-200">
-      <div className=" bg-stone-300 text-stone-950 p-2">
+    <>
+      <nav className="sticky top-0 z-50 bg-[#fafafa]">
         <Container>
-          <div className="flex space-x-4">
-              <Link href="#" className="hover:text-primary">
-                <FaFacebook className="h-3 w-3" />
-              </Link>
-              <Link href="#" className="hover:text-primary">
-                <FaX className="h-3 w-3" />
-              </Link>
-              <Link href="#" className="hover:text-primary">
-                <FaInstagram className="h-3 w-3" />
-              </Link>
+          {/* Main Navbar */}
+          <div className="relative flex items-center justify-between h-16 border-b border-black/10">
+            {/* Left Section: MENU (with icon) + Separator + Language */}
+            <div className="flex items-center">
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="flex items-center gap-2 text-gray-600 hover:text-[#1a1c1e] transition-colors px-4"
+                style={{ fontFamily: 'var(--font-inter)' }}
+              >
+                <HiOutlineMenu className="w-5 h-5" />
+                <span className="text-sm uppercase tracking-wide">MENU</span>
+              </button>
+              
+              {/* Vertical Separator */}
+              <div className="h-4 w-px bg-gray-400/50 mx-2"></div>
+              
+              {/* Language Selector */}
+              <div className="text-gray-600 text-sm uppercase px-4" style={{ fontFamily: 'var(--font-inter)' }}>
+                <span className="text-[#1a1c1e] cursor-pointer">EN</span>
+                <span className="mx-1">/</span>
+                <span className="cursor-pointer hover:text-[#1a1c1e]">FR</span>
+              </div>
             </div>
-        </Container>
-      </div>
-      <Container>
-        <div className="flex items-center justify-between h-16">
-          {/* Left desktop nav */}
-          <div className="flex-1 flex items-center justify-start">
-            <div className="hidden md:flex space-x-6">
-              {firstFew.map((item) => (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={`hover:text-orange-600 transition ${
-                    isActive(item.href) ? "border-b-2 border-orange-600" : ""
-                  }`}
-                >
-                  {item.name}
-                </Link>
+
+            {/* Center: Brand Name - Absolutely positioned, italicized */}
+            <Link 
+              href="/" 
+              className="absolute left-1/2 transform -translate-x-1/2 text-xl font-normal italic text-gray-600 tracking-tight"
+              style={{ fontFamily: 'var(--font-playfair)' }}
+            >
+              Syke World
+            </Link>
+
+            {/* Right Section: CONTACTS + Separator + BOOKING + Separator + Icon */}
+            <div className="flex items-center">
+              <Link
+                href="/about"
+                className="text-gray-600 text-sm uppercase tracking-wide hover:text-[#1a1c1e] transition-colors px-4"
+                style={{ fontFamily: 'var(--font-inter)' }}
+              >
+                CONTACTS
+              </Link>
+              
+              {/* Vertical Separator */}
+              <div className="h-4 w-px bg-gray-400/50 mx-2"></div>
+              
+              <Link
+                href="/booking"
+                className="text-gray-600 text-sm uppercase tracking-wide hover:text-[#1a1c1e] transition-colors px-4"
+                style={{ fontFamily: 'var(--font-inter)' }}
+              >
+                BOOKING
+              </Link>
+              
+              {/* Vertical Separator */}
+              <div className="h-4 w-px bg-gray-400/50 mx-2"></div>
+              
+              {/* User Section */}
+              {session?.user ? (
+                <div className="flex items-center gap-3 px-4">
+                  <Avatar className="h-8 w-8">
+                    {session.user.image && (
+                      <AvatarImage src={session.user.image} alt={session.user.name || "User"} />
+                    )}
+                    <AvatarFallback className="bg-gray-200 text-gray-700 text-xs">
+                      {session.user.name?.charAt(0).toUpperCase() || session.user.email?.charAt(0).toUpperCase() || "U"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex flex-col items-start min-w-0">
+                    {session.user.name && (
+                      <span className="text-xs text-[#1a1c1e] font-medium truncate max-w-[120px]" style={{ fontFamily: 'var(--font-inter)' }}>
+                        {session.user.name}
+                      </span>
+                    )}
+                    {session.user.email && (
+                      <span className="text-xs text-gray-500 truncate max-w-[120px]" style={{ fontFamily: 'var(--font-inter)' }}>
+                        {session.user.email}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <button className="text-gray-600 hover:text-[#1a1c1e] transition-colors px-4">
+                  <User className="w-5 h-5" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Breadcrumbs - Left aligned, matching navbar padding */}
+          <div className="py-3 relative">
+            <div className="flex items-center gap-2 text-xs text-gray-600 pl-4" style={{ fontFamily: 'var(--font-inter)' }}>
+              {breadcrumbs.map((crumb, index) => (
+                <span key={crumb.href} className="flex items-center">
+                  {index > 0 && <span className="mx-2 text-gray-500">/</span>}
+                  <Link
+                    href={crumb.href}
+                    className={`hover:text-[#1a1c1e] transition-colors ${
+                      index === breadcrumbs.length - 1 ? "text-[#1a1c1e]" : "text-gray-600"
+                    }`}
+                  >
+                    {crumb.name}
+                  </Link>
+                </span>
               ))}
             </div>
-          </div>
 
-          {/* Right side buttons */}
-          <div className="flex-1 flex items-center justify-end space-x-3">
-            <div className="hidden md:flex items-center space-x-2">
-              {!session ? (
-                <>
-                  <Link
-                    href="/auth"
-                    className="px-4 py-2 flex items-center text-white bg-orange-600 rounded-md"
-                  >
-                    <FaPlus className="pr-2" /> Sign In
-                  </Link>
-                  <Link
-                    href="/signup"
-                    className="px-4 py-2 border border-orange-600 text-orange-600 rounded-md hover:bg-orange-600 hover:text-white transition"
-                  >
-                    Sign Up
-                  </Link>
-                </>
-              ) : (
-                <>
-                  <img
-                    src={session.user?.image || ""}
-                    alt="User"
-                    className="w-8 h-8 rounded-full"
-                  />
-                  <button
-                    onClick={() => signOut()}
-                    className="px-3 py-1 bg-orange-600 text-white rounded"
-                  >
-                    Sign Out
-                  </button>
-                </>
-              )}
-
-              {/* ⭐ Desktop More Sheet */}
-              <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-                
-                <SheetTrigger className="px-3 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">
-                  More
-                </SheetTrigger>
-
-                <SheetContent side="right" className="w-80 sm:w-96">
-                  <SheetHeader>
-                    <SheetTitle className="text-md font-lighter border-b py-4">
-                      Explore
-                    </SheetTitle>
-                  </SheetHeader>
-
-                  {/* Animated links using framer-motion */}
-                  <motion.div
-                    initial={{ opacity: 0, x: 50 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 50 }}
-                    transition={{ duration: 0.3 }}
-                    className="mt-6 flex flex-col justify-center items-center space-y-4"
-                  >
-                    {menuItems.map((item) => (
-                      <Link
-                        key={item.name}
-                        href={item.href}
-                        onClick={() => setSheetOpen(false)} // close sheet on click
-                        className="text-md uppercase text-gray-700 hover:text-orange-600"
-                      >
-                        {item.name}
-                      </Link>
+            {/* Promotional Cards - Fixed positioned, overlay */}
+            <div className="absolute left-4 top-full mt-2 flex items-center gap-4 z-50">
+              {/* Paidha Card */}
+              <Link 
+                href="/visit"
+                className="w-full max-w-[400px] group relative overflow-hidden rounded-lg p-4 backdrop-blur-md bg-black/2 border border-black/10 hover:bg-black/5 hover:border-black/20 transition-all duration-300"
+              >
+                <div className="relative z-10">
+                  <div className="flex items-center mb-2">
+                    <h3 
+                      className="text-sm font-semibold text-[#1a1c1e] uppercase tracking-wider"
+                      style={{ fontFamily: 'var(--font-inter)' }}
+                    >
+                      Discover
+                    </h3>
+                  </div>
+                  <div className="relative w-full h-32 mb-2 rounded overflow-hidden">
+                    {visitImages.map((img, index) => (
+                      <Image
+                        key={index}
+                        src={img}
+                        alt="Paidha"
+                        fill
+                        className={`absolute inset-0 object-cover transition-opacity duration-1000 ${
+                          index === currentImageIndex ? "opacity-100" : "opacity-0"
+                        }`}
+                      />
                     ))}
-                  </motion.div>
-                </SheetContent>
-              </Sheet>
-            </div>
+                  </div>
+                  <p 
+                    className="text-2xl font-bold text-[#1a1c1e] mb-1 leading-tight"
+                    style={{ fontFamily: 'var(--font-playfair)' }}
+                  >
+                    Paidha
+                  </p>
+                  <p 
+                    className="text-xs text-gray-600 leading-relaxed mb-2"
+                    style={{ fontFamily: 'var(--font-inter)' }}
+                  >
+                    The Hidden Gem of West Nile
+                  </p>
+                  <div className="flex items-center justify-end">
+                    <svg className="w-4 h-4 text-white/70 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg>
+                  </div>
+                </div>
+              </Link>
 
-            {/* Mobile-only hamburger */}
-            <div className="md:hidden">
-              <button onClick={() => setMobileOpen(!mobileOpen)}>
-                {mobileOpen ? (
-                  <HiOutlineX className="w-6 h-6 text-white" />
-                ) : (
-                  <HiOutlineMenu className="w-6 h-6 text-white" />
-                )}
-              </button>
+              {/* Bar & Restaurant Card */}
+              {!kitchenCardClosed && (
+                <div className="w-full max-w-[400px] group relative overflow-hidden rounded-lg p-4 backdrop-blur-md bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-300">
+                  <Link href="/kitchen" className="relative z-10 block">
+                    <div className="flex items-center mb-2">
+                      <h3 
+                        className="text-sm font-semibold text-[#1a1c1e] uppercase tracking-wider"
+                        style={{ fontFamily: 'var(--font-inter)' }}
+                      >
+                        Experience
+                      </h3>
+                    </div>
+                    <div className="relative w-full h-32 mb-2 rounded overflow-hidden">
+                      <Image
+                        src="/images/pexels-creative-vix-370984.jpg"
+                        alt="Bar & Restaurant"
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                    <p 
+                      className="text-2xl font-bold text-[#1a1c1e] mb-1 leading-tight"
+                      style={{ fontFamily: 'var(--font-playfair)' }}
+                    >
+                      Bar & Restaurant
+                    </p>
+                    <p 
+                      className="text-xs text-gray-600 leading-relaxed mb-2"
+                      style={{ fontFamily: 'var(--font-inter)' }}
+                    >
+                      Exquisite cuisine & crafted cocktails
+                    </p>
+                    <div className="flex items-center justify-end">
+                      <svg className="w-4 h-4 text-black/60 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                      </svg>
+                    </div>
+                  </Link>
+                  {/* Close Button - Only visible on hover */}
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setKitchenCardClosed(true);
+                    }}
+                    className="absolute top-2 right-2 z-20 w-6 h-6 flex items-center justify-center rounded-full bg-black/50 hover:bg-black/70 text-white transition-all opacity-0 group-hover:opacity-100"
+                    aria-label="Close"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
-        </div>
-      </Container>
+        </Container>
+      </nav>
 
-      {/* Center Logo */}
-      <div className="absolute left-1/2 top-2/3 transform -translate-x-1/2 -translate-y-1/2">
-        <Link href="/">
-          <img src='/images/logo.png' className="h-8 w-12"/>
-        </Link>
-      </div>
-
-      {/* Mobile Menu */}
-      <AnimatePresence>
-        {mobileOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="md:hidden bg-gray-900/90 text-white p-6 space-y-4"
-            style={{ height: "calc(100vh - 64px)" }}
-          >
-            <div className="text-sm opacity-80 mb-3">MENU</div>
-
+      {/* Sidebar Menu */}
+      <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+        <SheetContent side="left" className="w-80 bg-white border-r border-gray-300 p-0">
+          <SheetHeader className="p-6 border-b border-gray-300">
+            <SheetTitle className="text-[#1a1c1e] text-xl" style={{ fontFamily: 'var(--font-playfair)' }}>
+              Syke World
+            </SheetTitle>
+          </SheetHeader>
+          <div className="mt-6 space-y-1 px-4">
             {menuItems.map((item) => (
               <Link
                 key={item.name}
                 href={item.href}
-                onClick={() => setMobileOpen(false)}
-                className="block py-3 text-lg hover:text-orange-500"
+                onClick={() => setSidebarOpen(false)}
+                className={`block px-4 py-3 text-sm uppercase tracking-wide transition-colors rounded ${
+                  pathname === item.href
+                    ? "text-[#1a1c1e] bg-gray-200"
+                    : "text-gray-600 hover:text-[#1a1c1e] hover:bg-gray-100"
+                }`}
+                style={{ fontFamily: 'var(--font-inter)' }}
               >
                 {item.name}
               </Link>
             ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </nav>
+            <div className="pt-4 mt-4 border-t border-gray-300">
+              {!session ? (
+                <Link
+                  href="/auth"
+                  onClick={() => setSidebarOpen(false)}
+                  className="block px-4 py-3 text-sm uppercase tracking-wide text-gray-600 hover:text-[#1a1c1e] transition-colors rounded"
+                  style={{ fontFamily: 'var(--font-inter)' }}
+                >
+                  Sign In
+                </Link>
+              ) : (
+                <button
+                  onClick={() => {
+                    signOut();
+                    setSidebarOpen(false);
+                  }}
+                  className="block w-full text-left px-4 py-3 text-sm uppercase tracking-wide text-gray-600 hover:text-[#1a1c1e] transition-colors rounded"
+                  style={{ fontFamily: 'var(--font-inter)' }}
+                >
+                  Sign Out
+                </button>
+              )}
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
+    </>
   );
 }

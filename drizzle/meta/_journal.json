@@ -1,0 +1,48 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1765309323828,
+      "tag": "0000_violet_tomorrow_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1766821587355,
+      "tag": "0001_tan_starbolt",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1766822136939,
+      "tag": "0002_swift_blindfold",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1766824257734,
+      "tag": "0003_secret_midnight",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1767112970098,
+      "tag": "0004_wandering_outlaw_kid",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1767119769154,
+      "tag": "0005_ambiguous_snowbird",
+      "breakpoints": true
+    }
+  ]
+}

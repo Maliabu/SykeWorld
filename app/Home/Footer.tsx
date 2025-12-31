@@ -7,6 +7,7 @@ import { z } from "zod";
 import Link from "next/link";
 import { FaChevronCircleRight, FaFacebook, FaInstagram, FaSpa } from "react-icons/fa";
 import { FaX } from "react-icons/fa6";
+import { subscribe } from "@/lib/actions/bookings";
 
 // Zod schema for validation
 const subscribeSchema = z.object({
@@ -18,8 +19,6 @@ export default function Footer() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
-  const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL
-
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -33,13 +32,12 @@ export default function Footer() {
 
     setLoading(true);
     try {
-      const res = await fetch(`${BACKEND_URL}/api/subscribe/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email }),
-      });
+      const subscribeResult = await subscribe({ name, email });
 
-      if (!res.ok) throw new Error("Failed to subscribe");
+      if (subscribeResult.error) {
+        toast.error(subscribeResult.error);
+        return;
+      }
 
       toast.success("Subscribed successfully!");
       setName("");
@@ -52,117 +50,235 @@ export default function Footer() {
   };
 
   return (
-    <footer className="w-full bg-stone-100 text-stone-950 relative">
+    <footer className="w-full bg-[#fafafa] text-[#1a1c1e] relative border-t border-black/10">
       <Container>
-        <div className="grid gap-8 p-20 bg-white rounded-b-2xl lg:grid-cols-2 grid-cols-1">
-          <div>
-            <div className="text-2xl font-semibold">Subscribe</div>
-            <div>Don't miss out on what's new! Keep in the loop.</div>
-          </div>
-
-          <form onSubmit={handleSubmit}>
-            <div className="gap-4 flex flex-col max-w-[300px]">
-              <input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Name"
-                className="bg-gray-50 p-2 rounded"
-              />
-              <input
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Email Address"
-                className="bg-gray-50 p-2 rounded"
-              />
-              <button
-                type="submit"
-                className="rounded-md bg-orange-600 p-2 text-white"
-                disabled={loading}
-              >
-                {loading ? "Subscribing..." : "Subscribe"}
-              </button>
+        {/* Subscribe Section */}
+        <div className="py-16 md:py-24 border-b border-black/10">
+          <div className="text-center mb-12">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="h-px w-12 bg-black/20"></div>
+              <p className="text-xs uppercase tracking-widest text-black/60 font-medium" style={{ fontFamily: 'var(--font-inter)' }}>
+                Newsletter
+              </p>
+              <div className="h-px w-12 bg-black/20"></div>
             </div>
-          </form>
-        </div>
-      </Container>
-
-      {/* Footer content */}
-      <Container>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 md:px-0 md:py-20 px-10 py-10">
-          {/* About */}
-          <div>
-            <Link href="/">
-              <FaSpa className="text-orange-600 h-8 w-8 mb-4" />
-            </Link>
-            <h4 className="text-lg mb-4">SykeWorld Hotel</h4>
-            <p className="text-sm">
-              Luxury meets serenity. Experience comfort like never before.
+            <h2 
+              className="text-4xl md:text-5xl font-bold text-[#1a1c1e] mb-4"
+              style={{ fontFamily: 'var(--font-playfair)' }}
+            >
+              Stay Connected
+            </h2>
+            <p 
+              className="text-sm md:text-base text-gray-600 max-w-2xl mx-auto leading-relaxed"
+              style={{ fontFamily: 'var(--font-inter)' }}
+            >
+              Don't miss out on what's new! Keep in the loop with our latest updates.
             </p>
           </div>
 
-          {/* Navigation */}
-          <div>
-            <h4 className="text-lg mb-4">Navigation</h4>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <Link href="/gallery" className="hover:text-primary">
-                  Gallery
-                </Link>
-              </li>
-              <li>
-                <Link href="/roomservice" className="hover:text-primary">
-                  Services
-                </Link>
-              </li>
-              <li>
-                <Link href="/kitchen" className="hover:text-primary">
-                  Bar & Restaurant
-                </Link>
-              </li>
-              <li>
-                <Link href="/about" className="hover:text-primary">
-                  About
-                </Link>
-              </li>
-            </ul>
-          </div>
+          <form onSubmit={handleSubmit} className="max-w-md mx-auto">
+            <div className="flex flex-col sm:flex-row gap-4">
+                <input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Name"
+                  className="flex-1 bg-transparent border border-black/20 text-[#1a1c1e] placeholder-gray-500 px-4 py-3 rounded focus:outline-none focus:border-amber-600 transition-all"
+                  style={{ fontFamily: 'var(--font-inter)' }}
+                />
+                <input
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Email Address"
+                  className="flex-1 bg-transparent border border-black/20 text-[#1a1c1e] placeholder-gray-500 px-4 py-3 rounded focus:outline-none focus:border-amber-600 transition-all"
+                  style={{ fontFamily: 'var(--font-inter)' }}
+                />
+                <button
+                  type="submit"
+                  className="bg-amber-600 hover:bg-amber-700 text-white px-8 py-3 font-medium tracking-wide uppercase transition-all duration-300 whitespace-nowrap"
+                  disabled={loading}
+                  style={{ fontFamily: 'var(--font-inter)' }}
+                >
+                  {loading ? "Subscribing..." : "Subscribe"}
+                </button>
+            </div>
+          </form>
+        </div>
 
-          {/* Contact */}
-          <div>
-            <h4 className="text-lg">Location</h4>
-            <p className="text-sm">123 Luxury Ave, Paradise City</p>
-            <p className="text-sm">info@horizonehotel.com</p>
-            <h4 className="text-lg mt-4">Contact</h4>
-            <p className="text-sm">+256 770 000 787</p>
-            <p className="text-sm">+256 770 000 787</p>
-            <h4 className="text-lg mt-4">Email</h4>
-            <p className="text-sm">info@sykeworld.com</p>
-          </div>
+        {/* Footer Content */}
+        <div className="py-16 md:py-20">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12">
+            {/* About */}
+            <div>
+              <Link href="/">
+                <img src='/images/logo.png' className="h-10 w-auto mb-6 opacity-90"/>
+              </Link>
+              <h4 
+                className="text-xl mb-4 font-bold text-[#1a1c1e]"
+                style={{ fontFamily: 'var(--font-playfair)' }}
+              >
+                Syke World Hotel
+              </h4>
+              <p 
+                className="text-sm text-gray-600 leading-relaxed"
+                style={{ fontFamily: 'var(--font-inter)' }}
+              >
+                Luxury meets serenity. Experience comfort like never before.
+              </p>
+            </div>
 
-          {/* Social */}
-          <div>
-            <h4 className="text-lg mb-4">Follow Us</h4>
-            <div className="flex space-x-4">
-              <Link href="#" className="hover:text-primary">
-                <FaFacebook className="h-5 w-5" />
+            {/* Navigation */}
+            <div>
+              <h4 
+                className="text-sm uppercase tracking-widest text-[#1a1c1e] font-medium mb-6"
+                style={{ fontFamily: 'var(--font-inter)' }}
+              >
+                Navigation
+              </h4>
+              <ul className="space-y-3 text-sm">
+                <li>
+                  <Link href="/gallery" className="text-gray-600 hover:text-[#1a1c1e] transition-colors" style={{ fontFamily: 'var(--font-inter)' }}>
+                    Gallery
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/roomservice" className="text-stone-300 hover:text-white transition-colors" style={{ fontFamily: 'var(--font-inter)' }}>
+                    Services
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/kitchen" className="text-stone-300 hover:text-white transition-colors" style={{ fontFamily: 'var(--font-inter)' }}>
+                    Bar & Restaurant
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/about" className="text-stone-300 hover:text-white transition-colors" style={{ fontFamily: 'var(--font-inter)' }}>
+                    About
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            {/* Contact */}
+            <div>
+              <h4 
+                className="text-sm uppercase tracking-widest text-[#1a1c1e] font-medium mb-6"
+                style={{ fontFamily: 'var(--font-inter)' }}
+              >
+                Contact
+              </h4>
+              <div className="space-y-4 text-sm text-gray-600" style={{ fontFamily: 'var(--font-inter)' }}>
+                <div>
+                  <p className="text-[#1a1c1e] font-medium mb-1">Location</p>
+                  <p>123 Luxury Ave, Paradise City</p>
+                </div>
+                <div>
+                  <p className="text-white font-medium mb-1">Phone</p>
+                  <p>+256 770 000 787</p>
+                  <p>+256 770 000 787</p>
+                </div>
+                <div>
+                  <p className="text-white font-medium mb-1">Email</p>
+                  <p>info@sykeworld.com</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Visit Cards */}
+            <div>
+              {/* Paidha Card */}
+              <Link 
+                href="/visit"
+                className="block mb-4 group relative overflow-hidden rounded-lg p-4 backdrop-blur-md bg-black/2 border border-black/10 hover:bg-black/5 hover:border-black/20 transition-all duration-300"
+              >
+                <div className="relative z-10">
+                  <div className="flex items-center mb-2">
+                    <h3 
+                      className="text-sm font-semibold text-[#1a1c1e] uppercase tracking-wider"
+                      style={{ fontFamily: 'var(--font-inter)' }}
+                    >
+                      Discover
+                    </h3>
+                  </div>
+                  <p 
+                    className="text-2xl font-bold text-[#1a1c1e] mb-1 leading-tight"
+                    style={{ fontFamily: 'var(--font-playfair)' }}
+                  >
+                    Paidha
+                  </p>
+                  <p 
+                    className="text-xs text-gray-600 leading-relaxed mb-2"
+                    style={{ fontFamily: 'var(--font-inter)' }}
+                  >
+                    The Hidden Gem of West Nile
+                  </p>
+                  <div className="flex items-center justify-end">
+                    <svg className="w-4 h-4 text-black/60 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg>
+                  </div>
+                </div>
               </Link>
-              <Link href="#" className="hover:text-primary">
-                <FaX className="h-5 w-5" />
-              </Link>
-              <Link href="#" className="hover:text-primary">
-                <FaInstagram className="h-5 w-5" />
+
+              {/* Kitchen Card */}
+              <Link 
+                href="/kitchen"
+                className="block group relative overflow-hidden rounded-lg p-4 backdrop-blur-md bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-300"
+              >
+                <div className="relative z-10">
+                  <div className="flex items-center mb-2">
+                    <h3 
+                      className="text-sm font-semibold text-[#1a1c1e] uppercase tracking-wider"
+                      style={{ fontFamily: 'var(--font-inter)' }}
+                    >
+                      Experience
+                    </h3>
+                  </div>
+                  <p 
+                    className="text-2xl font-bold text-[#1a1c1e] mb-1 leading-tight"
+                    style={{ fontFamily: 'var(--font-playfair)' }}
+                  >
+                    Bar & Restaurant
+                  </p>
+                  <p 
+                    className="text-xs text-gray-600 leading-relaxed mb-2"
+                    style={{ fontFamily: 'var(--font-inter)' }}
+                  >
+                    Exquisite cuisine & crafted cocktails
+                  </p>
+                  <div className="flex items-center justify-end">
+                    <svg className="w-4 h-4 text-black/60 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg>
+                  </div>
+                </div>
               </Link>
             </div>
-            <div className="flex">
-  <Link href="/visit" className="mt-4">
-    <div className="bg-orange-600 text-white rounded-md px-4 py-2 flex items-center whitespace-nowrap">
-      Visit Paidha <FaChevronCircleRight className="ml-2" />
-    </div>
-  </Link>
-</div>
-</div>
+          </div>
+        </div>
+
+        {/* Social Icons */}
+        <div className="py-6 border-t border-black/10">
+          <div className="flex justify-center space-x-6">
+            <Link href="#" className="text-gray-600 hover:text-[#1a1c1e] transition-colors">
+              <FaFacebook className="h-5 w-5" />
+            </Link>
+            <Link href="#" className="text-stone-300 hover:text-white transition-colors">
+              <FaX className="h-5 w-5" />
+            </Link>
+            <Link href="#" className="text-stone-300 hover:text-white transition-colors">
+              <FaInstagram className="h-5 w-5" />
+            </Link>
+          </div>
+        </div>
+
+        {/* Copyright */}
+        <div className="py-6 border-t border-black/10">
+          <div className="text-center text-sm text-gray-500" style={{ fontFamily: 'var(--font-inter)' }}>
+            © {new Date().getFullYear()} Syke World Hotel. All rights reserved.
+          </div>
         </div>
       </Container>
+      <Toaster />
     </footer>
   );
 }

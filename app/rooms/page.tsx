@@ -2,48 +2,65 @@
 
 import Container from "../Home/Container";
 import { useState, useEffect, useMemo } from "react";
-import {
-  FaArrowLeft,
-  FaArrowRight,
-  FaStar,
-} from "react-icons/fa";
-import ReviewsColumn from "./reviews";
-import { CarouselProps, Room, RoomService } from "../types/types";
+import { FaArrowLeft, FaArrowRight, FaStar } from "react-icons/fa";
+import { Room, RoomService, CarouselProps } from "../types/types";
+import useSWR from "swr";
 
+// --------------------
+// Fetcher
+// --------------------
+const fetcher = (url: string) =>
+  fetch(url).then((res) => {
+    if (!res.ok) throw new Error("Failed to fetch");
+    return res.json();
+  });
 
+// --------------------
+// Carousel
+// --------------------
 function Carousel({ images }: CarouselProps) {
   const [current, setCurrent] = useState(0);
 
   useEffect(() => {
+    if (!images || images.length === 0) return;
     const interval = setInterval(() => {
       setCurrent((prev) => (prev + 1) % images.length);
     }, 4000);
     return () => clearInterval(interval);
-  }, [images.length]);
+  }, [images]);
+
+  if (!images || images.length === 0)
+    return (
+      <div className="w-full h-64 md:h-96 border-l border-r border-black/10 flex items-center justify-center text-gray-500">
+        No images
+      </div>
+    );
 
   return (
-    <div className="relative w-full h-64 md:h-96 overflow-hidden rounded-xl shadow group">
+    <div className="relative w-full h-64 md:h-96 overflow-hidden border-l border-r border-black/10 group">
       {images.map((img, index) => (
         <img
           key={index}
           src={img}
-          alt="Room"
+          alt={`Room image ${index + 1}`}
           className={`absolute inset-0 w-full h-full object-cover transition-all duration-[1200ms] ease-[cubic-bezier(.4,0,.2,1)] ${
-            index === current ? "opacity-100 scale-100 translate-x-0" : "opacity-0 scale-105 translate-x-5"
+            index === current
+              ? "opacity-100 scale-100 translate-x-0"
+              : "opacity-0 scale-105 translate-x-5"
           }`}
         />
       ))}
 
       <button
         onClick={() => setCurrent((p) => (p - 1 + images.length) % images.length)}
-        className="absolute opacity-0 group-hover:opacity-100 transition-all top-1/2 left-4 -translate-y-1/2 bg-white p-2 rounded-full shadow"
+        className="absolute opacity-0 group-hover:opacity-100 transition-all top-1/2 left-4 -translate-y-1/2 bg-white/90 backdrop-blur-sm text-[#1a1c1e] p-2 rounded-full hover:bg-white"
       >
         <FaArrowLeft />
       </button>
 
       <button
         onClick={() => setCurrent((p) => (p + 1) % images.length)}
-        className="absolute opacity-0 group-hover:opacity-100 transition-all top-1/2 right-4 -translate-y-1/2 bg-white p-2 rounded-full shadow"
+        className="absolute opacity-0 group-hover:opacity-100 transition-all top-1/2 right-4 -translate-y-1/2 bg-white/90 backdrop-blur-sm text-[#1a1c1e] p-2 rounded-full hover:bg-white"
       >
         <FaArrowRight />
       </button>
@@ -51,44 +68,104 @@ function Carousel({ images }: CarouselProps) {
   );
 }
 
+// --------------------
+// Page
+// --------------------
 export default function Page() {
-  const [rooms, setRooms] = useState<Room[]>([]);
-  const [loading, setLoading] = useState(true);
   const [sortPrice, setSortPrice] = useState<"none" | "low" | "high">("none");
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [allServices, setAllServices] = useState<RoomService[]>([]);
-  const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL
 
+  // Rooms via Server Action
+  const [roomsData, setRoomsData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<any>(null);
 
-  // Fetch rooms
   useEffect(() => {
-    setLoading(true);
-    fetch(`${BACKEND_URL}/api/rooms/`)
-      .then((res) => res.json())
-      .then((data) => {
-        const formatted = data.map((r: any) => ({
-          ...r,
-          images: (r.images || []).map((img: any) => img.image),
-          price: `UGX ${r.room_type?.base_price ?? 0}/night`,
-          priceValue: r.room_type?.base_price ?? 0,
-          services: r.room_type?.services || [],
-          reviews: { stars: 4.5, count: 10 },
-        }));
-        setRooms(formatted);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error(err);
-        setLoading(false);
-      });
+    import("@/lib/actions/bookings").then(({ getAllRooms }) => {
+      getAllRooms()
+        .then((result) => {
+          if (result.success) {
+            setRoomsData({ rooms: result.rooms || [] });
+          } else {
+            console.error("getAllRooms error:", result.error, result.details);
+            setError(new Error(result.error || "Failed to load rooms"));
+          }
+        })
+        .catch((err) => {
+          console.error("getAllRooms catch error:", err);
+          setError(err);
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    }).catch((importError) => {
+      console.error("Failed to import getAllRooms:", importError);
+      setError(importError);
+      setIsLoading(false);
+    });
   }, []);
 
-  // Fetch services dynamically
+  // Map API → Room[]
+  const rooms: Room[] = useMemo(() => {
+    if (!roomsData?.rooms) return [];
+
+    return roomsData.rooms.map((r: any) => ({
+      id: r.id.toString(),
+      roomNumber: r.roomNumber,
+      floor: r.floor,
+      status: r.status,
+      roomType: {
+        id: Number(r.roomType.id),
+        name: r.roomType.name,
+        description: r.roomType.description || "",
+        basePrice: Number(r.roomType.basePrice),
+        maxGuests: r.roomType.maxGuests,
+        services: (r.roomType.services || []).map((s: any) => ({
+          id: Number(s.id),
+          name: s.name,
+          description: s.description || "",
+          icon: s.icon || undefined,
+        })),
+      },
+      images: (r.images || []).map((img: any) => ({
+        id: Number(img.id),
+        image: img.image,
+        caption: img.caption || "",
+      })),
+      services: (r.services || []).map((s: any) => ({
+        id: Number(s.id),
+        name: s.name,
+        description: s.description || "",
+        icon: s.icon || undefined,
+      })),
+      reviews: (r.reviews || []).map((rev: any, idx: number) => ({
+        id: rev.id?.toString() || `review-${r.id}-${idx}`,
+        user: rev.user || rev.userId || "Anonymous",
+        message: rev.comment || "",
+        stars: rev.stars ?? 5,
+        avatar: rev.avatar || undefined,
+        created_at: rev.created || new Date().toISOString(),
+      })),
+    }));
+  }, [roomsData]);
+
+  // Services for filters
   useEffect(() => {
-    fetch(`${BACKEND_URL}/api/rooms/services/`)
-      .then((res) => res.json())
-      .then((data) => setAllServices(data))
-      .catch(console.error);
+    import("@/lib/actions/bookings").then(({ getAllServices }) => {
+      getAllServices().then((result) => {
+        if (result.success && result.services) {
+          setAllServices(
+            (result.services || []).map((s: any) => ({
+              id: Number(s.id),
+              name: s.name,
+              description: s.description || "",
+              icon: s.icon || undefined,
+            }))
+          );
+        }
+      }).catch(console.error);
+    });
   }, []);
 
   const toggleService = (s: string) => {
@@ -97,55 +174,151 @@ export default function Page() {
     );
   };
 
+  // Filter & sort
   const filteredRooms = useMemo(() => {
     let r = [...rooms];
+
     if (selectedServices.length > 0) {
       r = r.filter((room) =>
-        selectedServices.every((s) => room.services.map((svc) => svc.name).includes(s))
+        selectedServices.every((s) =>
+          room.services?.map((svc) => svc.name).includes(s)
+        )
       );
     }
-    if (sortPrice === "low") r.sort((a, b) => a.priceValue - b.priceValue);
-    if (sortPrice === "high") r.sort((a, b) => b.priceValue - a.priceValue);
+
+    if (sortPrice === "low")
+      r.sort((a, b) => a.roomType.basePrice - b.roomType.basePrice);
+
+    if (sortPrice === "high")
+      r.sort((a, b) => b.roomType.basePrice - a.roomType.basePrice);
+
     return r;
   }, [rooms, sortPrice, selectedServices]);
 
-  if (loading) return <div className="p-10 text-center">Loading rooms...</div>;
+  // Early returns must come AFTER all hooks
+  if (isLoading) {
+    return <div className="p-10 text-center text-[#1a1c1e] bg-[#fafafa] min-h-screen flex items-center justify-center" style={{ fontFamily: 'var(--font-inter)' }}>Loading rooms...</div>;
+  }
+
+  if (error) {
+    return (
+      <div className="p-10 text-center bg-[#fafafa] min-h-screen flex flex-col items-center justify-center">
+        <div className="text-red-600 font-semibold mb-2" style={{ fontFamily: 'var(--font-inter)' }}>Failed to load rooms</div>
+        <div className="text-sm text-gray-500 mb-4" style={{ fontFamily: 'var(--font-inter)' }}>
+          {error instanceof Error ? error.message : "An error occurred"}
+        </div>
+        <button
+          onClick={() => {
+            setError(null);
+            setIsLoading(true);
+            import("@/lib/actions/bookings").then(({ getAllRooms }) => {
+              getAllRooms()
+                .then((result) => {
+                  if (result.success) {
+                    setRoomsData({ rooms: result.rooms || [] });
+                  } else {
+                    setError(new Error(result.error || "Failed to load rooms"));
+                  }
+                })
+                .catch((err) => {
+                  setError(err);
+                })
+                .finally(() => {
+                  setIsLoading(false);
+                });
+            });
+          }}
+          className="px-4 py-3 bg-amber-600 text-white hover:bg-amber-700 transition uppercase tracking-wide"
+          style={{ fontFamily: 'var(--font-inter)' }}
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
 
   return (
-    <div className="py-20 bg-gray-100 min-h-screen">
+    <div className="py-24 md:py-32 bg-[#fafafa] min-h-screen">
       <Container>
-        <div className="flex flex-col md:flex-row justify-between gap-6">
-          <div className="text-3xl">Rooms</div>
-          <div className="md:w-1/2 text-gray-600">
-            Choose your perfect stay — luxury, comfort, family-friendly, and more.
+        <div className="text-center mb-16">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="h-px w-12 bg-black/20"></div>
+            <p className="text-xs uppercase tracking-widest text-black/60 font-medium" style={{ fontFamily: 'var(--font-inter)' }}>
+              Accommodations
+            </p>
+            <div className="h-px w-12 bg-white/50"></div>
           </div>
+          <h1 
+            className="text-4xl md:text-5xl font-bold text-[#1a1c1e] mb-4"
+            style={{ fontFamily: 'var(--font-playfair)' }}
+          >
+            Our Rooms
+          </h1>
+          <p 
+            className="text-sm md:text-base text-gray-600 max-w-3xl mx-auto leading-relaxed"
+            style={{ fontFamily: 'var(--font-inter)' }}
+          >
+            Choose your perfect stay — luxury, comfort, family-friendly, and more. Each room is thoughtfully designed for your comfort.
+          </p>
         </div>
 
         <div className="mt-16 grid grid-cols-1 md:grid-cols-4 gap-8">
-          <div className="bg-white p-5 rounded-xl flex flex-col justify-between h-full">
+          {/* Filters */}
+          <div className="p-6 border-l border-r border-black/10 flex flex-col justify-between h-full">
             <div>
-              <h3 className="font-semibold text-xl mb-4">Filters</h3>
-
-              <div className="mb-4">
-                <label className="font-medium">Sort by Price</label>
-                <select
-                  className="w-full border p-2 rounded mt-1"
-                  value={sortPrice}
-                  onChange={(e) => setSortPrice(e.target.value as any)}
+              <div className="mb-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="h-px w-12 bg-white/50"></div>
+                  <p className="text-xs uppercase tracking-widest text-white/70 font-medium" style={{ fontFamily: 'var(--font-inter)' }}>
+                    Filter
+                  </p>
+                  <div className="h-px w-12 bg-white/50"></div>
+                </div>
+                <h3 
+                  className="text-2xl md:text-3xl font-bold text-[#1a1c1e] mb-6"
+                  style={{ fontFamily: 'var(--font-playfair)' }}
                 >
-                  <option value="none">None</option>
-                  <option value="low">Lowest First</option>
-                  <option value="high">Highest First</option>
+                  Filters
+                </h3>
+              </div>
+
+              <div className="mb-6">
+                <label 
+                  className="block text-xs uppercase tracking-widest text-black/60 font-medium mb-2"
+                  style={{ fontFamily: 'var(--font-inter)' }}
+                >
+                  Sort by Price
+                </label>
+                <select
+                  className="w-full bg-transparent border-b border-gray-400/50 px-0 py-3 text-[#1a1c1e] focus:outline-none focus:border-b-amber-600 transition-all"
+                  value={sortPrice}
+                  onChange={(e) =>
+                    setSortPrice(e.target.value as "none" | "low" | "high")
+                  }
+                  style={{ fontFamily: 'var(--font-inter)' }}
+                >
+                  <option value="none" className="bg-white">No sorting</option>
+                  <option value="low" className="bg-white">Lowest First</option>
+                  <option value="high" className="bg-white">Highest First</option>
                 </select>
               </div>
 
               <div>
-                <h4 className="font-medium mb-2">Services</h4>
-                {allServices.map((s) => (
-                  <label key={s.id} className="block text-sm capitalize mb-1">
+                <h4 
+                  className="text-xs uppercase tracking-widest text-white/70 font-medium mb-3"
+                  style={{ fontFamily: 'var(--font-inter)' }}
+                >
+                  Services
+                </h4>
+                {allServices.map((s, index) => (
+                  <label 
+                    key={index} 
+                    className="block text-sm text-gray-600 capitalize mb-2 cursor-pointer"
+                    style={{ fontFamily: 'var(--font-inter)' }}
+                  >
                     <input
                       type="checkbox"
-                      className="mr-2"
+                      className="mr-2 accent-amber-600"
                       checked={selectedServices.includes(s.name)}
                       onChange={() => toggleService(s.name)}
                     />
@@ -154,48 +327,103 @@ export default function Page() {
                 ))}
               </div>
             </div>
-            <div className="mt-5">
-              <ReviewsColumn />
-            </div>
+
           </div>
 
+          {/* Rooms */}
           <div className="md:col-span-3 space-y-20">
             {filteredRooms.length === 0 && (
-              <div className="p-6 bg-white rounded shadow text-center">
+              <div className="p-6 border-l border-r border-black/10 text-center text-gray-600" style={{ fontFamily: 'var(--font-inter)' }}>
                 No rooms match your filters.
               </div>
             )}
 
             {filteredRooms.map((room, index) => (
-              <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
-                <Carousel images={room.images} />
+              <div
+                key={index}
+                className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start p-8 border-l border-r border-black/10 hover:border-black/20 transition-all"
+              >
+                <Carousel
+                  images={room.images?.map((img) => img.image) || []}
+                />
 
-                <div className="space-y-4">
-                  <h2 className="text-2xl font-semibold">{room.room_type?.name}</h2>
-                  <div className="text-lg font-medium text-orange-600">{room.price}</div>
-
-                  <div className="flex items-center gap-1 text-yellow-500">
-                    {Array.from({ length: Math.round(room.reviews.stars) }).map((_, i) => (
-                      <FaStar key={i} />
-                    ))}
-                    <span className="ml-2 text-sm text-gray-500">
-                      {room.reviews.stars} • {room.reviews.count} reviews
-                    </span>
+                <div className="space-y-6">
+                  <div>
+                    <h2 
+                      className="text-4xl md:text-5xl font-bold text-[#1a1c1e] mb-2"
+                      style={{ fontFamily: 'var(--font-playfair)' }}
+                    >
+                      {room.roomType?.name}
+                    </h2>
+                    <div 
+                      className="text-2xl font-bold text-amber-600"
+                      style={{ fontFamily: 'var(--font-inter)' }}
+                    >
+                      UGX {room.roomType?.basePrice?.toLocaleString()}/night
+                    </div>
                   </div>
 
-                  <p className="text-gray-600">{room.room_type?.description}</p>
+                  {/* Reviews */}
+                  <div className="flex items-center gap-1">
+                    {(() => {
+                      const reviews = room.reviews || [];
+                      const avgStars =
+                        reviews.length > 0
+                          ? reviews.reduce(
+                              (sum, r) => sum + (r.stars ?? 5),
+                              0
+                            ) / reviews.length
+                          : 0;
 
-                  <div className="flex gap-3">
-                    {room.services.map((service, idx) => (
-                      <div key={idx} className="">
-                        <span className="text-gray-800 bg-gray-300 rounded py-1 px-2">{service.name}</span>
-                      </div>
+                      return (
+                        <>
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <FaStar
+                              key={i}
+                              className={
+                                i < Math.round(avgStars)
+                                  ? "text-amber-500"
+                                  : "text-gray-400"
+                              }
+                            />
+                          ))}
+                          <span className="ml-2 text-sm text-gray-500" style={{ fontFamily: 'var(--font-inter)' }}>
+                            {reviews.length > 0
+                              ? `${avgStars.toFixed(1)} • ${
+                                  reviews.length
+                                } review${reviews.length > 1 ? "s" : ""}`
+                              : "No reviews"}
+                          </span>
+                        </>
+                      );
+                    })()}
+                  </div>
+
+                  <p 
+                    className="text-gray-600 leading-relaxed"
+                    style={{ fontFamily: 'var(--font-inter)' }}
+                  >
+                    {room.roomType?.description}
+                  </p>
+
+                  <div className="flex gap-3 flex-wrap">
+                    {room.services?.map((service, index) => (
+                      <span
+                        key={index}
+                        className="text-[#1a1c1e] bg-black/5 border border-black/20 py-1 px-3 text-sm"
+                        style={{ fontFamily: 'var(--font-inter)' }}
+                      >
+                        {service.name}
+                      </span>
                     ))}
                   </div>
 
                   <a
-                    href={`/booking?room=${encodeURIComponent(room.room_type?.name || "")}`}
-                    className="inline-block mt-4 bg-orange-600 text-white px-5 py-2 rounded-lg shadow hover:bg-orange-600 transition"
+                    href={`/booking?room=${encodeURIComponent(
+                      room.roomType?.name || ""
+                    )}`}
+                    className="inline-block mt-4 bg-amber-600 hover:bg-amber-700 text-white px-6 py-3 text-sm font-medium tracking-wide uppercase transition"
+                    style={{ fontFamily: 'var(--font-inter)' }}
                   >
                     Book This Room
                   </a>

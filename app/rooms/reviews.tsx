@@ -1,48 +1,61 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { getAllRooms } from "@/lib/actions/bookings";
 
 interface Review {
-  id: number;
+  id: string;
   user: string;
   message: string;
   stars: number;
   avatar?: string;
+  createdAt?: string;
 }
 
 export default function ReviewsColumn() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
-  const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL
+  const [error, setError] = useState<any>(null);
 
   useEffect(() => {
-    async function fetchReviews() {
-      try {
-        const res = await fetch(`${BACKEND_URL}/api/rooms/reviews/`); // adjust your endpoint
-        if (!res.ok) throw new Error("Failed to fetch reviews");
-        const data = await res.json();
-
-        // format data if needed
-        const formatted = data.map((r: any) => ({
-          id: r.id,
-          user: r.user.username || r.user.email, // assuming user object
-          message: r.comment,
-          stars: r.stars,
-          avatar: r.user.avatar || undefined, // if you store avatars
-        }));
-
-        setReviews(formatted);
-      } catch (err) {
-        console.error(err);
-      } finally {
+    getAllRooms()
+      .then((result) => {
+        if (result.success && result.rooms) {
+          // Flatten all reviews from all rooms
+          const allReviews = result.rooms.flatMap((room: any) =>
+            (room.reviews || []).map((rev: any) => ({
+              id: rev.id || `review-${room.id}-${rev.stars}`,
+              user: rev.user?.firstName && rev.user?.lastName
+                ? `${rev.user.firstName} ${rev.user.lastName}`
+                : rev.user?.email || "Anonymous",
+              message: rev.comment || "",
+              stars: rev.stars ?? 5,
+              avatar: rev.user?.avatar || undefined,
+              createdAt: rev.created || rev.createdAt,
+            }))
+          );
+          // Sort by newest first and take top 10
+          allReviews.sort((a, b) => {
+            const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+            const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+            return dateB - dateA;
+          });
+          setReviews(allReviews.slice(0, 10));
+        } else {
+          setError(new Error(result.error || "Failed to load reviews"));
+        }
+      })
+      .catch((err) => {
+        setError(err);
+      })
+      .finally(() => {
         setLoading(false);
-      }
-    }
-
-    fetchReviews();
+      });
   }, []);
 
   if (loading) return <div className="p-4 text-center">Loading reviews...</div>;
+  if (error) return <div className="p-4 text-center text-red-500">Failed to load reviews.</div>;
+
   if (reviews.length === 0)
     return <div className="p-4 text-center">No reviews yet.</div>;
 
@@ -51,10 +64,7 @@ export default function ReviewsColumn() {
       <h2 className="text-xl font-semibold mb-4 text-gray-800">Client Reviews</h2>
       <div className="flex flex-col space-y-4">
         {reviews.map((review) => (
-          <div
-            key={review.id}
-            className="flex flex-col bg-gray-50 p-4 rounded-lg "
-          >
+          <div key={review.id} className="flex flex-col bg-gray-50 p-4 rounded-lg">
             <div className="flex items-center gap-3 mb-2">
               {review.avatar && (
                 <img
@@ -67,9 +77,7 @@ export default function ReviewsColumn() {
                 <p className="font-medium text-gray-800">{review.user}</p>
                 <p className="text-yellow-500 text-sm">
                   {"★".repeat(review.stars)}{" "}
-                  <span className="text-gray-400">
-                    {"★".repeat(5 - review.stars)}
-                  </span>
+                  <span className="text-gray-400">{"★".repeat(5 - review.stars)}</span>
                 </p>
               </div>
             </div>
