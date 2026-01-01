@@ -433,7 +433,7 @@ export default function DashboardHome() {
                   tickFormatter={(value) => `UGX ${(value / 1000).toFixed(0)}K`}
                 />
                 <Tooltip
-                  formatter={(value: number) => [`UGX ${value.toLocaleString()}`, "Earnings"]}
+                  formatter={(value: number | undefined) => [`UGX ${(value || 0).toLocaleString()}`, "Earnings"]}
                   labelStyle={{ color: "#000" }}
                 />
                 <Legend />

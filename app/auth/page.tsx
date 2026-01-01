@@ -143,11 +143,11 @@ export default function AuthTabs() {
       // Use Next.js server action instead of Django API
       const result = await registerGuest({
         email: parsed.data.email,
-        username: parsed.data.email.split("@")[0], // Use email prefix as username
         password: parsed.data.password,
         firstName,
         lastName,
         phone: parsed.data.phone,
+        userType: "guest" as const,
       });
 
       if (result.error) {

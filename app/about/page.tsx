@@ -38,7 +38,7 @@ export default function AboutPage() {
                 stars: review.stars || 5,
                 avatar: review.user?.profilePicture && review.user.profilePicture !== "default.jpg" 
                   ? review.user.profilePicture 
-                  : review.user?.image || review.user?.avatar || review.user?.email || undefined,
+                  : review.user?.email || undefined,
                 created_at: review.created.toDateString()
               });
             }

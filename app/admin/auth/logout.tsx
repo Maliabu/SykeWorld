@@ -15,23 +15,20 @@ export default function Logout(){
             setLoading(true)
             const result = await logout()
             
-            if(result.success){
-                // Clear any localStorage items
-                window.localStorage.removeItem("token")
-                window.localStorage.removeItem("id")
-                window.localStorage.removeItem("username")
-                window.localStorage.removeItem("name")
-                window.localStorage.removeItem("email")
-                window.localStorage.removeItem("userType")
-                window.localStorage.removeItem("access")
-                window.localStorage.removeItem("refresh")
-                
-                // Redirect to admin login
-                router.push("/admin")
-                router.refresh()
-            } else {
-                toast.error(result.error || "Failed to logout")
-            }
+            // Logout always succeeds, just clear localStorage and redirect
+            // Clear any localStorage items
+            window.localStorage.removeItem("token")
+            window.localStorage.removeItem("id")
+            window.localStorage.removeItem("username")
+            window.localStorage.removeItem("name")
+            window.localStorage.removeItem("email")
+            window.localStorage.removeItem("userType")
+            window.localStorage.removeItem("access")
+            window.localStorage.removeItem("refresh")
+            
+            // Redirect to admin login
+            router.push("/admin")
+            router.refresh()
         } catch (error: any) {
             console.error("Logout error:", error)
             toast.error("An error occurred during logout")

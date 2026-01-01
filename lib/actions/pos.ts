@@ -21,7 +21,7 @@ import {
 } from "@/lib/validations/pos";
 import { eq, and, desc, asc } from "drizzle-orm";
 import { users } from "@/lib/db/schema/users";
-import { requireAuth } from "@/lib/auth/session";
+import { requireAuth, requireStaff } from "@/lib/auth/session";
 import { requirePermission } from "@/lib/auth/permissions";
 import { logActivity } from "@/lib/utils/activityLog";
 

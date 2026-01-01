@@ -38,8 +38,8 @@ export const createRoomTypeSchema = z.object({
 export const createRoomSchema = z.object({
   roomNumber: z.string().min(1, "Room number is required"),
   roomTypeId: z.string().min(1, "Room type is required"),
-  floor: z.number().int().positive().default(1),
-  status: z.enum(["available", "occupied", "cleaning", "maintenance", "unavailable"]).default("available"),
+  floor: z.number().int().positive(),
+  status: z.enum(["available", "occupied", "cleaning", "maintenance", "unavailable"]),
 });
 
 export const createBookingSchema = z.object({

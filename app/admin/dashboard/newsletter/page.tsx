@@ -54,7 +54,6 @@ export default function NewsletterPage() {
         class: "prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto focus:outline-none min-h-[400px] p-4",
       },
     },
-    enabled: mounted, // Only enable editor after mount
   });
 
   useEffect(() => {

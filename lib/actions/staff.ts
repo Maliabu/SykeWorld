@@ -15,7 +15,7 @@ import {
   createTaskSchema,
 } from "@/lib/validations/staff";
 import { eq, inArray } from "drizzle-orm";
-import { requireStaff } from "@/lib/auth/session";
+import { requireStaff, requireAuth } from "@/lib/auth/session";
 
 export async function createRole(data: unknown) {
   try {
@@ -460,9 +460,15 @@ export async function updateTask(taskId: string, data: unknown) {
     await requireStaff();
     const validated = createTaskSchema.partial().parse(data);
 
+    // Convert dueDate to string if it's a Date object
+    const updateData = {
+      ...validated,
+      dueDate: validated.dueDate instanceof Date ? validated.dueDate.toISOString() : validated.dueDate,
+    };
+
     const [updatedTask] = await db
       .update(staffTasks)
-      .set(validated)
+      .set(updateData)
       .where(eq(staffTasks.id, taskId))
       .returning();
 

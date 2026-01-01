@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { bookings, rooms, roomTypes } from "@/lib/db/schema";
 import { payments, transactions } from "@/lib/db/schema/payments";
 import { users } from "@/lib/db/schema/users";
-import { eq } from "drizzle-orm";
+import { eq, or } from "drizzle-orm";
 // Get Pesapal Access Token (duplicated here to avoid circular dependencies)
 async function getPesapalToken(): Promise<string> {
   const PESAPAL_BASE_URL = process.env.PESAPAL_BASE_URL || "https://pay.pesapal.com/v3";
@@ -130,15 +130,19 @@ export async function POST(req: NextRequest) {
       .update(payments)
       .set({
         status: paymentStatus === "COMPLETED" ? "COMPLETED" : paymentStatus,
-        updatedAt: new Date(),
       })
       .where(eq(payments.id, payment.id));
 
-    // Update transaction record if exists
+    // Update transaction record if exists (find by merchantReference which should match OrderMerchantReference or by pesapalReference)
     const [transaction] = await db
       .select()
       .from(transactions)
-      .where(eq(transactions.paymentId, payment.id))
+      .where(
+        or(
+          eq(transactions.merchantReference, OrderMerchantReference),
+          eq(transactions.pesapalReference, OrderTrackingId)
+        )
+      )
       .limit(1);
 
     if (transaction) {
@@ -146,8 +150,7 @@ export async function POST(req: NextRequest) {
         .update(transactions)
         .set({
           status: paymentStatus,
-          trackingId: OrderTrackingId,
-          updatedAt: new Date(),
+          updated: new Date(),
         })
         .where(eq(transactions.id, transaction.id));
     }
@@ -207,7 +210,7 @@ export async function POST(req: NextRequest) {
             .where(eq(users.id, booking.userId))
             .limit(1);
 
-          if (customer?.email && room && roomType) {
+          if (customer?.email && room && roomType && booking.checkIn && booking.checkOut) {
             const nights = Math.ceil(
               (new Date(booking.checkOut).getTime() - new Date(booking.checkIn).getTime()) /
                 (1000 * 60 * 60 * 24)

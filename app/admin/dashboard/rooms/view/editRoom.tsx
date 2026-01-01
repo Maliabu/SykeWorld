@@ -81,7 +81,11 @@ export default function EditRoom(props: { id: string, submitId: string }) {
       
       if (result.success && result.room) {
         setRoomData(result.room);
-        setExistingImages(result.room.images || []);
+        setExistingImages((result.room.images || []).map((img: any) => ({
+          id: img.id,
+          image: img.image,
+          caption: img.caption ?? undefined,
+        })));
         
         // Load reviews
         const reviewsResult = await getRoomReviews(props.id);

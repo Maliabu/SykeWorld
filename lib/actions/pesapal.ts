@@ -334,6 +334,9 @@ export async function initiatePesapalPayment(data: unknown) {
     // Create payment record
     let payment;
     try {
+      if (!session) {
+        return { error: "Unauthorized" };
+      }
       [payment] = await db
         .insert(payments)
         .values({
@@ -477,7 +480,6 @@ export async function verifyPesapalTransaction(trackingId: string) {
             const [customer] = await db
               .select({
                 email: users.email,
-                name: users.name,
                 firstName: users.firstName,
                 lastName: users.lastName,
               })
@@ -486,7 +488,7 @@ export async function verifyPesapalTransaction(trackingId: string) {
               .limit(1);
 
             if (customer && customer.email) {
-              const customerName = customer.name || 
+              const customerName = 
                 (customer.firstName && customer.lastName 
                   ? `${customer.firstName} ${customer.lastName}` 
                   : customer.email.split("@")[0]);

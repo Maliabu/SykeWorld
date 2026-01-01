@@ -623,6 +623,7 @@ export async function getRoomReviews(roomId: string) {
           firstName: users.firstName,
           lastName: users.lastName,
           email: users.email,
+          profilePicture: users.profilePicture,
         },
       })
       .from(roomReviews)

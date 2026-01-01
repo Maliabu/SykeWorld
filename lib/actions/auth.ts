@@ -4,16 +4,16 @@ import { db } from "@/lib/db";
 import { passwordResetTokens, users } from "@/lib/db/schema/users";
 import { hashPassword, verifyPassword, signToken, signRefreshToken } from "@/lib/auth/utils";
 import { registerSchema, loginSchema, googleLoginSchema } from "@/lib/validations/auth";
+import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { cookies } from "next/headers";
-import { User } from "@/app/types/types";
 // app/actions/sendResetEmail.ts
 import { checkEmail, sendHtmlEmail } from "@/server/fetch.actions";
 import { generateResetToken, hashToken } from "@/server/token";
 import { logActivity } from "@/lib/utils/activityLog";
 import { getSession } from "@/lib/auth/session";
 
-export async function registerGuest(data: User) {
+export async function registerGuest(data: z.infer<typeof registerSchema>) {
   try {
     const validated = registerSchema.parse({ ...data, userType: "guest" });
     
@@ -119,7 +119,7 @@ export async function dbInsertToken(userId: string, tokenHash: string) {
   return !!result;
 }
 
-export async function registerStaff(data: User) {
+export async function registerStaff(data: z.infer<typeof registerSchema>) {
   try {
     const validated = registerSchema.parse({ ...data, userType: "staff" });
     

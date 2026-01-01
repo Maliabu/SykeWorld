@@ -25,7 +25,7 @@ export async function createContactMessage(data: unknown) {
         id: message.id,
         name: message.name,
         email: message.email,
-        createdAt: message.created,
+        createdAt: message.createdAt,
       },
     };
   } catch (error: any) {
@@ -43,7 +43,7 @@ export async function getAllContactMessages() {
     const messages = await db
       .select()
       .from(contactMessages)
-      .orderBy(desc(contactMessages.created));
+      .orderBy(desc(contactMessages.createdAt));
 
     return {
       success: true,
@@ -52,7 +52,7 @@ export async function getAllContactMessages() {
         name: msg.name,
         email: msg.email,
         message: msg.message,
-        createdAt: msg.created,
+        createdAt: msg.createdAt,
       })),
     };
   } catch (error: any) {

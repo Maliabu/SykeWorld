@@ -80,13 +80,13 @@ export default function Header(){
               getUserTaskCount(),
             ]);
             
-            if (notifResult.success) {
+            if (notifResult.success && notifResult.count !== undefined) {
               setNotificationCount(notifResult.count);
             }
-            if (ticketResult.success) {
+            if (ticketResult.success && ticketResult.count !== undefined) {
               setTicketCount(ticketResult.count);
             }
-            if (taskResult.success) {
+            if (taskResult.success && taskResult.count !== undefined) {
               setTaskCount(taskResult.count);
             }
           } catch (error) {

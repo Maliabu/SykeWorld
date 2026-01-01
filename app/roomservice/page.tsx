@@ -47,6 +47,12 @@ export default function ServicesPage() {
                 description: r.roomType.description || "",
                 basePrice: Number(r.roomType.basePrice),
                 maxGuests: r.roomType.maxGuests,
+                services: (r.services || []).map((s: any) => ({
+                  id: Number(s.id),
+                  name: s.name,
+                  description: s.description || "",
+                  icon: s.icon || undefined,
+                })),
               },
               images: (r.images || []).map((img: any) => ({
                 id: Number(img.id),
