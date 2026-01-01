@@ -17,7 +17,6 @@ import {
   Calendar, 
   DollarSign, 
   TrendingUp, 
-  Users, 
   Bed,
   CheckCircle2,
   Clock,
@@ -27,7 +26,6 @@ import {
   Mail,
   LineChart,
   Mailbox,
-  BarChart3,
   Activity,
   Bell,
   ListChecks
@@ -68,7 +66,6 @@ export default function DashboardHome() {
   const [taskCount, setTaskCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [timeGradient, setTimeGradient] = useState("");
   const [textColor, setTextColor] = useState("text-gray-900 dark:text-white");
 
   useEffect(() => {
@@ -79,35 +76,8 @@ export default function DashboardHome() {
       setCurrentTime(new Date());
     }, 1000);
 
-    // Set initial gradient
-    updateTimeGradient();
-
     return () => clearInterval(timeInterval);
   }, []);
-
-  useEffect(() => {
-    updateTimeGradient();
-  }, [currentTime]);
-
-  const updateTimeGradient = () => {
-    const hour = currentTime.getHours();
-    
-    // Morning: 6am - 12pm (bright, warm gradient)
-    if (hour >= 6 && hour < 12) {
-      setTimeGradient("from-orange-100 via-yellow-50 to-orange-50 dark:from-orange-950 dark:via-yellow-950 dark:to-orange-900");
-      setTextColor("text-gray-900 dark:text-white");
-    }
-    // Afternoon: 12pm - 6pm (bright, vibrant gradient)
-    else if (hour >= 12 && hour < 18) {
-      setTimeGradient("from-orange-200 via-orange-100 to-yellow-100 dark:from-orange-900 dark:via-orange-800 dark:to-yellow-900");
-      setTextColor("text-gray-900 dark:text-white");
-    }
-    // Evening/Night: 6pm - 6am (warm, sunset gradient)
-    else {
-      setTimeGradient("from-orange-300 via-red-200 to-purple-200 dark:from-orange-800 dark:via-red-900 dark:to-purple-900");
-      setTextColor("text-gray-900 dark:text-white");
-    }
-  };
 
   const loadStats = async () => {
     try {

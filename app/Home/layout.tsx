@@ -8,9 +8,7 @@ export default function WebsiteLayout({
   }>) {
     return (
         <div>
-          <Navbar />
           {children}
-          <Footer/>
       </div>
     );
   }

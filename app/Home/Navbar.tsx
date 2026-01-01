@@ -7,7 +7,7 @@ import { HiOutlineMenu, HiOutlineX } from "react-icons/hi";
 import { useSession, signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { User } from "lucide-react";
+import { User, Mountain } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import Container from "./Container";
 
@@ -65,64 +65,73 @@ export default function Navbar() {
         <Container>
           {/* Main Navbar */}
           <div className="relative flex items-center justify-between h-16 border-b border-black/10">
-            {/* Left Section: MENU (with icon) + Separator + Language */}
+            {/* Left Section: MENU (with icon) + Separator + Visit Paidha */}
             <div className="flex items-center">
               <button
                 onClick={() => setSidebarOpen(true)}
-                className="flex items-center gap-2 text-gray-600 hover:text-[#1a1c1e] transition-colors px-4"
+                className="flex items-center gap-2 text-gray-600 hover:text-[#1a1c1e] transition-colors px-2 md:px-4"
                 style={{ fontFamily: 'var(--font-inter)' }}
               >
                 <HiOutlineMenu className="w-5 h-5" />
-                <span className="text-sm uppercase tracking-wide">MENU</span>
+                <span className="hidden sm:inline text-sm uppercase tracking-wide">MENU</span>
               </button>
               
               {/* Vertical Separator */}
-              <div className="h-4 w-px bg-gray-400/50 mx-2"></div>
+              <div className="hidden md:block h-4 w-px bg-gray-400/50 mx-2"></div>
               
-              {/* Language Selector */}
-              <div className="text-gray-600 text-sm uppercase px-4" style={{ fontFamily: 'var(--font-inter)' }}>
-                <span className="text-[#1a1c1e] cursor-pointer">EN</span>
-                <span className="mx-1">/</span>
-                <span className="cursor-pointer hover:text-[#1a1c1e]">FR</span>
-              </div>
+              {/* Visit Paidha Link */}
+              <Link
+                href="/visit"
+                className="flex items-center gap-2 text-gray-600 text-sm uppercase tracking-wide hover:text-[#1a1c1e] transition-colors px-2 md:px-4"
+                style={{ fontFamily: 'var(--font-inter)' }}
+              >
+                <Mountain className="w-4 h-4" />
+                <span className="hidden sm:inline">Visit Paidha</span>
+              </Link>
             </div>
 
-            {/* Center: Brand Name - Absolutely positioned, italicized */}
+            {/* Center: Brand Name/Logo - Absolutely positioned */}
             <Link 
               href="/" 
-              className="absolute left-1/2 transform -translate-x-1/2 text-xl font-normal italic text-gray-600 tracking-tight"
-              style={{ fontFamily: 'var(--font-playfair)' }}
+              className="absolute left-1/2 transform -translate-x-1/2"
             >
-              Syke World
+              <span className="hidden sm:inline text-lg md:text-xl font-normal italic text-gray-600 tracking-tight" style={{ fontFamily: 'var(--font-playfair)' }}>
+                Syke World
+              </span>
+              <img 
+                src="/images/logo.png" 
+                alt="Syke World" 
+                className="sm:hidden h-8 w-auto"
+              />
             </Link>
 
             {/* Right Section: CONTACTS + Separator + BOOKING + Separator + Icon */}
             <div className="flex items-center">
               <Link
                 href="/about"
-                className="text-gray-600 text-sm uppercase tracking-wide hover:text-[#1a1c1e] transition-colors px-4"
+                className="hidden md:inline text-gray-600 text-sm uppercase tracking-wide hover:text-[#1a1c1e] transition-colors px-4"
                 style={{ fontFamily: 'var(--font-inter)' }}
               >
                 CONTACTS
               </Link>
               
               {/* Vertical Separator */}
-              <div className="h-4 w-px bg-gray-400/50 mx-2"></div>
+              <div className="hidden md:block h-4 w-px bg-gray-400/50 mx-2"></div>
               
               <Link
                 href="/booking"
-                className="text-gray-600 text-sm uppercase tracking-wide hover:text-[#1a1c1e] transition-colors px-4"
+                className="hidden lg:inline text-gray-600 text-sm uppercase tracking-wide hover:text-[#1a1c1e] transition-colors px-4"
                 style={{ fontFamily: 'var(--font-inter)' }}
               >
                 BOOKING
               </Link>
               
               {/* Vertical Separator */}
-              <div className="h-4 w-px bg-gray-400/50 mx-2"></div>
+              <div className="hidden lg:block h-4 w-px bg-gray-400/50 mx-2"></div>
               
               {/* User Section */}
               {session?.user ? (
-                <div className="flex items-center gap-3 px-4">
+                <div className="flex items-center gap-2 md:gap-3 px-2 md:px-4">
                   <Avatar className="h-8 w-8">
                     {session.user.image && (
                       <AvatarImage src={session.user.image} alt={session.user.name || "User"} />
@@ -131,7 +140,7 @@ export default function Navbar() {
                       {session.user.name?.charAt(0).toUpperCase() || session.user.email?.charAt(0).toUpperCase() || "U"}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="flex flex-col items-start min-w-0">
+                  <div className="hidden md:flex flex-col items-start min-w-0">
                     {session.user.name && (
                       <span className="text-xs text-[#1a1c1e] font-medium truncate max-w-[120px]" style={{ fontFamily: 'var(--font-inter)' }}>
                         {session.user.name}
@@ -145,7 +154,7 @@ export default function Navbar() {
                   </div>
                 </div>
               ) : (
-                <button className="text-gray-600 hover:text-[#1a1c1e] transition-colors px-4">
+                <button className="text-gray-600 hover:text-[#1a1c1e] transition-colors px-2 md:px-4">
                   <User className="w-5 h-5" />
                 </button>
               )}
@@ -170,8 +179,8 @@ export default function Navbar() {
               ))}
             </div>
 
-            {/* Promotional Cards - Fixed positioned, overlay */}
-            <div className="absolute left-4 top-full mt-2 flex items-center gap-4 z-50">
+            {/* Promotional Cards - Fixed positioned, overlay - Hidden on mobile */}
+            <div className="hidden md:flex absolute left-8 top-full mt-2 items-center gap-4 z-50">
               {/* Paidha Card */}
               <Link 
                 href="/visit"
@@ -180,7 +189,7 @@ export default function Navbar() {
                 <div className="relative z-10">
                   <div className="flex items-center mb-2">
                     <h3 
-                      className="text-sm font-semibold text-[#1a1c1e] uppercase tracking-wider"
+                      className="text-sm font-semibold text-[#1a1c1e] uppercase tracking-wider ml-2"
                       style={{ fontFamily: 'var(--font-inter)' }}
                     >
                       Discover

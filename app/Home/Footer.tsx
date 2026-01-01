@@ -141,17 +141,17 @@ export default function Footer() {
                   </Link>
                 </li>
                 <li>
-                  <Link href="/roomservice" className="text-stone-300 hover:text-white transition-colors" style={{ fontFamily: 'var(--font-inter)' }}>
+                  <Link href="/roomservice" className="text-gray-600 hover:text-[#1a1c1e] transition-colors" style={{ fontFamily: 'var(--font-inter)' }}>
                     Services
                   </Link>
                 </li>
                 <li>
-                  <Link href="/kitchen" className="text-stone-300 hover:text-white transition-colors" style={{ fontFamily: 'var(--font-inter)' }}>
+                  <Link href="/kitchen" className="text-gray-600 hover:text-[#1a1c1e] transition-colors" style={{ fontFamily: 'var(--font-inter)' }}>
                     Bar & Restaurant
                   </Link>
                 </li>
                 <li>
-                  <Link href="/about" className="text-stone-300 hover:text-white transition-colors" style={{ fontFamily: 'var(--font-inter)' }}>
+                  <Link href="/about" className="text-gray-600 hover:text-[#1a1c1e] transition-colors" style={{ fontFamily: 'var(--font-inter)' }}>
                     About
                   </Link>
                 </li>
@@ -172,12 +172,12 @@ export default function Footer() {
                   <p>123 Luxury Ave, Paradise City</p>
                 </div>
                 <div>
-                  <p className="text-white font-medium mb-1">Phone</p>
+                  <p className="text-[#1a1c1e] font-medium mb-1">Phone</p>
                   <p>+256 770 000 787</p>
                   <p>+256 770 000 787</p>
                 </div>
                 <div>
-                  <p className="text-white font-medium mb-1">Email</p>
+                  <p className="text-[#1a1c1e] font-medium mb-1">Email</p>
                   <p>info@sykeworld.com</p>
                 </div>
               </div>
@@ -262,10 +262,10 @@ export default function Footer() {
             <Link href="#" className="text-gray-600 hover:text-[#1a1c1e] transition-colors">
               <FaFacebook className="h-5 w-5" />
             </Link>
-            <Link href="#" className="text-stone-300 hover:text-white transition-colors">
+            <Link href="#" className="text-gray-600 hover:text-[#1a1c1e] transition-colors">
               <FaX className="h-5 w-5" />
             </Link>
-            <Link href="#" className="text-stone-300 hover:text-white transition-colors">
+            <Link href="#" className="text-gray-600 hover:text-[#1a1c1e] transition-colors">
               <FaInstagram className="h-5 w-5" />
             </Link>
           </div>

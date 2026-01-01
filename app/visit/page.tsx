@@ -1,30 +1,95 @@
 "use client";
-import React from "react";
+import React, { useState, useEffect } from "react";
+import Image from "next/image";
 
 export default function VisitPaidha() {
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  const visitImages = [
+    "/images/weather.jpg",
+    "/images/music.jpg",
+    "/images/craft.jpg",
+    "/images/pba.jpg"
+  ];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % visitImages.length);
+    }, 3000); // Change image every 3 seconds
+
+    return () => clearInterval(interval);
+  }, [visitImages.length]);
+
   return (
     <main className="w-full min-h-screen bg-[#fafafa] text-[#1a1c1e]">
       {/* HERO SECTION */}
-      <section className="relative w-full h-[60vh] md:h-[75vh] overflow-hidden">
+      <section className="relative w-full h-[60vh] md:h-[75vh] overflow-visible">
         <img
           src="/images/town.jpg"
           alt="Paidha town view Uganda"
           className="w-full h-full object-cover"
         />
 
-        <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-center px-6">
-          <h1 
-            className="text-4xl md:text-5xl lg:text-6xl font-bold text-white drop-shadow-lg"
-            style={{ fontFamily: 'var(--font-playfair)' }}
-          >
-            Discover Paidha
-          </h1>
-          <p 
-            className="text-sm md:text-base text-white/90 mt-4 max-w-3xl leading-relaxed"
-            style={{ fontFamily: 'var(--font-inter)' }}
-          >
-            The Hidden Gem of West Nile – where nature, culture, and adventure meet.
-          </p>
+        <div className="absolute inset-0 bg-black/50 flex flex-col items-end justify-center text-right px-6 md:px-12 lg:px-24">
+          <div className="max-w-3xl">
+            <h1 
+              className="text-4xl md:text-5xl lg:text-6xl font-bold text-white drop-shadow-lg"
+              style={{ fontFamily: 'var(--font-playfair)' }}
+            >
+              Discover Paidha
+            </h1>
+            <p 
+              className="text-sm md:text-base text-white/90 mt-4 leading-relaxed"
+              style={{ fontFamily: 'var(--font-inter)' }}
+            >
+              The Hidden Gem of West Nile – where nature, culture, and adventure meet.
+            </p>
+          </div>
+        </div>
+
+        {/* Welcome Card Overlay - Provides background for fixed cards, extends above and below hero */}
+        <div className="absolute -top-20 -bottom-20 left-0 w-full px-4 md:px-8 lg:px-16 flex items-stretch">
+          <div className="bg-[#fafafa] w-full max-w-[600px] border-l border-r border-black/10 flex flex-col justify-center p-8">
+            <div className="text-center space-y-6">
+              {/* Carousel Image */}
+              <div className="relative w-full h-32 rounded overflow-hidden">
+                {visitImages.map((img, index) => (
+                  <Image
+                    key={index}
+                    src={img}
+                    alt="Paidha"
+                    fill
+                    className={`absolute inset-0 object-cover transition-opacity duration-1000 ${
+                      index === currentImageIndex ? "opacity-100" : "opacity-0"
+                    }`}
+                  />
+                ))}
+              </div>
+
+              {/* Welcome Section */}
+              <div>
+                <div className="flex items-center justify-center gap-3 mb-4">
+                  <div className="h-px w-12 bg-black/20"></div>
+                  <p className="text-xs uppercase tracking-widest text-black/60 font-medium" style={{ fontFamily: 'var(--font-inter)' }}>
+                    Welcome
+                  </p>
+                  <div className="h-px w-12 bg-black/20"></div>
+                </div>
+                <h2 
+                  className="text-3xl md:text-4xl font-bold text-[#1a1c1e] mb-4"
+                  style={{ fontFamily: 'var(--font-playfair)' }}
+                >
+                  Greetings from West Nile
+                </h2>
+                <p 
+                  className="text-sm text-gray-600 leading-relaxed"
+                  style={{ fontFamily: 'var(--font-inter)' }}
+                >
+                  Experience the hidden gem of West Nile
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 

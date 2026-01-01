@@ -433,15 +433,15 @@ export default function Home() {
                     />
                     {/* Overlay Card */}
                     <div className="absolute top-4 right-4 max-w-[300px] z-10">
-                      <div className="bg-black/70 backdrop-blur-sm rounded-lg p-4 border border-white/10">
+                      <div className="bg-white/50 backdrop-blur-sm rounded-lg p-4 border border-white/10">
                         <h4 
-                          className="text-xl font-bold text-white mb-1"
+                          className="text-xl font-bold text-black mb-1"
                           style={{ fontFamily: 'var(--font-playfair)' }}
                         >
                           {item.title}
                         </h4>
                         <p 
-                          className="text-sm text-stone-300"
+                          className="text-sm text-stone-800"
                           style={{ fontFamily: 'var(--font-inter)' }}
                         >
                           {item.desc}

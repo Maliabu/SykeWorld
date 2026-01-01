@@ -241,7 +241,7 @@ export default function BookingPage() {
                 Book Your Stay
               </h1>
               <p 
-                className="text-sm md:text-base text-stone-300 max-w-2xl mx-auto leading-relaxed"
+                className="text-sm md:text-base text-[#1a1c1e] max-w-2xl mx-auto leading-relaxed"
                 style={{ fontFamily: 'var(--font-inter)' }}
               >
                 Experience luxury and comfort at Syke World Hotel
@@ -412,13 +412,13 @@ export default function BookingPage() {
                   
                   <div>
                     <label 
-                      className="block text-xs uppercase tracking-widest text-white/70 font-medium mb-2"
+                      className="block text-xs uppercase tracking-widest text-black/60 font-medium mb-2"
                       style={{ fontFamily: 'var(--font-inter)' }}
                     >
                       Phone Number
                     </label>
                     <input 
-                      className="w-full bg-transparent border-b border-gray-400/50 px-0 py-3 text-white placeholder-stone-400 focus:outline-none focus:border-b-amber-600 transition-all" 
+                      className="w-full bg-transparent border-b border-gray-400/50 px-0 py-3 text-[#1a1c1e] placeholder-stone-400 focus:outline-none focus:border-b-amber-600 transition-all" 
                       placeholder="+256 XXX XXX XXX" 
                       value={form.phone} 
                       onChange={(e) => update("phone", e.target.value)} 
@@ -428,13 +428,13 @@ export default function BookingPage() {
                   
                   <div>
                     <label 
-                      className="block text-xs uppercase tracking-widest text-white/70 font-medium mb-2"
+                      className="block text-xs uppercase tracking-widest text-black/60 font-medium mb-2"
                       style={{ fontFamily: 'var(--font-inter)' }}
                     >
                       Select Room
                     </label>
                     <select 
-                      className="w-full bg-transparent border-b border-gray-400/50 px-0 py-3 text-white focus:outline-none focus:border-b-amber-600 transition-all" 
+                      className="w-full bg-transparent border-b border-gray-400/50 px-0 py-3 text-[#1a1c1e] focus:outline-none focus:border-b-amber-600 transition-all" 
                       value={form.room} 
                       onChange={(e) => update("room", e.target.value)}
                       style={{ fontFamily: 'var(--font-inter)' }}
@@ -446,13 +446,13 @@ export default function BookingPage() {
                   
                   <div>
                     <label 
-                      className="block text-xs uppercase tracking-widest text-white/70 font-medium mb-2"
+                      className="block text-xs uppercase tracking-widest text-black/60 font-medium mb-2"
                       style={{ fontFamily: 'var(--font-inter)' }}
                     >
                       Special Requests
                     </label>
                     <textarea 
-                      className="w-full bg-transparent border-b border-gray-400/50 px-0 py-3 text-white placeholder-stone-400 focus:outline-none focus:border-b-amber-600 transition-all resize-none" 
+                      className="w-full bg-transparent border-b border-gray-400/50 px-0 py-3 text-[#1a1c1e] placeholder-stone-400 focus:outline-none focus:border-b-amber-600 transition-all resize-none" 
                       placeholder="Any special requests or preferences..." 
                       rows={4} 
                       value={form.specialRequests} 
@@ -475,13 +475,13 @@ export default function BookingPage() {
                   
                   <div>
                     <label 
-                      className="block text-xs uppercase tracking-widest text-white/70 font-medium mb-2"
+                      className="block text-xs uppercase tracking-widest text-black/60 font-medium mb-2"
                       style={{ fontFamily: 'var(--font-inter)' }}
                     >
                       Choose Payment Method
                     </label>
                     <select 
-                      className="w-full bg-transparent border-b border-gray-400/50 px-0 py-3 text-white focus:outline-none focus:border-b-amber-600 transition-all" 
+                      className="w-full bg-transparent border-b border-gray-400/50 px-0 py-3 text-[#1a1c1e] focus:outline-none focus:border-b-amber-600 transition-all" 
                       value={form.paymentMethod} 
                       onChange={(e) => update("paymentMethod", e.target.value)}
                       style={{ fontFamily: 'var(--font-inter)' }}
@@ -497,7 +497,7 @@ export default function BookingPage() {
                   <div className="flex gap-4 pt-4">
                     <button 
                       onClick={() => setStep(1)} 
-                      className="flex-1 bg-amber-700 hover:bg-amber-800 text-white px-6 py-3 text-base font-semibold transition uppercase tracking-wide"
+                      className="flex-1 bg-amber-700 hover:bg-amber-800 text-[#1a1c1e] px-6 py-3 text-base font-semibold transition uppercase tracking-wide"
                       style={{ fontFamily: 'var(--font-inter)' }}
                     >
                       Back
@@ -508,7 +508,7 @@ export default function BookingPage() {
                         if (err) toast.error(err); 
                         else setStep(3); 
                       }} 
-                      className="flex-1 bg-amber-600 text-white px-6 py-3 text-base font-semibold hover:bg-amber-700 transition uppercase tracking-wide"
+                      className="flex-1 bg-amber-600 text-[#1a1c1e] px-6 py-3 text-base font-semibold hover:bg-amber-700 transition uppercase tracking-wide"
                       style={{ fontFamily: 'var(--font-inter)' }}
                     >
                       Continue to Review
@@ -538,35 +538,35 @@ export default function BookingPage() {
                       </div>
                       <div>
                         <div className="text-sm text-stone-400 mb-1">Email</div>
-                        <div className="font-semibold text-white">{form.email || "—"}</div>
+                        <div className="font-semibold text-[#1a1c1e]">{form.email || "—"}</div>
                       </div>
                       <div>
                         <div className="text-sm text-stone-400 mb-1">Phone</div>
-                        <div className="font-semibold text-white">{form.phone || "—"}</div>
+                        <div className="font-semibold text-[#1a1c1e]">{form.phone || "—"}</div>
                       </div>
                       <div>
                         <div className="text-sm text-stone-400 mb-1">Guests</div>
-                        <div className="font-semibold text-white">{form.guests}</div>
+                        <div className="font-semibold text-[#1a1c1e]">{form.guests}</div>
                       </div>
                       <div className="col-span-2">
                         <div className="text-sm text-stone-400 mb-1">Room</div>
-                        <div className="font-semibold text-white">{selectedRoom?.title ?? "—"}</div>
+                        <div className="font-semibold text-[#1a1c1e]">{selectedRoom?.title ?? "—"}</div>
                       </div>
                       <div>
                         <div className="text-sm text-stone-400 mb-1">Check-in</div>
-                        <div className="font-semibold text-white">{form.checkIn || "—"}</div>
+                        <div className="font-semibold text-[#1a1c1e]">{form.checkIn || "—"}</div>
                       </div>
                       <div>
                         <div className="text-sm text-stone-400 mb-1">Check-out</div>
-                        <div className="font-semibold text-white">{form.checkOut || "—"}</div>
+                        <div className="font-semibold text-[#1a1c1e]">{form.checkOut || "—"}</div>
                       </div>
                       <div>
                         <div className="text-sm text-stone-400 mb-1">Nights</div>
-                        <div className="font-semibold text-white">{nights}</div>
+                        <div className="font-semibold text-[#1a1c1e]">{nights}</div>
                       </div>
                       <div>
                         <div className="text-sm text-stone-400 mb-1">Payment Method</div>
-                        <div className="font-semibold text-white">{form.paymentMethod || "—"}</div>
+                        <div className="font-semibold text-[#1a1c1e]">{form.paymentMethod || "—"}</div>
                       </div>
                     </div>
                     
@@ -587,7 +587,7 @@ export default function BookingPage() {
                     <button 
                       type="button"
                       onClick={() => setStep(2)} 
-                      className="flex-1 bg-amber-700 hover:bg-amber-800 text-white px-6 py-3 text-base font-semibold transition uppercase tracking-wide"
+                      className="flex-1 bg-amber-700 hover:bg-amber-800 text-[#1a1c1e] px-6 py-3 text-base font-semibold transition uppercase tracking-wide"
                       style={{ fontFamily: 'var(--font-inter)' }}
                     >
                       Back
@@ -595,7 +595,7 @@ export default function BookingPage() {
                     <button 
                       type="submit"
                       disabled={loading} 
-                      className="flex-1 bg-amber-600 text-white px-6 py-3 text-base font-semibold hover:bg-amber-700 transition uppercase tracking-wide disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex-1 bg-amber-600 text-[#1a1c1e] px-6 py-3 text-base font-semibold hover:bg-amber-700 transition uppercase tracking-wide disabled:opacity-50 disabled:cursor-not-allowed"
                       style={{ fontFamily: 'var(--font-inter)' }}
                     >
                       {loading ? "Processing..." : "Confirm & Pay"}
@@ -658,7 +658,7 @@ export default function BookingPage() {
                   </button>
                   <button 
                     onClick={nextCarousel} 
-                    className="absolute top-1/2 right-0 -translate-y-1/2 bg-black/50 backdrop-blur-sm text-white p-2 hover:bg-black/70 transition opacity-0 group-hover:opacity-100"
+                    className="absolute top-1/2 right-0 -translate-y-1/2 bg-white/90 backdrop-blur-sm text-[#1a1c1e] p-2 hover:bg-white transition opacity-0 group-hover:opacity-100"
                   >
                     <FaArrowRight/>
                   </button>
