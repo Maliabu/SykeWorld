@@ -11,6 +11,51 @@ import { User, Mountain } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import Container from "./Container";
 
+// Helper function to format money
+const formatMoney = (n: number) => `UGX ${n.toFixed(2)}`;
+
+// Component to display booking total in navbar
+function BookingTotalDisplay() {
+  const [totalAmount, setTotalAmount] = useState(0);
+
+  useEffect(() => {
+    const updateTotal = () => {
+      const stored = localStorage.getItem('bookingTotalAmount');
+      if (stored) {
+        setTotalAmount(parseFloat(stored) || 0);
+      }
+    };
+
+    // Initial load
+    updateTotal();
+
+    // Listen for custom event (when booking page updates the total)
+    window.addEventListener('bookingTotalUpdated', updateTotal);
+    
+    // Poll for changes as backup
+    const interval = setInterval(updateTotal, 300);
+
+    return () => {
+      window.removeEventListener('bookingTotalUpdated', updateTotal);
+      clearInterval(interval);
+    };
+  }, []);
+
+  if (totalAmount === 0) return null;
+
+  return (
+    <div className="flex items-center gap-2">
+      <span className="text-gray-500">/</span>
+      <div className="flex items-center gap-2">
+        <span className="text-gray-600 uppercase tracking-wider text-[10px]">Total:</span>
+        <span className="text-amber-600 font-bold text-sm whitespace-nowrap" style={{ fontFamily: 'var(--font-inter)' }}>
+          {formatMoney(totalAmount)}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export default function Navbar() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [kitchenCardClosed, setKitchenCardClosed] = useState(false);
@@ -37,6 +82,7 @@ export default function Navbar() {
     { name: "Hotel", href: "/" },
     { name: "Rooms", href: "/rooms" },
     { name: "Restaurant", href: "/kitchen" },
+    { name: "Booking", href: "/booking" },
     { name: "Gallery", href: "/gallery" },
     { name: "About", href: "/about" },
   ];
@@ -163,20 +209,27 @@ export default function Navbar() {
 
           {/* Breadcrumbs - Left aligned, matching navbar padding */}
           <div className="py-3 relative">
-            <div className="flex items-center gap-2 text-xs text-gray-600 pl-4" style={{ fontFamily: 'var(--font-inter)' }}>
-              {breadcrumbs.map((crumb, index) => (
-                <span key={crumb.href} className="flex items-center">
-                  {index > 0 && <span className="mx-2 text-gray-500">/</span>}
-                  <Link
-                    href={crumb.href}
-                    className={`hover:text-[#1a1c1e] transition-colors ${
-                      index === breadcrumbs.length - 1 ? "text-[#1a1c1e]" : "text-gray-600"
-                    }`}
-                  >
-                    {crumb.name}
-                  </Link>
-                </span>
-              ))}
+            <div className="flex items-center justify-between gap-2 text-xs text-gray-600 pl-4 pr-4" style={{ fontFamily: 'var(--font-inter)' }}>
+              <div className="flex items-center gap-2">
+                {breadcrumbs.map((crumb, index) => (
+                  <span key={crumb.href} className="flex items-center">
+                    {index > 0 && <span className="mx-2 text-gray-500">/</span>}
+                    <Link
+                      href={crumb.href}
+                      className={`hover:text-[#1a1c1e] transition-colors ${
+                        index === breadcrumbs.length - 1 ? "text-[#1a1c1e]" : "text-gray-600"
+                      }`}
+                    >
+                      {crumb.name}
+                    </Link>
+                  </span>
+                ))}
+              </div>
+              
+              {/* Total Amount Display - Only on booking page */}
+              {pathname === '/booking' && (
+                <BookingTotalDisplay />
+              )}
             </div>
 
             {/* Promotional Cards - Fixed positioned, overlay - Hidden on mobile */}

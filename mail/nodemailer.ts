@@ -2,7 +2,7 @@ import nodemailer from 'nodemailer';
 
 
 const transporter = nodemailer.createTransport({
-  host: "sykeworld.com", // make sure to get ssl
+  host: "mail.sykeworld.com", // make sure to get ssl
   // host: "server336.web-hosting.com", //has ssl
   port: 465,
   secure: true, // true for port 465, false for other ports
@@ -13,7 +13,7 @@ const transporter = nodemailer.createTransport({
 });
 
 const noReplyTransporter = nodemailer.createTransport({
-  host: "sykeworld.com", // make sure to get ssl
+  host: "mail.sykeworld.com", // make sure to get ssl
   // host: "server336.web-hosting.com", //has ssl
   port: 465,
   secure: true, // true for port 465, false for other ports

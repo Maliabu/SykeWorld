@@ -126,6 +126,15 @@ export default function BookingPage() {
   const selectedRoom = rooms.find((r) => String(r.id) === String(form.room));
   const totalAmount = selectedRoom ? selectedRoom.priceValue * nights : 0;
 
+  // Store total amount in localStorage for Navbar to access
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('bookingTotalAmount', totalAmount.toString());
+      // Trigger a custom event to update Navbar immediately
+      window.dispatchEvent(new Event('bookingTotalUpdated'));
+    }
+  }, [totalAmount]);
+
   // carousel
   const prevCarousel = () =>
     setCarouselIndex((i) => (i - 1 + Math.max(1, rooms.length)) % Math.max(1, rooms.length));
@@ -226,7 +235,7 @@ export default function BookingPage() {
       <div className="py-24 md:py-32 bg-[#fafafa] min-h-screen">
         <Container>
           <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-16">
+            <div className="text-center mb-12 md:mb-16">
               <div className="flex items-center justify-center gap-3 mb-4">
                 <div className="h-px w-12 bg-black/20"></div>
                 <p className="text-xs uppercase tracking-widest text-black/60 font-medium" style={{ fontFamily: 'var(--font-inter)' }}>
@@ -235,7 +244,7 @@ export default function BookingPage() {
                 <div className="h-px w-12 bg-black/20"></div>
               </div>
               <h1 
-                className="text-4xl md:text-5xl font-bold text-[#1a1c1e] mb-4"
+                className="text-3xl md:text-4xl lg:text-5xl font-bold text-[#1a1c1e] mb-4"
                 style={{ fontFamily: 'var(--font-playfair)' }}
               >
                 Book Your Stay
@@ -250,16 +259,16 @@ export default function BookingPage() {
 
                 {/* Sign-in suggestion banner - only show when user is NOT signed in */}
                 {!isLoadingSession && !isSignedIn && (
-                  <div className="mb-8 p-4 bg-amber-600/20 border-l-4 border-amber-600 rounded-r-lg flex items-center gap-3 border border-black/10">
+                  <div className="mb-6 md:mb-8 p-3 md:p-4 bg-amber-600/20 border-l-4 border-amber-600 rounded-r-lg flex flex-col sm:flex-row items-start sm:items-center gap-3 border border-black/10">
                     <AlertCircle className="h-5 w-5 text-amber-400 flex-shrink-0" />
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-[#1a1c1e]" style={{ fontFamily: 'var(--font-inter)' }}>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs sm:text-sm font-medium text-[#1a1c1e]" style={{ fontFamily: 'var(--font-inter)' }}>
                         Sign in to save your booking details and access exclusive offers
                       </p>
                     </div>
                     <Link
                       href="/auth"
-                      className="px-4 py-3 bg-amber-600 text-white text-sm font-medium hover:bg-amber-700 transition whitespace-nowrap uppercase tracking-wide"
+                      className="px-3 md:px-4 py-2 md:py-3 bg-amber-600 text-white text-xs sm:text-sm font-medium hover:bg-amber-700 transition whitespace-nowrap uppercase tracking-wide self-start sm:self-auto"
                       style={{ fontFamily: 'var(--font-inter)' }}
                     >
                       Sign In
@@ -267,46 +276,46 @@ export default function BookingPage() {
                   </div>
                 )}
 
-            <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-12">
-            <div className="space-y-8">
+            <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-4 md:gap-6 lg:gap-8 xl:gap-12 overflow-hidden">
+            <div className="space-y-6 md:space-y-8 min-w-0">
 
               {/* STEPS NAV */}
-              <div className="flex gap-0 mb-8">
-                <div className={`flex-1 px-6 py-4 text-center font-medium transition-all border-t border-b ${
+              <div className="flex gap-0 mb-6 md:mb-8 overflow-x-auto">
+                <div className={`flex-1 px-3 md:px-6 py-3 md:py-4 text-center font-medium transition-all border-t border-b ${
                   step === 1 
                     ? "bg-amber-600 text-white" 
                     : step > 1 
                     ? "bg-amber-600/20 text-amber-400 border-amber-600/30" 
                     : "bg-black/5 text-gray-500 border-black/10"
                 }`} style={{ fontFamily: 'var(--font-inter)' }}>
-                  <div className="text-sm font-semibold">Step 1</div>
-                  <div className="text-xs mt-1">Details</div>
+                  <div className="text-xs md:text-sm font-semibold">Step 1</div>
+                  <div className="text-[10px] md:text-xs mt-1">Details</div>
                 </div>
-                <div className={`flex-1 px-6 py-4 text-center font-medium transition-all border-t border-b border-l ${
+                <div className={`flex-1 px-3 md:px-6 py-3 md:py-4 text-center font-medium transition-all border-t border-b border-l ${
                   step === 2 
                     ? "bg-amber-600 text-white border-amber-600" 
                     : step > 2 
                     ? "bg-amber-600/20 text-amber-400 border-amber-600/30" 
                     : "bg-black/5 text-gray-500 border-black/10"
                 }`} style={{ fontFamily: 'var(--font-inter)' }}>
-                  <div className="text-sm font-semibold">Step 2</div>
-                  <div className="text-xs mt-1">Payment</div>
+                  <div className="text-xs md:text-sm font-semibold">Step 2</div>
+                  <div className="text-[10px] md:text-xs mt-1">Payment</div>
                 </div>
-                <div className={`flex-1 px-6 py-4 text-center font-medium transition-all border-t border-b border-l ${
+                <div className={`flex-1 px-3 md:px-6 py-3 md:py-4 text-center font-medium transition-all border-t border-b border-l ${
                   step === 3 
                     ? "bg-amber-600 text-white border-amber-600" 
                     : "bg-black/5 text-gray-500 border-black/10"
                 }`} style={{ fontFamily: 'var(--font-inter)' }}>
-                  <div className="text-sm font-semibold">Step 3</div>
-                  <div className="text-xs mt-1">Review</div>
+                  <div className="text-xs md:text-sm font-semibold">Step 3</div>
+                  <div className="text-[10px] md:text-xs mt-1">Review</div>
                 </div>
               </div>
 
               {/* STEP 1: DETAILS */}
               {step === 1 && (
-                <div className="space-y-6 p-8 border-l border-r border-black/10">
+                <div className="space-y-6 p-4 md:p-8 border-l border-r border-black/10">
                   <h2 
-                    className="text-2xl md:text-3xl font-bold text-[#1a1c1e] mb-6"
+                    className="text-xl md:text-2xl lg:text-3xl font-bold text-[#1a1c1e] mb-4 md:mb-6"
                     style={{ fontFamily: 'var(--font-playfair)' }}
                   >
                     Booking Details
@@ -465,9 +474,9 @@ export default function BookingPage() {
 
               {/* STEP 2: PAYMENT */}
               {step === 2 && (
-                <div className="space-y-6 p-8 border-l border-r border-black/10">
+                <div className="space-y-6 p-4 md:p-8 border-l border-r border-black/10">
                   <h2 
-                    className="text-2xl md:text-3xl font-bold text-[#1a1c1e] mb-6"
+                    className="text-xl md:text-2xl lg:text-3xl font-bold text-[#1a1c1e] mb-4 md:mb-6"
                     style={{ fontFamily: 'var(--font-playfair)' }}
                   >
                     Payment Method
@@ -497,7 +506,7 @@ export default function BookingPage() {
                   <div className="flex gap-4 pt-4">
                     <button 
                       onClick={() => setStep(1)} 
-                      className="flex-1 bg-amber-700 hover:bg-amber-800 text-[#1a1c1e] px-6 py-3 text-base font-semibold transition uppercase tracking-wide"
+                      className="flex-1 bg-amber-700 hover:bg-amber-800 text-[#1a1c1e] px-4 md:px-6 py-3 text-sm md:text-base font-semibold transition uppercase tracking-wide"
                       style={{ fontFamily: 'var(--font-inter)' }}
                     >
                       Back
@@ -508,7 +517,7 @@ export default function BookingPage() {
                         if (err) toast.error(err); 
                         else setStep(3); 
                       }} 
-                      className="flex-1 bg-amber-600 text-[#1a1c1e] px-6 py-3 text-base font-semibold hover:bg-amber-700 transition uppercase tracking-wide"
+                      className="flex-1 bg-amber-600 text-[#1a1c1e] px-4 md:px-6 py-3 text-sm md:text-base font-semibold hover:bg-amber-700 transition uppercase tracking-wide"
                       style={{ fontFamily: 'var(--font-inter)' }}
                     >
                       Continue to Review
@@ -521,17 +530,17 @@ export default function BookingPage() {
               {step === 3 && (
                 <form 
                   onSubmit={handleSubmit}
-                  className="space-y-6 p-8 border-l border-r border-black/10"
+                  className="space-y-6 p-4 md:p-8 border-l border-r border-black/10"
                 >
                   <h2 
-                    className="text-2xl md:text-3xl font-bold text-[#1a1c1e] mb-6"
+                    className="text-xl md:text-2xl lg:text-3xl font-bold text-[#1a1c1e] mb-4 md:mb-6"
                     style={{ fontFamily: 'var(--font-playfair)' }}
                   >
                     Review & Confirm
                   </h2>
 
-                  <div className="p-6 space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 md:p-6 space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <div className="text-sm text-gray-500 mb-1">Name</div>
                         <div className="font-semibold text-[#1a1c1e]">{form.name || "—"}</div>
@@ -587,7 +596,7 @@ export default function BookingPage() {
                     <button 
                       type="button"
                       onClick={() => setStep(2)} 
-                      className="flex-1 bg-amber-700 hover:bg-amber-800 text-[#1a1c1e] px-6 py-3 text-base font-semibold transition uppercase tracking-wide"
+                      className="flex-1 bg-amber-700 hover:bg-amber-800 text-[#1a1c1e] px-4 md:px-6 py-3 text-sm md:text-base font-semibold transition uppercase tracking-wide"
                       style={{ fontFamily: 'var(--font-inter)' }}
                     >
                       Back
@@ -595,7 +604,7 @@ export default function BookingPage() {
                     <button 
                       type="submit"
                       disabled={loading} 
-                      className="flex-1 bg-amber-600 text-[#1a1c1e] px-6 py-3 text-base font-semibold hover:bg-amber-700 transition uppercase tracking-wide disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex-1 bg-amber-600 text-[#1a1c1e] px-4 md:px-6 py-3 text-sm md:text-base font-semibold hover:bg-amber-700 transition uppercase tracking-wide disabled:opacity-50 disabled:cursor-not-allowed"
                       style={{ fontFamily: 'var(--font-inter)' }}
                     >
                       {loading ? "Processing..." : "Confirm & Pay"}
@@ -607,9 +616,9 @@ export default function BookingPage() {
             </div>
 
             {/* RIGHT: Recommended rooms carousel */}
-            <div className="space-y-6">
-              <div className="border-t border-b border-black/10 p-6">
-                <div className="mb-6">
+            <div className="space-y-6 min-w-0">
+              <div className="border-t border-b border-black/10 p-4 md:p-6">
+                <div className="mb-4 md:mb-6">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="h-px w-12 bg-black/20"></div>
                     <p className="text-xs uppercase tracking-widest text-black/60 font-medium" style={{ fontFamily: 'var(--font-inter)' }}>
@@ -618,7 +627,7 @@ export default function BookingPage() {
                     <div className="h-px w-12 bg-black/20"></div>
                   </div>
                   <h3 
-                    className="text-2xl md:text-3xl font-bold text-[#1a1c1e] mb-4"
+                    className="text-xl md:text-2xl lg:text-3xl font-bold text-[#1a1c1e] mb-4"
                     style={{ fontFamily: 'var(--font-playfair)' }}
                   >
                     Recommended Rooms
@@ -626,9 +635,9 @@ export default function BookingPage() {
                 </div>
                 <Link href='/rooms'>
                 <div className="relative group">
-                  <div className="flex gap-4 overflow-hidden">
+                  <div className="flex gap-4 overflow-x-auto">
                     {displayedRooms.map((room, i) => (
-                      <div key={i} className="min-w-[200px] bg-black/2 border border-black/10 cursor-pointer hover:border-black/20 transition-all">
+                      <div key={i} className="min-w-[180px] sm:min-w-[200px] flex-shrink-0 bg-black/2 border border-black/10 cursor-pointer hover:border-black/20 transition-all">
                         <div className="relative w-full h-48 overflow-hidden">
                           <img src={room.image} className="w-full h-full object-cover transition-transform duration-700 hover:scale-110" />
                         </div>
@@ -667,8 +676,8 @@ export default function BookingPage() {
               </div>
 
               {/* quick price box */}
-              <div className="border-t border-b border-black/10 p-6">
-                <div className="mb-6">
+              <div className="border-t border-b border-black/10 p-4 md:p-6">
+                <div className="mb-4 md:mb-6">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="h-px w-12 bg-black/20"></div>
                     <p className="text-xs uppercase tracking-widest text-black/60 font-medium" style={{ fontFamily: 'var(--font-inter)' }}>
@@ -677,7 +686,7 @@ export default function BookingPage() {
                     <div className="h-px w-12 bg-black/20"></div>
                   </div>
                   <h3 
-                    className="text-2xl md:text-3xl font-bold text-[#1a1c1e] mb-4"
+                    className="text-xl md:text-2xl lg:text-3xl font-bold text-[#1a1c1e] mb-4"
                     style={{ fontFamily: 'var(--font-playfair)' }}
                   >
                     Booking Summary
