@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import BookingForm from "../(forms)/BookingForm";
+import Container from "./Container";
 
 export default function Hero() {
   const router = useRouter();
@@ -13,7 +14,8 @@ export default function Hero() {
       <div className="w-full py-20 md:py-32 relative z-10">
         <div className="w-full">
           {/* Text Content Above Image */}
-          <div className="text-center mb-16 space-y-6">
+          <Container>
+            <div className="text-center mb-16 space-y-6">
             {/* Elegant Subheading */}
             <div className="flex items-center justify-center gap-3 mb-4">
               <div className="h-px w-16 bg-black/20"></div>
@@ -61,6 +63,7 @@ export default function Hero() {
               </Link>
             </div>
           </div>
+          </Container>
 
           {/* Hero Image Below Text */}
           <div className="relative w-full h-[350px] md:h-[450px] lg:h-[550px]">
@@ -75,17 +78,18 @@ export default function Hero() {
               <div className="absolute inset-0 bg-gradient-to-t from-gray-950/40 via-transparent to-transparent"></div>
             </div>
             
-            {/* Booking Form Overlay - Responsive positioning */}
-            {/* Small/Medium: Centered blur card with half overlapping */}
-            <div className="absolute -top-1/2 left-1/2 -translate-x-1/2 w-full max-w-md px-4 md:block lg:hidden">
-              <div className="backdrop-blur-md bg-black/2 border-l border-r border-black/10">
-                <BookingForm />
-              </div>
-            </div>
-            
             {/* Large: Overlay on top of image, taller than image, respects padding */}
             <div className="hidden lg:flex absolute -top-[82px] -bottom-[82px] right-0 w-full px-4 lg:px-16 justify-end items-stretch">
               <div className="bg-[#fafafa] w-full max-w-[350px] border-l border-r border-black/10 flex items-center justify-center">
+                <BookingForm />
+              </div>
+            </div>
+          </div>
+          
+          {/* Booking Form for Small/Medium: Positioned below hero with small overlap */}
+          <div className="relative -mt-16 md:-mt-20 mb-8 md:mb-12 md:block lg:hidden">
+            <div className="w-full max-w-md mx-auto px-4">
+              <div className="backdrop-blur-md bg-white/90 border-l border-r border-black/10">
                 <BookingForm />
               </div>
             </div>

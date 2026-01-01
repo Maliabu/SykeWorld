@@ -145,7 +145,7 @@ export default function Home() {
                   </div>
                 </div>
               </div>
-              <div className="relative group overflow-hidden">
+              <div className="relative group overflow-hidden -mx-4 md:mx-0">
                 <div className="aspect-[4/3] overflow-hidden">
                   <img
                     src="/images/pexels-creative-vix-370984.jpg"
@@ -175,7 +175,7 @@ export default function Home() {
 
             {/* Second: Image Left, Text Right */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-center">
-              <div className="relative group overflow-hidden order-2 md:order-1">
+              <div className="relative group overflow-hidden order-2 md:order-1 -mx-4 md:mx-0">
                 <div className="aspect-[4/3] overflow-hidden">
                   <img
                     src="/images/lobby.png"
@@ -279,7 +279,7 @@ export default function Home() {
                   </div>
                 </div>
               </div>
-              <div className="relative group overflow-hidden">
+              <div className="relative group overflow-hidden -mx-4 md:mx-0">
                 <div className="aspect-[4/3] overflow-hidden">
                   <img
                     src="/images/bg-3.jpg"
@@ -392,7 +392,7 @@ export default function Home() {
             </div>
 
             {/* Right: Images */}
-            <div className="space-y-8">
+            <div className="space-y-8 -mx-4 md:mx-0">
               {/* Large image */}
               <div className="relative group overflow-hidden h-[400px]">
                 <img
@@ -420,7 +420,7 @@ export default function Home() {
               </div>
 
               {/* Two stacked images */}
-              <div className="grid grid-cols-2 gap-8">
+              <div className="grid grid-cols-2 gap-4 md:gap-8">
                 {[ 
                   { src: "/images/pba.jpg", title: "Local Culture", desc: "Rich Alur heritage" },
                   { src: "/images/hat.jpg", title: "Natural Beauty", desc: "Scenic landscapes" }

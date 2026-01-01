@@ -322,16 +322,43 @@ export default function Navbar() {
                   Sign In
                 </Link>
               ) : (
-                <button
-                  onClick={() => {
-                    signOut();
-                    setSidebarOpen(false);
-                  }}
-                  className="block w-full text-left px-4 py-3 text-sm uppercase tracking-wide text-gray-600 hover:text-[#1a1c1e] transition-colors rounded"
-                  style={{ fontFamily: 'var(--font-inter)' }}
-                >
-                  Sign Out
-                </button>
+                <>
+                  {/* Profile Section */}
+                  <div className="px-4 py-4 mb-2">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-12 w-12">
+                        {session.user?.image && (
+                          <AvatarImage src={session.user.image} alt={session.user.name || "User"} />
+                        )}
+                        <AvatarFallback className="bg-gray-200 text-gray-700 text-sm">
+                          {session.user?.name?.charAt(0).toUpperCase() || session.user?.email?.charAt(0).toUpperCase() || "U"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        {session.user?.name && (
+                          <p className="text-sm font-medium text-[#1a1c1e] truncate" style={{ fontFamily: 'var(--font-inter)' }}>
+                            {session.user.name}
+                          </p>
+                        )}
+                        {session.user?.email && (
+                          <p className="text-xs text-gray-500 truncate" style={{ fontFamily: 'var(--font-inter)' }}>
+                            {session.user.email}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      signOut();
+                      setSidebarOpen(false);
+                    }}
+                    className="block w-full text-left px-4 py-3 text-sm uppercase tracking-wide text-gray-600 hover:text-[#1a1c1e] transition-colors rounded"
+                    style={{ fontFamily: 'var(--font-inter)' }}
+                  >
+                    Sign Out
+                  </button>
+                </>
               )}
             </div>
           </div>
