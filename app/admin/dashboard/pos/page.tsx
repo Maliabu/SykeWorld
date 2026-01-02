@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { ShoppingCart, Plus, Minus, Printer, Save, X, Search } from "lucide-react";
-import Image from "next/image";
+import { useSession } from "@/lib/hooks/useSession";
 
 interface CartItem {
   id: string;
@@ -20,13 +20,25 @@ interface CartItem {
   image?: string;
 }
 
+/* ------------------------- PLACEHOLDER IMAGE ------------------------- */
+const placeholderSvg = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Crect fill='%23e5e7eb' width='400' height='300'/%3E%3Ctext fill='%239ca3af' font-family='sans-serif' font-size='18' x='50%25' y='50%25' text-anchor='middle' dy='.3em'%3ENo Image%3C/text%3E%3C/svg%3E";
+
 export default function POSPage() {
+  const { user } = useSession();
   const [menuItems, setMenuItems] = useState<any[]>([]);
   const [drinks, setDrinks] = useState<any[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState<"menu" | "drinks">("menu");
+  
+  // Get staff name for receipt
+  const getStaffName = () => {
+    if (user?.firstName && user?.lastName) {
+      return `${user.firstName} ${user.lastName}`;
+    }
+    return user?.username || user?.email?.split('@')[0] || "Staff";
+  };
 
   useEffect(() => {
     loadItems();
@@ -146,24 +158,64 @@ export default function POSPage() {
               padding: 10px;
             }
             .header { text-align: center; margin-bottom: 10px; }
-            .item { display: flex; justify-content: space-between; margin: 5px 0; }
+            .header-row { display: flex; justify-content: space-between; margin: 3px 0; font-size: 11px; }
+            .served-by { text-align: right; margin-bottom: 10px; font-size: 11px; }
+            .items-header { display: flex; justify-content: space-between; margin: 10px 0 5px 0; font-weight: bold; font-size: 11px; border-bottom: 1px solid #000; padding-bottom: 3px; }
+            .items-header span { flex: 1; text-align: left; }
+            .items-header span:nth-child(2) { text-align: center; }
+            .items-header span:nth-child(3) { text-align: center; }
+            .items-header span:nth-child(4) { text-align: right; }
+            .item { display: flex; justify-content: space-between; margin: 3px 0; font-size: 11px; }
+            .item span { flex: 1; text-align: left; }
+            .item span:nth-child(2) { text-align: center; }
+            .item span:nth-child(3) { text-align: center; }
+            .item span:nth-child(4) { text-align: right; }
             .total { font-weight: bold; margin-top: 10px; padding-top: 10px; border-top: 1px solid #000; }
+            .total .item { display: flex; justify-content: space-between; width: 100%; }
+            .total .item span:first-child { flex: 0 0 auto; }
+            .total .item span:last-child { flex: 0 0 auto; margin-left: auto; }
             .footer { text-align: center; margin-top: 20px; font-size: 10px; }
+            .qr-code { text-align: center; margin-top: 15px; }
+            .qr-code img { width: 100px; height: 100px; }
           </style>
         </head>
         <body>
           <div class="header">
-            <h2>HOTEL RESTAURANT</h2>
-            <p>Order: ${receiptData.orderNumber}</p>
-            <p>${new Date(receiptData.createdAt).toLocaleString()}</p>
+            <h2>SYKE WORLD HOTEL</h2>
+            <p>Landmark Place, opposite Rock Filling Station, Zombo</p>
+          </div>
+          <div class="header-row">
+            <span>ORDER NO</span>
+            <span>${receiptData.orderNumber}</span>
+          </div>
+          <div class="header-row">
+            <span>DATE</span>
+            <span>${new Date(receiptData.createdAt).toLocaleString()}</span>
+          </div>
+          <div class="served-by">
+            Served by: ${getStaffName()}
           </div>
           <div class="items">
-            ${receiptData.items.map((item: any) => `
+            <div class="items-header">
+              <span>NAME</span>
+              <span>QTY</span>
+              <span>UNIT.P</span>
+              <span>TOTAL</span>
+            </div>
+            ${receiptData.items.map((item: any) => {
+              const itemName = item.name.toUpperCase();
+              const qty = item.quantity;
+              const unitPrice = parseFloat(item.price);
+              const total = unitPrice * qty;
+              return `
               <div class="item">
-                <span>${item.name} x${item.quantity}</span>
-                <span>UGX ${(parseFloat(item.price) * item.quantity).toLocaleString()}</span>
+                <span>${itemName}</span>
+                <span>${qty}</span>
+                <span>${unitPrice.toLocaleString()}</span>
+                <span>${total.toLocaleString()}</span>
               </div>
-            `).join("")}
+            `;
+            }).join("")}
           </div>
           <div class="total">
             <div class="item">
@@ -173,6 +225,9 @@ export default function POSPage() {
           </div>
           <div class="footer">
             <p>Thank you for your order!</p>
+          </div>
+          <div class="qr-code">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://sykeworld.com" alt="QR Code" />
           </div>
         </body>
       </html>
@@ -207,24 +262,64 @@ export default function POSPage() {
               padding: 10px;
             }
             .header { text-align: center; margin-bottom: 10px; }
-            .item { display: flex; justify-content: space-between; margin: 5px 0; }
+            .header-row { display: flex; justify-content: space-between; margin: 3px 0; font-size: 11px; }
+            .served-by { text-align: right; margin-bottom: 10px; font-size: 11px; }
+            .items-header { display: flex; justify-content: space-between; margin: 10px 0 5px 0; font-weight: bold; font-size: 11px; border-bottom: 1px solid #000; padding-bottom: 3px; }
+            .items-header span { flex: 1; text-align: left; }
+            .items-header span:nth-child(2) { text-align: center; }
+            .items-header span:nth-child(3) { text-align: center; }
+            .items-header span:nth-child(4) { text-align: right; }
+            .item { display: flex; justify-content: space-between; margin: 3px 0; font-size: 11px; }
+            .item span { flex: 1; text-align: left; }
+            .item span:nth-child(2) { text-align: center; }
+            .item span:nth-child(3) { text-align: center; }
+            .item span:nth-child(4) { text-align: right; }
             .total { font-weight: bold; margin-top: 10px; padding-top: 10px; border-top: 1px solid #000; }
+            .total .item { display: flex; justify-content: space-between; width: 100%; }
+            .total .item span:first-child { flex: 0 0 auto; }
+            .total .item span:last-child { flex: 0 0 auto; margin-left: auto; }
             .footer { text-align: center; margin-top: 20px; font-size: 10px; }
+            .qr-code { text-align: center; margin-top: 15px; }
+            .qr-code img { width: 100px; height: 100px; }
           </style>
         </head>
         <body>
           <div class="header">
-            <h2>HOTEL RESTAURANT</h2>
-            <p>Order: ${orderNumber}</p>
-            <p>${new Date().toLocaleString()}</p>
+            <h2>SYKE WORLD HOTEL</h2>
+            <p>Landmark Place, opposite Rock Filling Station, Zombo</p>
+          </div>
+          <div class="header-row">
+            <span>ORDER NO</span>
+            <span>${orderNumber}</span>
+          </div>
+          <div class="header-row">
+            <span>DATE</span>
+            <span>${new Date().toLocaleString()}</span>
+          </div>
+          <div class="served-by">
+            Served by: ${getStaffName()}
           </div>
           <div class="items">
-            ${cart.map((item) => `
+            <div class="items-header">
+              <span>NAME</span>
+              <span>QTY</span>
+              <span>UNIT.P</span>
+              <span>TOTAL</span>
+            </div>
+            ${cart.map((item) => {
+              const itemName = item.name.toUpperCase();
+              const qty = item.quantity;
+              const unitPrice = parseFloat(item.price);
+              const total = unitPrice * qty;
+              return `
               <div class="item">
-                <span>${item.name} x${item.quantity}</span>
-                <span>UGX ${(parseFloat(item.price) * item.quantity).toLocaleString()}</span>
+                <span>${itemName}</span>
+                <span>${qty}</span>
+                <span>${unitPrice.toLocaleString()}</span>
+                <span>${total.toLocaleString()}</span>
               </div>
-            `).join("")}
+            `;
+            }).join("")}
           </div>
           <div class="total">
             <div class="item">
@@ -234,6 +329,9 @@ export default function POSPage() {
           </div>
           <div class="footer">
             <p>Thank you for your order!</p>
+          </div>
+          <div class="qr-code">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://sykeworld.com" alt="QR Code" />
           </div>
         </body>
       </html>
@@ -305,11 +403,18 @@ export default function POSPage() {
                 filteredMenuItems.map((item) => (
                   <Card key={item.id} className="cursor-pointer">
                     <CardContent className="p-4" onClick={() => addToCart(item, "menu")}>
-                      {item.image && (
-                        <div className="relative w-full h-32 mb-2">
-                          <Image src={item.image} alt={item.name} fill className="object-cover rounded" />
-                        </div>
-                      )}
+                      <div className="w-full h-32 mb-2 rounded overflow-hidden bg-gray-100">
+                        <img 
+                          src={item.image || placeholderSvg} 
+                          alt={item.name} 
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            if (!e.currentTarget.src.includes('data:image')) {
+                              e.currentTarget.src = placeholderSvg;
+                            }
+                          }}
+                        />
+                      </div>
                       <h3 className="font-semibold text-sm">{item.name}</h3>
                       {item.localName && <p className="text-xs text-gray-500">{item.localName}</p>}
                       <p className="text-lg font-bold text-orange-600 mt-2">UGX {parseFloat(item.price || "0").toLocaleString()}</p>
@@ -326,11 +431,18 @@ export default function POSPage() {
                 filteredDrinks.map((item) => (
                   <Card key={item.id} className="cursor-pointer">
                     <CardContent className="p-4" onClick={() => addToCart(item, "drink")}>
-                      {item.image && (
-                        <div className="relative w-full h-32 mb-2">
-                          <Image src={item.image} alt={item.name} fill className="object-cover rounded" />
-                        </div>
-                      )}
+                      <div className="w-full h-32 mb-2 rounded overflow-hidden bg-gray-100">
+                        <img 
+                          src={item.image || placeholderSvg} 
+                          alt={item.name} 
+                          className="w-full h-full object-contain"
+                          onError={(e) => {
+                            if (!e.currentTarget.src.includes('data:image')) {
+                              e.currentTarget.src = placeholderSvg;
+                            }
+                          }}
+                        />
+                      </div>
                       <h3 className="font-semibold text-sm">{item.name}</h3>
                       {item.localName && <p className="text-xs text-gray-500">{item.localName}</p>}
                       <p className="text-lg font-bold text-orange-600 mt-2">UGX {parseFloat(item.price || "0").toLocaleString()}</p>
