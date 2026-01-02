@@ -8,7 +8,7 @@ export const runtime = 'nodejs';
 export const maxDuration = 60; // 60 seconds timeout for large uploads
 
 // Ensure .php extension is included - the file MUST be editor.php
-const defaultUrl = 'https://sykeworld.com/uploads/editor.php';
+const defaultUrl = 'https://uploads.sykeworld.com/editor.php';
 const envUrl = process.env.CPANEL_UPLOAD_URL;
 // Force .php extension if missing from env variable
 let cpanelUrl = envUrl || defaultUrl;

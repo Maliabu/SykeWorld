@@ -11,13 +11,14 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Edit, Trash2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ServiceIcon } from "@/lib/utils/serviceIcons";
 
 export default function ServicesPage() {
   const [services, setServices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingService, setEditingService] = useState<any>(null);
-  const [formData, setFormData] = useState({ name: "", description: "", icon: "" });
+  const [formData, setFormData] = useState({ name: "", description: "" });
 
   useEffect(() => {
     loadServices();
@@ -44,7 +45,7 @@ export default function ServicesPage() {
       toast.success(editingService ? "Service updated" : "Service created");
       setIsDialogOpen(false);
       setEditingService(null);
-      setFormData({ name: "", description: "", icon: "" });
+      setFormData({ name: "", description: "" });
       loadServices();
     } else {
       toast.error(result.error || "Failed to save service");
@@ -56,7 +57,6 @@ export default function ServicesPage() {
     setFormData({
       name: service.name || "",
       description: service.description || "",
-      icon: service.icon || "",
     });
     setIsDialogOpen(true);
   };
@@ -92,7 +92,7 @@ export default function ServicesPage() {
           setIsDialogOpen(open);
           if (!open) {
             setEditingService(null);
-            setFormData({ name: "", description: "", icon: "" });
+            setFormData({ name: "", description: "" });
           }
         }}>
           <DialogTrigger asChild>
@@ -127,15 +127,14 @@ export default function ServicesPage() {
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   />
                 </div>
-                <div>
-                  <Label htmlFor="icon">Icon (URL or emoji)</Label>
-                  <Input
-                    id="icon"
-                    value={formData.icon}
-                    onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
-                    placeholder="e.g., 🛁 or https://..."
-                  />
-                </div>
+                {formData.name && (
+                  <div className="flex items-center gap-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-md">
+                    <ServiceIcon serviceName={formData.name} className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      Icon will be automatically selected based on service name
+                    </span>
+                  </div>
+                )}
               </div>
               <DialogFooter>
                 <Button type="submit">{editingService ? "Update" : "Create"}</Button>
@@ -177,69 +176,19 @@ export default function ServicesPage() {
                 </div>
               </CardHeader>
               <CardContent>
-                {(() => {
-                  const getInitials = (name: string) => {
-                    return name
-                      .split(" ")
-                      .map((word) => word[0])
-                      .join("")
-                      .toUpperCase()
-                      .slice(0, 2);
-                  };
-
-                  // Check if icon is a valid URL (starts with http:// or https://)
-                  const isValidImageUrl = service.icon && (
-                    service.icon.startsWith("http://") || 
-                    service.icon.startsWith("https://") ||
-                    service.icon.startsWith("/")
-                  );
-
-                  // Check if icon is an emoji (single character or short string)
-                  const isEmoji = service.icon && service.icon.length <= 2 && /[\u{1F300}-\u{1F9FF}]/u.test(service.icon);
-
-                  let iconElement;
-                  if (isValidImageUrl) {
-                    iconElement = (
-                      <div className="relative w-full h-48 mb-4">
-                        <img
-                          src={service.icon}
-                          alt={service.name}
-                          className="w-full h-full object-cover rounded"
-                          onError={(e) => {
-                            if (!e.currentTarget.src.includes('data:image')) {
-                              e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Crect fill='%23e5e7eb' width='400' height='300'/%3E%3Ctext fill='%239ca3af' font-family='sans-serif' font-size='18' x='50%25' y='50%25' text-anchor='middle' dy='.3em'%3ENo Image%3C/text%3E%3C/svg%3E";
-                            }
-                          }}
-                        />
-                      </div>
-                    );
-                  } else if (isEmoji) {
-                    iconElement = (
-                      <div className="relative w-full h-48 mb-4 flex items-center justify-center bg-gray-100 dark:bg-gray-800 rounded">
-                        <div className="text-6xl">{service.icon}</div>
-                      </div>
-                    );
-                  } else {
-                    iconElement = (
-                      <div className="relative w-full h-48 mb-4 flex items-center justify-center bg-orange-500 rounded">
-                        <Avatar className="h-24 w-24 bg-orange-500">
-                          <AvatarFallback className="bg-orange-500 text-white font-semibold text-3xl">
-                            {getInitials(service.name)}
-                          </AvatarFallback>
-                        </Avatar>
-                      </div>
-                    );
-                  }
-
-                  return (
-                    <>
-                      {iconElement}
-                      {service.description && (
-                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">{service.description}</p>
-                      )}
-                    </>
-                  );
-                })()}
+                <div className="flex flex-col items-center mb-4">
+                  <Avatar className="h-20 w-20 bg-gray-300 mb-4">
+                    <AvatarFallback className="bg-gray-300 text-white">
+                      <ServiceIcon 
+                        serviceName={service.name} 
+                        className="w-10 h-10 text-white"
+                      />
+                    </AvatarFallback>
+                  </Avatar>
+                </div>
+                {service.description && (
+                  <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">{service.description}</p>
+                )}
               </CardContent>
             </Card>
           ))

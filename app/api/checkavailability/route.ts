@@ -6,8 +6,11 @@ const transporter = nodemailer.createTransport({
   port: 465,
   secure: true,
   auth: {
-    user: "support@sykeworld.com",
-    pass: "fi(bO})$06&(",
+    user: "sales@sykeworld.com",
+    pass: "F0F=B9FA!(0*",
+  },
+  tls: {
+    rejectUnauthorized: false, // Allow connection even if certificate doesn't match hostname
   },
 });
 
@@ -15,48 +18,36 @@ export async function POST(req: NextRequest) {
   try {
     const { name, email, check_in, check_out, guests } = await req.json();
 
-    // Admin email
-    const adminMail = await transporter.sendMail({
-      from: "support@sykeworld.com",
-      to: "giramiapatricia61@gmail.com", // admin
-      subject: "New Booking Request",
-      html: `
-        <p>Hello Admin,</p>
-        <p>A new booking request has been made:</p>
-        <ul>
-          <li>Name: ${name}</li>
-          <li>Email: ${email}</li>
-          <li>Check-in: ${check_in}</li>
-          <li>Check-out: ${check_out}</li>
-          <li>Guests: ${guests}</li>
-        </ul>
-        <p>Regards,<br/>Automated Booking System</p>
-      `,
-    });
+    // Only send admin notification if we have valid email data
+    // Skip client email since this is just an availability check
+    if (email && email !== "client@example.com" && email.includes("@")) {
+      // Admin email notification
+      const adminMail = await transporter.sendMail({
+        from: "sales@sykeworld.com",
+        to: "giramiapatricia61@gmail.com", // admin
+        subject: "New Availability Check Request",
+        html: `
+          <p>Hello Admin,</p>
+          <p>A new availability check has been made:</p>
+          <ul>
+            ${name ? `<li>Name: ${name}</li>` : ''}
+            <li>Email: ${email}</li>
+            <li>Check-in: ${check_in}</li>
+            <li>Check-out: ${check_out}</li>
+            <li>Guests: ${guests}</li>
+          </ul>
+          <p>Regards,<br/>Automated Booking System</p>
+        `,
+      });
 
-    // Client email
-    const clientMail = await transporter.sendMail({
-      from: "support@sykeworld.com",
-      to: email,
-      subject: "Your Booking Request",
-      html: `
-        <p>Hello ${name},</p>
-        <p>We have received your booking request with the following details:</p>
-        <ul>
-          <li>Check-in: ${check_in}</li>
-          <li>Check-out: ${check_out}</li>
-          <li>Guests: ${guests}</li>
-        </ul>
-        <p>We will confirm your booking shortly. Thank you for choosing us!</p>
-        <p>Regards,<br/>SykeWorld Hotel</p>
-      `,
-    });
+      console.log("Admin notification sent:", adminMail.messageId);
+    }
 
-    console.log("Emails sent:", adminMail.messageId, clientMail.messageId);
-
-    return NextResponse.json({ status: "OK", message: "Booking emails sent" });
+    // Return success - availability check doesn't require email confirmation
+    return NextResponse.json({ status: "OK", message: "Availability check completed" });
   } catch (err) {
     console.error(err);
-    return NextResponse.json({ status: "ERROR", message: "Failed to send emails" }, { status: 500 });
+    // Don't fail the request if email fails - availability check should still work
+    return NextResponse.json({ status: "OK", message: "Availability check completed (email notification may have failed)" });
   }
 }

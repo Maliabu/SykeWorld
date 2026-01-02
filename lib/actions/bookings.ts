@@ -292,7 +292,6 @@ export async function createRoomService(data: unknown) {
     const validated = z.object({
       name: z.string().min(1, "Name is required"),
       description: z.string().optional(),
-      icon: z.string().optional(),
     }).parse(data);
 
     const [service] = await db
@@ -300,7 +299,7 @@ export async function createRoomService(data: unknown) {
       .values({
         name: validated.name,
         description: validated.description || null,
-        icon: validated.icon || null,
+        icon: null, // Icon is auto-selected based on name
       })
       .returning();
 
@@ -475,53 +474,38 @@ export async function checkAvailability(data: unknown) {
     const checkOut = new Date(validated.checkOut);
     const checkInStr = checkIn.toISOString().split("T")[0];
     const checkOutStr = checkOut.toISOString().split("T")[0];
+    const guests = validated.guests || 1;
 
-    // Get all rooms or filter by room type
-    let allRooms;
+    // Build where conditions
+    const whereConditions = [eq(rooms.status, "available")];
     if (validated.roomTypeId) {
-      allRooms = await db
-        .select({
-          id: rooms.id,
-          roomNumber: rooms.roomNumber,
-          floor: rooms.floor,
-          status: rooms.status,
-          roomType: {
-            id: roomTypes.id,
-            name: roomTypes.name,
-            description: roomTypes.description,
-            basePrice: roomTypes.basePrice,
-            maxGuests: roomTypes.maxGuests,
-          },
-        })
-        .from(rooms)
-        .innerJoin(roomTypes, eq(rooms.roomTypeId, roomTypes.id))
-        .where(
-          and(
-            eq(rooms.status, "available"),
-            eq(roomTypes.id, validated.roomTypeId)
-          )
-        );
-    } else {
-      allRooms = await db
-        .select({
-          id: rooms.id,
-          roomNumber: rooms.roomNumber,
-          floor: rooms.floor,
-          status: rooms.status,
-          roomType: {
-            id: roomTypes.id,
-            name: roomTypes.name,
-            description: roomTypes.description,
-            basePrice: roomTypes.basePrice,
-            maxGuests: roomTypes.maxGuests,
-          },
-        })
-        .from(rooms)
-        .innerJoin(roomTypes, eq(rooms.roomTypeId, roomTypes.id))
-        .where(eq(rooms.status, "available"));
+      whereConditions.push(eq(roomTypes.id, validated.roomTypeId));
+    }
+    // Filter by maxGuests >= guests
+    if (guests && guests > 0) {
+      whereConditions.push(gte(roomTypes.maxGuests, guests));
     }
 
-    // Filter out rooms with overlapping bookings
+    // Get all rooms matching criteria
+    const allRooms = await db
+      .select({
+        id: rooms.id,
+        roomNumber: rooms.roomNumber,
+        floor: rooms.floor,
+        status: rooms.status,
+        roomType: {
+          id: roomTypes.id,
+          name: roomTypes.name,
+          description: roomTypes.description,
+          basePrice: roomTypes.basePrice,
+          maxGuests: roomTypes.maxGuests,
+        },
+      })
+      .from(rooms)
+      .innerJoin(roomTypes, eq(rooms.roomTypeId, roomTypes.id))
+      .where(and(...whereConditions));
+
+    // Filter out rooms with overlapping bookings and get images/services
     const availableRooms = await Promise.all(
       allRooms.map(async (room) => {
         const overlappingBookings = await db
@@ -551,17 +535,51 @@ export async function checkAvailability(data: unknown) {
             )
           );
 
-        return overlappingBookings.length === 0 ? room : null;
+        if (overlappingBookings.length > 0) {
+          return null;
+        }
+
+        // Get images for this room
+        const images = await db
+          .select()
+          .from(roomImages)
+          .where(eq(roomImages.roomId, room.id));
+
+        // Get services for room type
+        let services: any[] = [];
+        try {
+          const serviceIds = await db
+            .select({ serviceId: roomTypeServices.roomServiceId })
+            .from(roomTypeServices)
+            .where(eq(roomTypeServices.roomTypeId, room.roomType.id));
+
+          if (serviceIds.length > 0) {
+            const serviceIdValues = serviceIds.map((s) => s.serviceId);
+            services = await db
+              .select()
+              .from(roomServices)
+              .where(inArray(roomServices.id, serviceIdValues));
+          }
+        } catch (serviceError) {
+          console.error("Error fetching services for room:", serviceError);
+        }
+
+        return {
+          ...room,
+          images: images || [],
+          services: services || [],
+        };
       })
     );
 
-    const filtered = availableRooms.filter((room) => room !== null) as typeof allRooms;
+    const filtered = availableRooms.filter((room) => room !== null);
 
     return { success: true, rooms: filtered };
   } catch (error: any) {
     if (error.name === "ZodError") {
       return { error: error.errors[0].message };
     }
+    console.error("checkAvailability error:", error);
     return { error: "Failed to check availability" };
   }
 }
@@ -818,12 +836,15 @@ export async function updateRoomService(serviceId: string, data: unknown) {
     const validated = z.object({
       name: z.string().min(1).optional(),
       description: z.string().optional(),
-      icon: z.string().optional(),
     }).parse(data);
 
+    // Always set icon to null since it's auto-selected based on name
     const [updated] = await db
       .update(roomServices)
-      .set(validated)
+      .set({
+        ...validated,
+        icon: null, // Icon is auto-selected based on name
+      })
       .where(eq(roomServices.id, serviceId))
       .returning();
 

@@ -95,8 +95,9 @@ if (move_uploaded_file($file['tmp_name'], $targetFile)) {
     $host = $_SERVER['HTTP_HOST'];
     $baseUrl = $protocol . '://' . $host;
     
-    // Return the URL
-    $fileUrl = $baseUrl . '/uploads/' . $folderName . '/' . $uniqueFilename;
+    // For subdomain (uploads.sykeworld.com), the document root is already the uploads directory
+    // So we don't need to add /uploads/ again - just use the folder and filename
+    $fileUrl = $baseUrl . '/' . $folderName . '/' . $uniqueFilename;
     
     echo json_encode([
         'success' => true,

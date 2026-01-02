@@ -84,6 +84,7 @@ export const createReviewSchema = z.object({
 export const checkAvailabilitySchema = z.object({
   checkIn: z.string().or(z.date()),
   checkOut: z.string().or(z.date()),
+  guests: z.number().int().positive().default(1).optional(),
   roomTypeId: z.string().optional(),
 });
 

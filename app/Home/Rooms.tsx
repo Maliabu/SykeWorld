@@ -4,6 +4,7 @@ import Container from "./Container";
 import { useState, useEffect } from "react";
 import { Room } from "../types/types";
 import { getAllRooms } from "@/lib/actions/bookings";
+import { ServiceIcon } from "@/lib/utils/serviceIcons";
 
 export default function RoomsSection() {
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -148,14 +149,8 @@ export default function RoomsSection() {
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
                         {room.services.slice(0, 6).map((service, idx) => (
                           <div key={service.id || idx} className="flex flex-col items-center text-center space-y-2">
-                            <div className="w-8 h-8 text-gray-500">
-                              {service.icon ? (
-                                <img src={service.icon} alt={service.name} className="w-full h-full object-contain" />
-                              ) : (
-                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className="w-full h-full">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                </svg>
-                              )}
+                            <div className="w-8 h-8 text-gray-500 flex items-center justify-center">
+                              <ServiceIcon serviceName={service.name} className="w-6 h-6" />
                             </div>
                             <p className="text-gray-600 text-xs" style={{ fontFamily: 'var(--font-inter)' }}>{service.name}</p>
                           </div>

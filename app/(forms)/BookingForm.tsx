@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
+import { useRouter } from "next/navigation";
+import { getAllRoomTypes } from "@/lib/actions/bookings";
 
 // Zod schema with more validations
 const bookingSchema = z
@@ -21,10 +23,34 @@ const bookingSchema = z
   });
 
 export default function BookingForm() {
+  const router = useRouter();
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
   const [guests, setGuests] = useState(1);
+  const [roomTypeId, setRoomTypeId] = useState("");
+  const [roomTypes, setRoomTypes] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingRoomTypes, setLoadingRoomTypes] = useState(true);
+
+  // Get today's date in YYYY-MM-DD format for min date
+  const today = new Date().toISOString().split('T')[0];
+
+  // Fetch room types on mount
+  useEffect(() => {
+    const fetchRoomTypes = async () => {
+      try {
+        const result = await getAllRoomTypes();
+        if (result.success && result.roomTypes) {
+          setRoomTypes(result.roomTypes);
+        }
+      } catch (err) {
+        console.error("Failed to fetch room types:", err);
+      } finally {
+        setLoadingRoomTypes(false);
+      }
+    };
+    fetchRoomTypes();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,28 +66,19 @@ export default function BookingForm() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/checkavailability", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    name: "Customer Name",
-    email: "client@example.com",
-    check_in: checkIn,
-    check_out: checkOut,
-    guests,
-  }),
-});
-
-if (!res.ok) throw new Error("Failed to send booking emails");
-toast.success("Booking request sent successfully!");
-
-      setCheckIn("");
-      setCheckOut("");
-      setGuests(1);
+      // Navigate to availability results page with query params
+      const params = new URLSearchParams({
+        checkIn,
+        checkOut,
+        guests: guests.toString(),
+      });
+      if (roomTypeId) {
+        params.append("roomTypeId", roomTypeId);
+      }
+      router.push(`/availability?${params.toString()}`);
     } catch (err) {
       console.error(err);
-      toast.error("Booking failed. Please try again.");
-    } finally {
+      toast.error("Failed to check availability. Please try again.");
       setLoading(false);
     }
   };
@@ -99,6 +116,7 @@ toast.success("Booking request sent successfully!");
           type="date"
           value={checkIn}
           onChange={(e) => setCheckIn(e.target.value)}
+          min={today}
           className="bg-transparent border-b border-gray-400/50 px-0 py-3 text-[#1a1c1e] placeholder-gray-500 focus:outline-none focus:border-b-amber-600 transition-all"
           style={{ fontFamily: 'var(--font-inter)' }}
           required
@@ -116,6 +134,7 @@ toast.success("Booking request sent successfully!");
           type="date"
           value={checkOut}
           onChange={(e) => setCheckOut(e.target.value)}
+          min={checkIn || today}
           className="bg-transparent border-b border-gray-400/50 px-0 py-3 text-[#1a1c1e] placeholder-gray-500 focus:outline-none focus:border-b-amber-600 transition-all"
           style={{ fontFamily: 'var(--font-inter)' }}
           required
@@ -133,11 +152,37 @@ toast.success("Booking request sent successfully!");
           type="number"
           min={1}
           value={guests}
-          onChange={(e) => setGuests(parseInt(e.target.value))}
-          className="bg-transparent border-b border-gray-400/50 px-0 py-3 text-[#1a1c1e] placeholder-gray-500 focus:outline-none focus:border-b-amber-600 transition-all"
+          onChange={(e) => setGuests(parseInt(e.target.value) || 1)}
+          className="bg-transparent border-b border-gray-400/50 px-0 py-3 text-[#1a1c1e] placeholder-gray-500 focus:outline-none focus:border-b-amber-600 transition-all w-full text-center"
           style={{ fontFamily: 'var(--font-inter)' }}
           required
         />
+      </div>
+
+      <div className="flex flex-col items-center w-full">
+        <label 
+          className="block text-xs uppercase tracking-widest text-black/60 mb-2 font-medium w-fit"
+          style={{ fontFamily: 'var(--font-inter)' }}
+        >
+          ROOM TYPE
+        </label>
+        <select
+          value={roomTypeId}
+          onChange={(e) => setRoomTypeId(e.target.value)}
+          className="bg-transparent border-b border-gray-400/50 px-0 py-3 text-[#1a1c1e] focus:outline-none focus:border-b-amber-600 transition-all w-full text-center cursor-pointer"
+          style={{ fontFamily: 'var(--font-inter)' }}
+        >
+          <option value="">All Room Types</option>
+          {loadingRoomTypes ? (
+            <option value="" disabled>Loading room types...</option>
+          ) : (
+            roomTypes.map((rt: any) => (
+              <option key={rt.id} value={rt.id}>
+                {rt.name}
+              </option>
+            ))
+          )}
+        </select>
       </div>
 
       <div className="flex items-end">

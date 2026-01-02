@@ -10,6 +10,9 @@ const transporter = nodemailer.createTransport({
     user: "sales@sykeworld.com",
     pass: "F0F=B9FA!(0*"
   },
+  tls: {
+    rejectUnauthorized: false, // Allow connection even if certificate doesn't match hostname
+  },
 });
 
 const noReplyTransporter = nodemailer.createTransport({
@@ -20,6 +23,9 @@ const noReplyTransporter = nodemailer.createTransport({
   auth: {
     user: "sales@sykeworld.com",
     pass: "F0F=B9FA!(0*"
+  },
+  tls: {
+    rejectUnauthorized: false, // Allow connection even if certificate doesn't match hostname
   },
 });
 

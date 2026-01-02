@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { toast, Toaster } from "sonner";
 import { FaStar, FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import Container from "../Home/Container";
@@ -10,7 +10,7 @@ import { useSession as useCustomSession } from "@/lib/hooks/useSession";
 import { useSession as useNextAuthSession } from "next-auth/react";
 import { AlertCircle } from "lucide-react";
 import { initiatePesapalPayment } from "@/lib/actions/pesapal";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 // helpers
 const formatMoney = (n: number) => `UGX ${n.toFixed(2)}`;
@@ -18,9 +18,27 @@ const formatMoney = (n: number) => `UGX ${n.toFixed(2)}`;
 /* ---------------- Multistep Booking Component ---------------- */
 
 export default function BookingPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-[#fafafa]">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600"></div>
+          <p className="mt-4 text-gray-600" style={{ fontFamily: 'var(--font-inter)' }}>
+            Loading...
+          </p>
+        </div>
+      </div>
+    }>
+      <BookingPageContent />
+    </Suspense>
+  );
+}
+
+function BookingPageContent() {
   const { user, loading: sessionLoading } = useCustomSession();
   const { data: nextAuthSession, status: nextAuthStatus } = useNextAuthSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
   
   // Check if user is signed in via either NextAuth or custom session
   const isSignedIn = !!user || nextAuthStatus === "authenticated";
@@ -46,6 +64,24 @@ export default function BookingPage() {
     specialRequests: "",
     paymentMethod: "",
   });
+
+  // Pre-fill form from query params (from availability page)
+  useEffect(() => {
+    const roomId = searchParams.get("roomId");
+    const checkIn = searchParams.get("checkIn");
+    const checkOut = searchParams.get("checkOut");
+    const guests = searchParams.get("guests");
+
+    if (roomId || checkIn || checkOut || guests) {
+      setForm((p) => ({
+        ...p,
+        room: roomId || p.room,
+        checkIn: checkIn || p.checkIn,
+        checkOut: checkOut || p.checkOut,
+        guests: guests ? parseInt(guests) : p.guests,
+      }));
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     // prefill name/email from session if present
