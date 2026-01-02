@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect, useRef, Suspense } from "react";
+import { useState, useEffect, useRef, Suspense, useCallback } from "react";
 import { toast, Toaster } from "sonner";
 import { FaStar, FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import Container from "../Home/Container";
 import Link from "next/link";
 import { getAllRooms, createBooking } from "@/lib/actions/bookings";
 import { useSession as useCustomSession } from "@/lib/hooks/useSession";
-import { useSession as useNextAuthSession } from "next-auth/react";
+import { useSession as useNextAuthSession, signOut } from "next-auth/react";
 import { AlertCircle } from "lucide-react";
 import { initiatePesapalPayment } from "@/lib/actions/pesapal";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -47,6 +47,17 @@ function BookingPageContent() {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const isSubmittingRef = useRef(false); // Prevent double submissions
+
+  // Auto sign out if session expired
+  const handleSessionExpired = useCallback(() => {
+    toast.error("Your session has expired. Please sign in again to continue.");
+    localStorage.removeItem("access");
+    localStorage.removeItem("refresh");
+    localStorage.removeItem("google_exchanged");
+    signOut({ redirect: false }).then(() => {
+      router.push("/auth?redirect=/booking");
+    });
+  }, [router]);
 
   // rooms list (fetched)
   const [rooms, setRooms] = useState<any[]>([]);
@@ -295,8 +306,8 @@ function BookingPageContent() {
 
                 {/* Sign-in suggestion banner - only show when user is NOT signed in */}
                 {!isLoadingSession && !isSignedIn && (
-                  <div className="mb-6 md:mb-8 p-3 md:p-4 bg-amber-600/20 border-l-4 border-amber-600 rounded-r-lg flex flex-col sm:flex-row items-start sm:items-center gap-3 border border-black/10">
-                    <AlertCircle className="h-5 w-5 text-amber-400 flex-shrink-0" />
+                  <div className="mb-6 md:mb-8 p-3 md:p-4 bg-amber-500/10 border-l-4 border-amber-100 flex flex-col sm:flex-row items-start sm:items-center gap-3 border">
+                    <AlertCircle className="h-5 w-5 text-amber-400 shrink-0" />
                     <div className="flex-1 min-w-0">
                       <p className="text-xs sm:text-sm font-medium text-[#1a1c1e]" style={{ fontFamily: 'var(--font-inter)' }}>
                         Sign in to save your booking details and access exclusive offers
@@ -314,7 +325,6 @@ function BookingPageContent() {
 
             <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-4 md:gap-6 lg:gap-8 xl:gap-12 overflow-hidden">
             <div className="space-y-6 md:space-y-8 min-w-0">
-
               {/* STEPS NAV */}
               <div className="flex gap-0 mb-6 md:mb-8 overflow-x-auto">
                 <div className={`flex-1 px-3 md:px-6 py-3 md:py-4 text-center font-medium transition-all border-t border-b ${
@@ -542,7 +552,7 @@ function BookingPageContent() {
                   <div className="flex gap-4 pt-4">
                     <button 
                       onClick={() => setStep(1)} 
-                      className="flex-1 bg-amber-700 hover:bg-amber-800 text-[#1a1c1e] px-4 md:px-6 py-3 text-sm md:text-base font-semibold transition uppercase tracking-wide"
+                      className="flex-1 bg-transparent border border-black/20 hover:border-black/40 text-[#1a1c1e] px-4 md:px-6 py-3 text-sm md:text-base font-semibold transition uppercase tracking-wide"
                       style={{ fontFamily: 'var(--font-inter)' }}
                     >
                       Back
@@ -550,10 +560,19 @@ function BookingPageContent() {
                     <button 
                       onClick={() => { 
                         const err = validateStep2(); 
-                        if (err) toast.error(err); 
-                        else setStep(3); 
+                        if (err) {
+                          toast.error(err);
+                          return;
+                        }
+                        // Check session before proceeding to step 3
+                        if (!isSignedIn) {
+                          toast.error("Please sign in to continue");
+                          router.push("/auth?redirect=/booking");
+                          return;
+                        }
+                        setStep(3); 
                       }} 
-                      className="flex-1 bg-amber-600 text-[#1a1c1e] px-4 md:px-6 py-3 text-sm md:text-base font-semibold hover:bg-amber-700 transition uppercase tracking-wide"
+                      className="flex-1 bg-amber-600 text-white px-4 md:px-6 py-3 text-sm md:text-base font-semibold hover:bg-amber-700 transition uppercase tracking-wide"
                       style={{ fontFamily: 'var(--font-inter)' }}
                     >
                       Continue to Review
@@ -632,7 +651,7 @@ function BookingPageContent() {
                     <button 
                       type="button"
                       onClick={() => setStep(2)} 
-                      className="flex-1 bg-amber-700 hover:bg-amber-800 text-[#1a1c1e] px-4 md:px-6 py-3 text-sm md:text-base font-semibold transition uppercase tracking-wide"
+                      className="flex-1 bg-transparent border border-black/20 hover:border-black/40 text-[#1a1c1e] px-4 md:px-6 py-3 text-sm md:text-base font-semibold transition uppercase tracking-wide"
                       style={{ fontFamily: 'var(--font-inter)' }}
                     >
                       Back
@@ -640,7 +659,7 @@ function BookingPageContent() {
                     <button 
                       type="submit"
                       disabled={loading} 
-                      className="flex-1 bg-amber-600 text-[#1a1c1e] px-4 md:px-6 py-3 text-sm md:text-base font-semibold hover:bg-amber-700 transition uppercase tracking-wide disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex-1 bg-amber-600 text-white px-4 md:px-6 py-3 text-sm md:text-base font-semibold hover:bg-amber-700 transition uppercase tracking-wide disabled:opacity-50 disabled:cursor-not-allowed"
                       style={{ fontFamily: 'var(--font-inter)' }}
                     >
                       {loading ? "Processing..." : "Confirm & Pay"}

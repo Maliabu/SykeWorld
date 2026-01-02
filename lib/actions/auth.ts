@@ -78,7 +78,7 @@ export async function registerGuest(data: z.infer<typeof registerSchema>) {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 60 * 30, // 30 minutes
+      maxAge: 60 * 60, // 1 hour
     });
 
     cookieStore.set("refresh", refreshToken, {
@@ -284,7 +284,7 @@ export async function login(data: unknown) {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 60 * 30, // 30 min
+      maxAge: 60 * 60, // 1 hour
       path: "/",
     });
 
@@ -383,7 +383,7 @@ export async function googleLogin(data: unknown) {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 60 * 30,
+      maxAge: 60 * 60, // 1 hour
     });
 
     cookieStore.set("refresh", refreshToken, {

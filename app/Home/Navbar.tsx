@@ -234,7 +234,8 @@ export default function Navbar() {
 
             {/* Promotional Cards - Fixed positioned, overlay - Hidden on mobile */}
             <div className="hidden md:flex absolute left-8 top-full mt-2 items-center gap-4 z-50">
-              {/* Paidha Card */}
+              {/* Paidha Card - Hidden on auth page */}
+              {pathname !== '/auth' && (
               <Link 
                 href="/visit"
                 className="w-full max-w-[400px] group relative overflow-hidden rounded-lg p-4 backdrop-blur-md bg-black/2 border border-black/10 hover:bg-black/5 hover:border-black/20 transition-all duration-300"
@@ -274,12 +275,13 @@ export default function Navbar() {
                     The Hidden Gem of West Nile
                   </p>
                   <div className="flex items-center justify-end">
-                    <svg className="w-4 h-4 text-white/70 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 text-black/70 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                     </svg>
                   </div>
                 </div>
               </Link>
+              )}
 
               {/* Bar & Restaurant Card */}
               {!kitchenCardClosed && (
