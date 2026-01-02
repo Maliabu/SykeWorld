@@ -95,9 +95,47 @@ if (move_uploaded_file($file['tmp_name'], $targetFile)) {
     $host = $_SERVER['HTTP_HOST'];
     $baseUrl = $protocol . '://' . $host;
     
-    // For subdomain (uploads.sykeworld.com), the document root is already the uploads directory
-    // So we don't need to add /uploads/ again - just use the folder and filename
-    $fileUrl = $baseUrl . '/' . $folderName . '/' . $uniqueFilename;
+    // For subdomain setup (uploads.sykeworld.com):
+    // - The document root IS the uploads directory
+    // - Files are saved to: {document_root}/{category}/{filename}
+    // - URL should be: https://uploads.sykeworld.com/{category}/{filename} (NO /uploads/ prefix)
+    // For main domain setup (sykeworld.com/uploads/):
+    // - Files are saved to: public_html/uploads/{category}/{filename}
+    // - URL should be: https://sykeworld.com/uploads/{category}/{filename}
+    
+    // Check if we're on a subdomain (uploads.*)
+    $isSubdomain = strpos($host, 'uploads.') === 0;
+    
+    if ($isSubdomain) {
+        // Subdomain: URL is just domain + category + filename (NO /uploads/ prefix)
+        // The subdomain's document root IS the uploads directory
+        $fileUrl = $baseUrl . '/' . $folderName . '/' . $uniqueFilename;
+    } else {
+        // Main domain: URL includes /uploads/ path
+        $scriptPath = dirname($_SERVER['SCRIPT_NAME']); // e.g., /uploads or /
+        // Normalize script path (remove leading/trailing slashes, then add one)
+        $scriptPath = '/' . trim($scriptPath, '/');
+        if ($scriptPath === '/') {
+            $scriptPath = '/uploads'; // Default to /uploads if root
+        }
+        $fileUrl = $baseUrl . $scriptPath . '/' . $folderName . '/' . $uniqueFilename;
+    }
+    
+    // CRITICAL: If on uploads subdomain, ensure /uploads/ is NOT in the URL
+    // Remove /uploads/ from anywhere in the path for subdomain
+    if ($isSubdomain) {
+        // Remove /uploads/ from the URL path completely
+        $fileUrl = preg_replace('#^https://uploads\.[^/]+/uploads/#', 'https://' . $host . '/', $fileUrl);
+        $fileUrl = preg_replace('#/uploads/#', '/', $fileUrl);
+        // Ensure we have the correct format: https://uploads.sykeworld.com/rooms/filename.jpg
+        $fileUrl = preg_replace('#^https://' . preg_quote($host, '#') . '/(.+)$#', 'https://' . $host . '/$1', $fileUrl);
+    }
+    
+    // Safety check: Remove any double /uploads/ in the URL (for main domain)
+    $fileUrl = preg_replace('#/uploads/uploads/#', '/uploads/', $fileUrl);
+    
+    // Debug: Log the URL construction
+    error_log("File URL: $fileUrl | Host: $host | IsSubdomain: " . ($isSubdomain ? 'yes' : 'no') . " | Folder: $folderName | File: $uniqueFilename | Script: " . $_SERVER['SCRIPT_NAME']);
     
     echo json_encode([
         'success' => true,

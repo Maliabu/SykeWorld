@@ -72,22 +72,30 @@ export default function Rooms() {
 
   return (
     <div className="p-6 md:p-8 lg:p-10 space-y-4 sm:space-y-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="flex flex-col gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900 dark:text-white">All Rooms</h1>
           <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">Manage hotel rooms</p>
         </div>
-        <div className="relative w-full sm:w-64">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search rooms..."
-            value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setPage(1); // Reset to first page on search
-            }}
-            className="pl-10 w-full"
-          />
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
+            <Input
+              placeholder="Search by: room number, room type, status, or floor"
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setPage(1); // Reset to first page on search
+              }}
+              className="pl-10 w-full"
+            />
+          </div>
+          <Button
+            onClick={() => window.location.href = "/admin/dashboard/rooms/allocations"}
+            className="whitespace-nowrap sm:flex-shrink-0"
+          >
+            View Allocations
+          </Button>
         </div>
       </div>
 

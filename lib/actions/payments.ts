@@ -2,8 +2,9 @@
 
 import { db } from "@/lib/db";
 import { payments, transactions, paymentLogs } from "@/lib/db/schema/payments";
+import { bookings } from "@/lib/db/schema/bookings";
 import { createPaymentSchema, createTransactionSchema } from "@/lib/validations/payments";
-import { eq } from "drizzle-orm";
+import { eq, or } from "drizzle-orm";
 import { requireAuth } from "@/lib/auth/session";
 
 export async function createPayment(data: unknown) {
@@ -185,6 +186,70 @@ export async function getAllTransactions() {
       return { error: "Unauthorized" };
     }
     return { error: "Failed to fetch transactions" };
+  }
+}
+
+// Sync booking statuses with completed payments (Admin utility)
+// This ensures bookings are confirmed when their payments are completed
+export async function syncBookingStatuses() {
+  try {
+    await requireAuth();
+
+    // Get ALL payments first, then filter for completed ones (case-insensitive)
+    const allPayments = await db
+      .select()
+      .from(payments);
+
+    // Filter for completed payments (case-insensitive) and normalize status
+    const completedPayments = allPayments.filter((p) => {
+      const status = (p.status || "").toUpperCase();
+      return status === "COMPLETED" || status === "COMPLETE" || status === "SUCCESS";
+    });
+
+    let updatedBookings = 0;
+    let normalizedPayments = 0;
+
+    // Process each completed payment
+    for (const payment of completedPayments) {
+      // First, normalize payment status to "COMPLETED" (uppercase) for consistency
+      if (payment.status !== "COMPLETED") {
+        await db
+          .update(payments)
+          .set({ status: "COMPLETED" })
+          .where(eq(payments.id, payment.id));
+        normalizedPayments++;
+      }
+
+      // Then, update booking status if payment is completed
+      if (payment.bookingId) {
+        // Check current booking status
+        const [booking] = await db
+          .select({ status: bookings.status })
+          .from(bookings)
+          .where(eq(bookings.id, payment.bookingId))
+          .limit(1);
+
+        // Update if booking is still pending
+        if (booking && booking.status === "pending") {
+          await db
+            .update(bookings)
+            .set({ status: "confirmed" })
+            .where(eq(bookings.id, payment.bookingId));
+          updatedBookings++;
+          console.log(`✅ Synced: Payment ${payment.id} (COMPLETED) → Booking ${payment.bookingId} (confirmed)`);
+        }
+      }
+    }
+
+    console.log(`📊 Sync complete: ${normalizedPayments} payments normalized, ${updatedBookings} bookings updated`);
+
+    return { success: true, updated: updatedBookings, normalized: normalizedPayments };
+  } catch (error: any) {
+    if (error.message === "Unauthorized") {
+      return { error: "Unauthorized" };
+    }
+    console.error("Sync booking statuses error:", error);
+    return { error: "Failed to sync booking statuses" };
   }
 }
 

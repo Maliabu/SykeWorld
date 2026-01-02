@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { getAllRooms } from "@/lib/actions/bookings";
 import { getAllBookings } from "@/lib/actions/bookings";
-import { getAllPayments } from "@/lib/actions/payments";
+import { getAllPayments, syncBookingStatuses } from "@/lib/actions/payments";
 import { getLoggedInUsers, getRecentlyAddedUsers } from "@/lib/actions/users";
 import { getMonthlyEarnings } from "@/lib/actions/reports";
 import { getAllSubscriptions } from "@/lib/actions/subscriptions";
@@ -58,6 +58,13 @@ export default function DashboardHome() {
     monthlyRevenue: 0,
     totalSubscriptions: 0,
   });
+  const [roomStatusCounts, setRoomStatusCounts] = useState({
+    available: 0,
+    occupied: 0,
+    cleaning: 0,
+    maintenance: 0,
+    unavailable: 0,
+  });
   const [loggedInUsers, setLoggedInUsers] = useState<any[]>([]);
   const [recentUsers, setRecentUsers] = useState<any[]>([]);
   const [monthlyEarnings, setMonthlyEarnings] = useState<any[]>([]);
@@ -81,6 +88,14 @@ export default function DashboardHome() {
 
   const loadStats = async () => {
     try {
+      // First, sync booking statuses with completed payments (fix any mismatches)
+      try {
+        await syncBookingStatuses();
+      } catch (syncError) {
+        console.error("Failed to sync booking statuses:", syncError);
+        // Continue anyway - don't block the dashboard
+      }
+
       const [roomsResult, bookingsResult, paymentsResult, loggedInResult, recentUsersResult, earningsResult, subscriptionsResult, activityStatsResult, notifCountResult, taskCountResult] = await Promise.all([
         getAllRooms(),
         getAllBookings(undefined),
@@ -98,22 +113,114 @@ export default function DashboardHome() {
       const bookings = bookingsResult.success ? bookingsResult.bookings || [] : [];
       const payments = paymentsResult.success ? paymentsResult.payments || [] : [];
 
+      // Debug: Log room data to diagnose issues
+      if (typeof window !== "undefined") {
+        console.log("Rooms result:", {
+          success: roomsResult.success,
+          error: roomsResult.error,
+          roomsCount: rooms.length,
+          firstRoom: rooms.length > 0 ? rooms[0] : null
+        });
+      }
+
+      // Debug: Log status values to help diagnose issues (only in development)
+      if (typeof window !== "undefined" && payments.length > 0) {
+        const completedPayments = payments.filter((p: any) => {
+          const status = (p.status || "").toUpperCase();
+          return status === "COMPLETED" || status === "COMPLETE" || status === "SUCCESS";
+        });
+        console.log("Total payments:", payments.length, "Completed:", completedPayments.length);
+        console.log("Payment statuses sample:", payments.slice(0, 5).map((p: any) => ({ status: p.status, amount: p.amount })));
+      }
+      if (typeof window !== "undefined" && bookings.length > 0) {
+        const confirmedBookings = bookings.filter((b: any) => (b.status || "").toLowerCase() === "confirmed");
+        console.log("Total bookings:", bookings.length, "Confirmed:", confirmedBookings.length);
+        console.log("Booking statuses sample:", bookings.slice(0, 5).map((b: any) => ({ status: b.status })));
+      }
+
       const availableRooms = rooms.filter((r: any) => r.status === "available").length;
-      const pendingBookings = bookings.filter((b: any) => b.status === "pending").length;
-      const confirmedBookings = bookings.filter((b: any) => b.status === "confirmed").length;
       
+      // Debug: Log room statuses to diagnose
+      if (typeof window !== "undefined" && rooms.length > 0) {
+        console.log("Total rooms:", rooms.length);
+        console.log("Room statuses sample:", rooms.slice(0, 5).map((r: any) => ({ 
+          roomNumber: r.roomNumber, 
+          status: r.status,
+          statusType: typeof r.status 
+        })));
+        const uniqueStatuses = [...new Set(rooms.map((r: any) => r.status))];
+        console.log("Unique room statuses found:", uniqueStatuses);
+      }
+      
+      // Count rooms by status (case-insensitive to handle any variations)
+      // Also handle null/undefined statuses
+      const statusCounts = {
+        available: rooms.filter((r: any) => {
+          const status = String(r?.status || "").toLowerCase().trim();
+          return status === "available";
+        }).length,
+        occupied: rooms.filter((r: any) => {
+          const status = String(r?.status || "").toLowerCase().trim();
+          return status === "occupied" || status === "booked";
+        }).length,
+        cleaning: rooms.filter((r: any) => {
+          const status = String(r?.status || "").toLowerCase().trim();
+          return status === "cleaning";
+        }).length,
+        maintenance: rooms.filter((r: any) => {
+          const status = String(r?.status || "").toLowerCase().trim();
+          return status === "maintenance";
+        }).length,
+        unavailable: rooms.filter((r: any) => {
+          const status = String(r?.status || "").toLowerCase().trim();
+          return status === "unavailable";
+        }).length,
+      };
+      
+      if (typeof window !== "undefined") {
+        console.log("Room status counts calculated:", statusCounts);
+        console.log("Total rooms processed:", rooms.length);
+      }
+      setRoomStatusCounts(statusCounts);
+      
+      // Case-insensitive status checks for bookings
+      const pendingBookings = bookings.filter((b: any) => 
+        (b.status || "").toLowerCase() === "pending"
+      ).length;
+      const confirmedBookings = bookings.filter((b: any) => 
+        (b.status || "").toLowerCase() === "confirmed"
+      ).length;
+      
+      // Case-insensitive status checks for payments - check for COMPLETED, COMPLETE, or Success
       const totalRevenue = payments
-        .filter((p: any) => p.status === "COMPLETED")
-        .reduce((sum: number, p: any) => sum + (parseFloat(p.amount) || 0), 0);
+        .filter((p: any) => {
+          const status = (p.status || "").toUpperCase();
+          return status === "COMPLETED" || status === "COMPLETE" || status === "SUCCESS";
+        })
+        .reduce((sum: number, p: any) => {
+          const amount = parseFloat(p.amount || "0");
+          return sum + (isNaN(amount) ? 0 : amount);
+        }, 0);
 
       const currentMonth = new Date().getMonth();
       const monthlyRevenue = payments
         .filter((p: any) => {
-          if (p.status !== "COMPLETED") return false;
-          const paymentDate = new Date(p.createdAt || p.created_at);
-          return paymentDate.getMonth() === currentMonth;
+          const status = (p.status || "").toUpperCase();
+          if (status !== "COMPLETED" && status !== "COMPLETE" && status !== "SUCCESS") return false;
+          // Try different date field names
+          const paymentDate = p.createdAt || p.created_at || p.created;
+          if (!paymentDate) return false;
+          try {
+            const date = new Date(paymentDate);
+            return date.getMonth() === currentMonth;
+          } catch {
+            return false;
+          }
         })
-        .reduce((sum: number, p: any) => sum + (parseFloat(p.amount) || 0), 0);
+        .reduce((sum: number, p: any) => {
+          const amount = parseFloat(p.amount || "0");
+          return sum + (isNaN(amount) ? 0 : amount);
+        }, 0);
 
       const subscriptions = subscriptionsResult.success ? subscriptionsResult.subscriptions || [] : [];
 
@@ -287,31 +394,58 @@ export default function DashboardHome() {
                     {getTimezone()}
                   </sup>
                 </div>
+                <div className={`text-sm font-medium ${textColor} opacity-90 mt-2`}>
+                  {formatDate(currentTime)}
+                </div>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Date Card with Cutout Effect */}
-        <div className="relative">
-          <div className="relative border-0 backdrop-blur-md bg-white/90 dark:bg-gray-900/90 rounded-lg overflow-visible">
-            <div className="p-4 relative">
-              {/* Card background with circular cutout using clip-path */}
-              <div 
-                className="absolute inset-0 backdrop-blur-md bg-white/90 dark:bg-gray-900/90 rounded-lg"
-                style={{
-                  clipPath: 'polygon(0% 0%, 0% 100%, 20% 100%, 20% 45%, 80% 45%, 80% 100%, 100% 100%, 100% 0%)',
-                }}
-              />
-              {/* Date text in the center cutout - shows page gradient behind */}
-              <div className="relative z-20 flex items-center justify-center py-3 min-h-[2.5rem]">
-                <span className={`text-sm font-medium ${textColor} opacity-90`}>
-                  {formatDate(currentTime)}
-                </span>
+        {/* Rooms Tally Card */}
+        <Card className="border-0 backdrop-blur-md bg-white/90 dark:bg-gray-900/90">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Bed className="h-5 w-5 text-orange-600" />
+              Room Status Overview
+            </CardTitle>
+            <CardDescription>Current room availability and status counts</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              <div className="flex flex-col items-center justify-center p-4 bg-green-50 dark:bg-green-950 rounded-lg border border-green-200 dark:border-green-800">
+                <div className="text-3xl font-bold text-green-600 dark:text-green-400 mb-1">
+                  {roomStatusCounts.available}
+                </div>
+                <div className="text-sm font-medium text-green-700 dark:text-green-300">Available</div>
+              </div>
+              <div className="flex flex-col items-center justify-center p-4 bg-orange-50 dark:bg-orange-950 rounded-lg border border-orange-200 dark:border-orange-800">
+                <div className="text-3xl font-bold text-orange-600 dark:text-orange-400 mb-1">
+                  {roomStatusCounts.occupied}
+                </div>
+                <div className="text-sm font-medium text-orange-700 dark:text-orange-300">Booked</div>
+              </div>
+              <div className="flex flex-col items-center justify-center p-4 bg-yellow-50 dark:bg-yellow-950 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                <div className="text-3xl font-bold text-yellow-600 dark:text-yellow-400 mb-1">
+                  {roomStatusCounts.cleaning}
+                </div>
+                <div className="text-sm font-medium text-yellow-700 dark:text-yellow-300">Cleaning</div>
+              </div>
+              <div className="flex flex-col items-center justify-center p-4 bg-red-50 dark:bg-red-950 rounded-lg border border-red-200 dark:border-red-800">
+                <div className="text-3xl font-bold text-red-600 dark:text-red-400 mb-1">
+                  {roomStatusCounts.maintenance}
+                </div>
+                <div className="text-sm font-medium text-red-700 dark:text-red-300">Maintenance</div>
+              </div>
+              <div className="flex flex-col items-center justify-center p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                <div className="text-3xl font-bold text-gray-600 dark:text-gray-400 mb-1">
+                  {roomStatusCounts.unavailable}
+                </div>
+                <div className="text-sm font-medium text-gray-700 dark:text-gray-300">Unavailable</div>
               </div>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Notification and Task Count Cards */}

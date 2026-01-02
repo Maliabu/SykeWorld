@@ -116,13 +116,23 @@ export async function uploadServerFile(formData: FormData, category?: string) {
         }
   
         if (response.ok) {
-          if (result.fileUrl) {
-            console.log('Upload successful, file URL:', result.fileUrl);
-            return result.fileUrl;
-          } else {
+          let fileUrl = result.fileUrl || result.url || result.path || result.location;
+          
+          if (!fileUrl) {
             console.error('Upload response missing fileUrl:', result);
             throw new Error(result.error || 'No file URL returned from server');
           }
+          
+          // Fix: Remove /uploads/ from subdomain URLs
+          // If URL is https://uploads.sykeworld.com/uploads/rooms/file.jpg
+          // It should be https://uploads.sykeworld.com/rooms/file.jpg
+          if (fileUrl.includes('uploads.sykeworld.com/uploads/')) {
+            fileUrl = fileUrl.replace('uploads.sykeworld.com/uploads/', 'uploads.sykeworld.com/');
+            console.log('🔧 Fixed subdomain URL (removed /uploads/):', fileUrl);
+          }
+          
+          console.log('✅ Upload successful, file URL:', fileUrl);
+          return fileUrl;
         } else {
           console.error('Upload failed:', result);
           throw new Error(result.error || `Upload failed with status ${response.status}`);

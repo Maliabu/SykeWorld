@@ -4,7 +4,7 @@ This guide explains how to configure Pesapal payment credentials for the Syke Wo
 
 ## Required Environment Variables
 
-You need to configure the following environment variables in your `.env.local` file:
+You need to configure the following environment variables in your `.env` or `.env.local` file:
 
 ```env
 # Pesapal Payment Gateway Configuration
@@ -13,31 +13,39 @@ PESAPAL_CONSUMER_SECRET=your-consumer-secret-here
 PESAPAL_CALLBACK_URL=https://yourdomain.com/api/pesapal/callback
 PESAPAL_BASE_URL=https://pay.pesapal.com/v3
 
-# Optional: IPN (Instant Payment Notification) Configuration
-# Only add this if you've registered an IPN URL and want to receive payment notifications
+# Sandbox/Test Mode (for localhost development)
+# Set to "true" to use sandbox/test environment (no real payments)
+# PESAPAL_SANDBOX=true
+
+# IPN (Instant Payment Notification) Configuration
+# 
+# AUTOMATIC IPN HANDLING (No manual configuration needed):
+# The system automatically handles IPN registration following Pesapal's API flow:
+# 1. Authenticates with consumer keys to get token
+# 2. Checks for existing registered IPN URLs
+# 3. If not found, automatically registers the IPN URL
+# 4. Gets the IPN ID and uses it in payment requests
 #
-# ⚠️ IMPORTANT: PESAPAL_IPN_ID should be the ID (UUID/string) that Pesapal assigns, NOT the URL!
+# The IPN URL is automatically derived from your callback URL:
+# - If callback is: https://yourdomain.com/api/pesapal/callback
+# - IPN URL will be: https://yourdomain.com/api/pesapal/ipn
 #
-# HOW TO GET YOUR IPN ID:
+# You can optionally set a custom IPN URL if needed:
+# PESAPAL_IPN_URL=https://yourdomain.com/api/pesapal/ipn
+#
+# ⚠️ NOTE: You do NOT need to manually set PESAPAL_IPN_ID - the system handles this automatically!
+#
+# HOW TO GET YOUR IPN ID (if you want to set it manually):
 #
 # Option 1: Via Pesapal API (Recommended)
-# If you only see "URL listeners" in your dashboard and no IDs, use the API:
-# 1. Create a temporary script or use the helper functions in lib/actions/pesapal.ts:
-#    - getPesapalIpnIds() - to list all registered IPN URLs and their IDs
-#    - registerPesapalIpn(url, "POST") - to register a new IPN URL and get its ID
-# 2. Run: node -e "require('./lib/actions/pesapal').getPesapalIpnIds().then(console.log)"
+# 1. Use the helper script: npx tsx scripts/get-ipn-id.ts
+# 2. Or use: getPesapalIpnIds() from lib/actions/pesapal.ts
 # 3. Find your IPN URL in the response and copy its associated ID
 #
 # Option 2: Register via API and get ID immediately
 # 1. Use registerPesapalIpn("https://sykeworld.com/api/pesapal/ipn", "POST")
 # 2. The response will include the IPN ID
 # 3. Copy that ID to your .env.local
-#
-# Option 3: Check Pesapal Dashboard
-# 1. Log in to Pesapal dashboard
-# 2. Go to Settings → IPN/Notifications (or Developer → IPN Settings)
-# 3. If you see IPN IDs listed, copy the one for your URL
-# 4. If you only see URLs, use Option 1 or 2 above
 #
 # Example of CORRECT format:
 # PESAPAL_IPN_ID=ipn-12345678-abcd-efgh-ijkl-123456789abc
@@ -47,18 +55,20 @@ PESAPAL_BASE_URL=https://pay.pesapal.com/v3
 # PESAPAL_IPN_ID=http://localhost:3000/api/pesapal/ipn  ❌
 #
 # IMPORTANT: If you don't want to use IPN:
-# - DO NOT add this variable at all, OR
+# - DO NOT add PESAPAL_IPN_ID or PESAPAL_IPN_URL, OR
 # - Leave it commented out (with #)
 # - The payment will still work, you just won't receive IPN notifications
 ```
 
 ## Step-by-Step Setup
 
-### 1. Create or Edit `.env.local` File
+### 1. Create or Edit `.env` File
 
-Create a file named `.env.local` in the `web` directory (same level as `package.json`).
+Create a file named `.env` (or `.env.local`) in the `web` directory (same level as `package.json`).
 
-**Location:** `web/.env.local`
+**Location:** `web/.env` or `web/.env.local`
+
+**Note:** The code supports both `.env` and `.env.local` files. Use whichever you prefer.
 
 ### 2. Get Your Pesapal Credentials
 
@@ -72,6 +82,13 @@ Create a file named `.env.local` in the `web` directory (same level as `package.
    - Navigate to **Settings** → **API Credentials** or **Developer** section
    - Copy your **Consumer Key** and **Consumer Secret**
    - **Note:** Use **Sandbox credentials** for testing, **Production credentials** for live payments
+
+3. **For Test/Sandbox Mode** (Recommended for localhost):
+   - Visit [https://developer.pesapal.com](https://developer.pesapal.com) or [http://demo.pesapal.com](http://demo.pesapal.com)
+   - Register for a test/developer account
+   - Get test credentials (different from production)
+   - Your test account will have a virtual balance (e.g., 1000 KES) for testing
+   - See [PESAPAL_SANDBOX_SETUP.md](./PESAPAL_SANDBOX_SETUP.md) for detailed sandbox setup
 
 ### 3. Set Up Callback URL
 
@@ -93,7 +110,7 @@ http://localhost:3000/api/pesapal/callback
 
 ### 4. Add Environment Variables
 
-Open `web/.env.local` and add:
+Open `web/.env` (or `web/.env.local`) and add:
 
 ```env
 # Pesapal Configuration
@@ -146,7 +163,7 @@ To verify your configuration is working:
 ## Troubleshooting
 
 ### Error: "Pesapal credentials not configured"
-- **Solution:** Make sure `.env.local` exists in the `web` directory
+- **Solution:** Make sure `.env` or `.env.local` exists in the `web` directory
 - **Solution:** Verify the variable names are exactly: `PESAPAL_CONSUMER_KEY` and `PESAPAL_CONSUMER_SECRET`
 - **Solution:** Restart your development server after adding variables
 
@@ -247,7 +264,7 @@ The response will include your IPN URLs with their associated IDs.
 
 ⚠️ **Important Security Reminders:**
 
-1. **Never commit `.env.local` to Git** - It's already in `.gitignore`
+1. **Never commit `.env` or `.env.local` to Git** - They should be in `.gitignore`
 2. **Use different credentials for development and production**
 3. **Keep your Consumer Secret secure** - Don't share it publicly
 4. **Rotate credentials** if they're ever exposed

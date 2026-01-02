@@ -9,10 +9,21 @@ import { requireAuth, getSession } from "@/lib/auth/session";
 import { z } from "zod";
 import { sendBookingReceipt } from "@/mail/nodemailer";
 
-const PESAPAL_BASE_URL = process.env.PESAPAL_BASE_URL || "https://pay.pesapal.com/v3";
+// Determine if we're using sandbox/test mode
+const PESAPAL_SANDBOX = process.env.PESAPAL_SANDBOX === "true" || 
+  (process.env.NODE_ENV === "development" && process.env.PESAPAL_SANDBOX !== "false");
+const PESAPAL_BASE_URL = process.env.PESAPAL_BASE_URL || 
+  (PESAPAL_SANDBOX ? "https://cybqa.pesapal.com/pesapalv3" : "https://pay.pesapal.com/v3");
+
+// Log which mode we're in (only in development)
+if (process.env.NODE_ENV === "development") {
+  console.log(`🔧 Pesapal Mode: ${PESAPAL_SANDBOX ? "SANDBOX (Test)" : "PRODUCTION"}`);
+  console.log(`🔧 Pesapal Base URL: ${PESAPAL_BASE_URL}`);
+}
 const PESAPAL_CONSUMER_KEY = process.env.PESAPAL_CONSUMER_KEY || "";
 const PESAPAL_CONSUMER_SECRET = process.env.PESAPAL_CONSUMER_SECRET || "";
 const PESAPAL_CALLBACK_URL = process.env.PESAPAL_CALLBACK_URL || "";
+const PESAPAL_IPN_URL = process.env.PESAPAL_IPN_URL || "";
 
 // Helper function to get registered IPN IDs from Pesapal
 // This is useful if you've registered IPN URLs in the dashboard but don't see the IDs
@@ -74,7 +85,7 @@ export async function registerPesapalIpn(ipnUrl: string, notificationType: "GET"
 }
 
 // Get Pesapal Access Token
-async function getPesapalToken(): Promise<string> {
+export async function getPesapalToken(): Promise<string> {
   if (!PESAPAL_CONSUMER_KEY || !PESAPAL_CONSUMER_SECRET) {
     throw new Error("Pesapal credentials not configured");
   }
@@ -120,14 +131,12 @@ async function getPesapalToken(): Promise<string> {
 // Initiate Pesapal Payment
 export async function initiatePesapalPayment(data: unknown) {
   try {
-    // Authentication is optional - we'll get user from booking
-    const session = await getSession();
     const validated = z.object({
       bookingId: z.string().min(1, "Booking ID is required"),
       amount: z.number().positive("Amount must be positive"),
     }).parse(data);
 
-    // Get booking details
+    // Get booking details first
     const [booking] = await db
       .select()
       .from(bookings)
@@ -138,10 +147,45 @@ export async function initiatePesapalPayment(data: unknown) {
       return { error: "Booking not found" };
     }
 
+    // Try to get session (works with custom JWT session)
+    let session = await getSession();
+    
+    // If no JWT session, try to get NextAuth session
+    if (!session) {
+      try {
+        const { getServerSession } = await import("next-auth/next");
+        const { authOptions } = await import("@/app/api/auth/[...nextauth]/route");
+        const nextAuthSession = await getServerSession(authOptions);
+        
+        if (nextAuthSession?.user?.email) {
+          // Find user by email from NextAuth session
+          const [user] = await db
+            .select({ id: users.id, email: users.email, userType: users.userType })
+            .from(users)
+            .where(eq(users.email, nextAuthSession.user.email))
+            .limit(1);
+          
+          if (user) {
+            // Create a session-like object for NextAuth users
+            session = {
+              userId: user.id,
+              email: user.email,
+              userType: user.userType,
+            };
+          }
+        }
+      } catch (nextAuthError) {
+        console.error("Error getting NextAuth session:", nextAuthError);
+      }
+    }
+
     // Verify booking belongs to user (if session exists)
     if (session && booking.userId !== session.userId) {
       return { error: "Unauthorized: This booking does not belong to you" };
     }
+    
+    // If no session at all, we can still proceed if booking exists
+    // (useful for cases where user created booking but session expired)
 
     // Get access token
     let accessToken: string;
@@ -183,6 +227,24 @@ export async function initiatePesapalPayment(data: unknown) {
       return { error: "Payment callback not configured. Please contact support." };
     }
 
+    // Check if this is an admin booking (session user is admin)
+    const isAdminBooking = session?.userType === "admin" || session?.userType === "staff";
+    
+    // Build callback URL - use separate admin callback route if this is an admin booking
+    // This ensures admin bookings always redirect to admin dashboard
+    let callbackUrl = PESAPAL_CALLBACK_URL;
+    if (isAdminBooking) {
+      try {
+        const url = new URL(callbackUrl);
+        // Replace /callback with /callback/admin for admin bookings
+        callbackUrl = callbackUrl.replace("/callback", "/callback/admin");
+        console.log("Admin booking detected - using admin callback URL:", callbackUrl);
+      } catch (e) {
+        // If URL parsing fails, use original callback URL
+        console.warn("Could not modify callback URL for admin booking:", e);
+      }
+    }
+
     // Build request body - DO NOT include notification_id unless explicitly configured
     // Pesapal rejects empty or invalid IPN IDs, so we must omit the field entirely
     const requestBody: any = {
@@ -190,7 +252,7 @@ export async function initiatePesapalPayment(data: unknown) {
       currency: "UGX",
       amount: validated.amount,
       description: "Room Booking Payment",
-      callback_url: PESAPAL_CALLBACK_URL,
+      callback_url: callbackUrl,
       billing_address: {
         email_address: email,
         phone_number: "",
@@ -200,37 +262,89 @@ export async function initiatePesapalPayment(data: unknown) {
       },
     };
 
-    // Only include notification_id if IPN is properly configured
-    // If you want to use IPN, register an IPN URL in Pesapal dashboard first
-    // and then add: PESAPAL_IPN_ID=your-ipn-id to .env.local
-    // IMPORTANT: PESAPAL_IPN_ID should be the ID (UUID/string) that Pesapal assigns, NOT the URL
-    const PESAPAL_IPN_ID = process.env.PESAPAL_IPN_ID;
-    if (PESAPAL_IPN_ID && typeof PESAPAL_IPN_ID === "string" && PESAPAL_IPN_ID.trim().length > 0) {
-      const ipnId = PESAPAL_IPN_ID.trim();
-      
-      // Validate that it's not a URL (Pesapal expects an ID, not a URL)
-      if (ipnId.startsWith("http://") || ipnId.startsWith("https://") || ipnId.includes("/")) {
-        console.error("===========================================");
-        console.error("INVALID IPN ID FORMAT DETECTED");
-        console.error("===========================================");
-        console.error("PESAPAL_IPN_ID should be the ID that Pesapal assigns, NOT the URL.");
-        console.error("You provided:", ipnId);
-        console.error("");
-        console.error("HOW TO FIX:");
-        console.error("1. Log in to your Pesapal merchant dashboard");
-        console.error("2. Go to Settings → IPN/Notifications");
-        console.error("3. Find your registered IPN URL");
-        console.error("4. Copy the IPN ID (usually a UUID or alphanumeric string) - NOT the URL");
-        console.error("5. Update .env.local: PESAPAL_IPN_ID=the-actual-id-here");
-        console.error("===========================================");
-        return { 
-          error: "Invalid IPN ID format. PESAPAL_IPN_ID should be the ID that Pesapal assigns (not the URL). Check your Pesapal dashboard → Settings → IPN/Notifications to find the correct ID." 
-        };
+    // Step 2: Get or Register IPN URL and get IPN ID
+    // According to Pesapal docs: https://developer.pesapal.com/how-to-integrate/e-commerce/api-30-json/registeripnurl
+    // We must register IPN URL before submitting orders
+    let ipnId: string | null = null;
+    
+    // Determine IPN URL - use explicit setting or derive from callback URL
+    let ipnUrlToUse = PESAPAL_IPN_URL;
+    if (!ipnUrlToUse && PESAPAL_CALLBACK_URL) {
+      try {
+        const callbackUrl = new URL(PESAPAL_CALLBACK_URL);
+        // Replace /callback with /ipn
+        ipnUrlToUse = PESAPAL_CALLBACK_URL.replace(/\/callback(\/)?$/, "/ipn");
+        // If callback doesn't end with /callback, append /api/pesapal/ipn
+        if (ipnUrlToUse === PESAPAL_CALLBACK_URL) {
+          ipnUrlToUse = `${callbackUrl.origin}/api/pesapal/ipn`;
+        }
+        console.log("📡 Auto-derived IPN URL from callback:", ipnUrlToUse);
+      } catch (e) {
+        console.warn("⚠️ Could not derive IPN URL from callback URL");
       }
-      
-      // Only add if it's a valid non-empty string that's not a URL
+    }
+    
+    // If we have an IPN URL, get or register it
+    if (ipnUrlToUse && ipnUrlToUse.trim().length > 0) {
+      try {
+        console.log("🔍 Checking for existing IPN registration...");
+        
+        // Step 2a: Get list of registered IPNs
+        // Docs: https://developer.pesapal.com/how-to-integrate/e-commerce/api-30-json/getregisteredipn
+        const ipnListResult = await getPesapalIpnIds();
+        
+        if (ipnListResult.success && ipnListResult.ipnList) {
+          // Handle array response (standard format)
+          const ipnList = Array.isArray(ipnListResult.ipnList) 
+            ? ipnListResult.ipnList 
+            : [ipnListResult.ipnList];
+          
+          // Find existing IPN with matching URL
+          const normalizedTargetUrl = new URL(ipnUrlToUse).href.replace(/\/$/, "");
+          const existingIpn = ipnList.find((ipn: any) => {
+            const url = ipn.url || ipn.ipn_url || "";
+            if (!url) return false;
+            try {
+              return new URL(url).href.replace(/\/$/, "") === normalizedTargetUrl;
+            } catch {
+              return url === ipnUrlToUse;
+            }
+          });
+          
+          if (existingIpn) {
+            ipnId = existingIpn.ipn_id || existingIpn.id;
+            if (ipnId) {
+              console.log("✅ Found existing IPN ID:", ipnId);
+            }
+          }
+        }
+        
+        // Step 2b: If not found, register new IPN URL
+        // Docs: https://developer.pesapal.com/how-to-integrate/e-commerce/api-30-json/registeripnurl
+        if (!ipnId) {
+          console.log("📝 Registering new IPN URL...");
+          const registerResult = await registerPesapalIpn(ipnUrlToUse, "POST");
+          
+          if (registerResult.success && registerResult.ipnId) {
+            ipnId = registerResult.ipnId;
+            console.log("✅ Successfully registered IPN, ID:", ipnId);
+          } else {
+            console.error("❌ Failed to register IPN:", registerResult.error);
+            // Continue without IPN - payment will work but no IPN notifications
+          }
+        }
+      } catch (error: any) {
+        console.error("❌ Error with IPN registration:", error.message);
+        // Continue without IPN - payment will work but no IPN notifications
+      }
+    } else {
+      console.warn("⚠️ No IPN URL configured - payments will work but no IPN notifications");
+    }
+    
+    // Add IPN ID to request if we have one
+    if (ipnId) {
       requestBody.notification_id = ipnId;
-      console.log("Using IPN ID:", ipnId);
+      console.log("✅ Using IPN ID in payment request:", ipnId);
     } else {
       // Explicitly ensure notification_id is NOT in the request body
       console.log("IPN not configured - omitting notification_id from request");
@@ -332,18 +446,23 @@ export async function initiatePesapalPayment(data: unknown) {
     }
 
     // Create payment record
+    // Use booking's userId (booking already has the correct user)
+    // This works even if session is not available (e.g., NextAuth user without JWT yet)
+    const userIdToUse = session?.userId || booking.userId;
+    
+    if (!userIdToUse) {
+      return { error: "Unable to determine user for payment. Please sign in again." };
+    }
+    
     let payment;
     try {
-      if (!session) {
-        return { error: "Unauthorized" };
-      }
       [payment] = await db
         .insert(payments)
         .values({
           bookingId: validated.bookingId,
-          userId: session.userId,
+          userId: userIdToUse,
           amount: validated.amount.toString(),
-          status: "PENDING",
+          status: "PENDING", // Always use uppercase for consistency
           pesapalOrderTrackingId: trackingId,
           pesapalMerchantReference: validated.bookingId,
         })
@@ -357,7 +476,7 @@ export async function initiatePesapalPayment(data: unknown) {
     try {
       await db.insert(transactions).values({
         bookingId: validated.bookingId,
-        userId: session.userId,
+        userId: userIdToUse,
         pesapalReference: trackingId,
         merchantReference: validated.bookingId,
         amount: validated.amount.toString(),

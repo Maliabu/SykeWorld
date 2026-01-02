@@ -49,6 +49,11 @@ export const navigationData = {
           url: "/admin/dashboard/rooms/view",
         },
         {
+          title: "Room Allocations",
+          icon: Activity,
+          url: "/admin/dashboard/rooms/allocations",
+        },
+        {
           title: "Room Types",
           icon: Tag,
           url: "/admin/dashboard/rooms/types",

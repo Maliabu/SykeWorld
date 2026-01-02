@@ -48,6 +48,8 @@ export const createBookingSchema = z.object({
   checkOut: z.string().or(z.date()),
   guests: z.number().int().positive().default(1),
   specialRequests: z.string().optional(),
+  customerEmail: z.string().email().optional(), // For admin bookings
+  customerName: z.string().optional(), // For admin bookings
 });
 
 export const createDashboardBookingSchema = z.object({

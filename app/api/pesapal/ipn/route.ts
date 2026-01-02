@@ -6,7 +6,10 @@ import { users } from "@/lib/db/schema/users";
 import { eq, or } from "drizzle-orm";
 // Get Pesapal Access Token (duplicated here to avoid circular dependencies)
 async function getPesapalToken(): Promise<string> {
-  const PESAPAL_BASE_URL = process.env.PESAPAL_BASE_URL || "https://pay.pesapal.com/v3";
+  const PESAPAL_SANDBOX = process.env.PESAPAL_SANDBOX === "true" || 
+    (process.env.NODE_ENV === "development" && process.env.PESAPAL_SANDBOX !== "false");
+  const PESAPAL_BASE_URL = process.env.PESAPAL_BASE_URL || 
+    (PESAPAL_SANDBOX ? "https://cybqa.pesapal.com/pesapalv3" : "https://pay.pesapal.com/v3");
   const PESAPAL_CONSUMER_KEY = process.env.PESAPAL_CONSUMER_KEY || "";
   const PESAPAL_CONSUMER_SECRET = process.env.PESAPAL_CONSUMER_SECRET || "";
 
@@ -39,7 +42,11 @@ async function getPesapalToken(): Promise<string> {
 }
 import { sendBookingReceipt } from "@/mail/nodemailer";
 
-const PESAPAL_BASE_URL = process.env.PESAPAL_BASE_URL || "https://pay.pesapal.com/v3";
+// Determine if we're using sandbox/test mode
+const PESAPAL_SANDBOX = process.env.PESAPAL_SANDBOX === "true" || 
+  (process.env.NODE_ENV === "development" && process.env.PESAPAL_SANDBOX !== "false");
+const PESAPAL_BASE_URL = process.env.PESAPAL_BASE_URL || 
+  (PESAPAL_SANDBOX ? "https://cybqa.pesapal.com/pesapalv3" : "https://pay.pesapal.com/v3");
 
 /**
  * Pesapal IPN (Instant Payment Notification) Endpoint
@@ -110,28 +117,71 @@ export async function POST(req: NextRequest) {
     }
 
     // Find the payment/transaction record
-    // OrderMerchantReference could be booking ID or payment ID
-    const [payment] = await db
+    // OrderMerchantReference could be booking ID (as set in pesapalMerchantReference) or payment ID
+    // Try to find by payment ID first, then by booking ID (pesapalMerchantReference)
+    let [payment] = await db
       .select()
       .from(payments)
       .where(eq(payments.id, OrderMerchantReference))
       .limit(1);
 
+    // If not found by ID, try to find by booking ID (which is what we set as merchant reference)
     if (!payment) {
-      console.error("Payment not found for IPN:", OrderMerchantReference);
+      [payment] = await db
+        .select()
+        .from(payments)
+        .where(eq(payments.pesapalMerchantReference, OrderMerchantReference))
+        .limit(1);
+    }
+
+    // Also try to find by tracking ID as fallback
+    if (!payment) {
+      [payment] = await db
+        .select()
+        .from(payments)
+        .where(eq(payments.pesapalOrderTrackingId, OrderTrackingId))
+        .limit(1);
+    }
+
+    if (!payment) {
+      console.error("Payment not found for IPN:", { OrderMerchantReference, OrderTrackingId });
       // Still return 200 - might be a duplicate notification
       return NextResponse.json({ message: "IPN received - payment not found" }, { status: 200 });
     }
 
     // Update payment status
-    const paymentStatus = transactionStatus.payment_status_description || transactionStatus.status || "UNKNOWN";
+    // Pesapal returns status in different fields - check all possibilities
+    const paymentStatus = transactionStatus.payment_status_description || 
+                          transactionStatus.status || 
+                          transactionStatus.payment_status ||
+                          "UNKNOWN";
+    
+    console.log("Payment status from Pesapal:", {
+      payment_status_description: transactionStatus.payment_status_description,
+      status: transactionStatus.status,
+      payment_status: transactionStatus.payment_status,
+      finalStatus: paymentStatus,
+      fullResponse: JSON.stringify(transactionStatus, null, 2)
+    });
+    
+    const isCompleted = paymentStatus === "COMPLETED" || 
+                        paymentStatus === "COMPLETE" ||
+                        paymentStatus?.toUpperCase() === "COMPLETED" ||
+                        paymentStatus?.toUpperCase() === "COMPLETE" ||
+                        transactionStatus.status === "COMPLETED" ||
+                        transactionStatus.status === "COMPLETE";
+    
+    // Always use uppercase "COMPLETED" for consistency
+    const finalPaymentStatus = isCompleted ? "COMPLETED" : (paymentStatus?.toUpperCase() || "PENDING");
     
     await db
       .update(payments)
       .set({
-        status: paymentStatus === "COMPLETED" ? "COMPLETED" : paymentStatus,
+        status: finalPaymentStatus,
       })
       .where(eq(payments.id, payment.id));
+
+    console.log("Updated payment status:", { paymentId: payment.id, status: finalPaymentStatus, isCompleted });
 
     // Update transaction record if exists (find by merchantReference which should match OrderMerchantReference or by pesapalReference)
     const [transaction] = await db
@@ -146,23 +196,46 @@ export async function POST(req: NextRequest) {
       .limit(1);
 
     if (transaction) {
+      // Normalize transaction status to uppercase for consistency
+      const finalTransactionStatus = isCompleted ? "COMPLETED" : (paymentStatus?.toUpperCase() || "PENDING");
       await db
         .update(transactions)
         .set({
-          status: paymentStatus,
+          status: finalTransactionStatus,
           updated: new Date(),
         })
         .where(eq(transactions.id, transaction.id));
     }
 
     // If payment completed, update booking and send receipt
-    if (paymentStatus === "COMPLETED" || transactionStatus.status === "COMPLETED") {
-      // Update booking status
+    if (isCompleted) {
+      console.log("Payment completed - updating booking status for booking:", payment.bookingId);
+      
+      // Update booking status - CRITICAL: Always update when payment is completed
       if (payment.bookingId) {
-        await db
-          .update(bookings)
-          .set({ status: "confirmed" })
-          .where(eq(bookings.id, payment.bookingId));
+        try {
+          const updateResult = await db
+            .update(bookings)
+            .set({ status: "confirmed" })
+            .where(eq(bookings.id, payment.bookingId))
+            .returning();
+          
+          console.log("Booking status update result:", updateResult);
+          
+          if (updateResult.length === 0) {
+            console.error("❌ Failed to update booking - booking not found:", payment.bookingId);
+          } else {
+            console.log("✅ Booking status updated to 'confirmed' for booking:", payment.bookingId);
+          }
+        } catch (bookingUpdateError: any) {
+          console.error("❌ ERROR updating booking status:", bookingUpdateError);
+          console.error("Error details:", {
+            message: bookingUpdateError.message,
+            bookingId: payment.bookingId,
+            paymentId: payment.id
+          });
+          // Don't throw - continue with receipt sending
+        }
 
         // Get booking details for receipt
         const [booking] = await db

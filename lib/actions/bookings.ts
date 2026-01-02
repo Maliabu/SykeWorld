@@ -227,6 +227,7 @@ export async function createRoom(data: unknown) {
         roomTypeId: validated.roomTypeId,
         floor: validated.floor,
         status: validated.status,
+        bookingCount: 0, // New rooms start with 0 bookings
       })
       .returning();
 
@@ -256,8 +257,11 @@ export async function addRoomImage(roomId: string, imageUrl: string, caption?: s
     await requireAuth();
     
     if (!roomId || !imageUrl) {
+      console.error("addRoomImage: Missing roomId or imageUrl", { roomId, imageUrl });
       return { error: "Room ID and image URL are required" };
     }
+
+    console.log("💾 Adding room image to database:", { roomId, imageUrl, caption });
 
     const [image] = await db
       .insert(roomImages)
@@ -268,12 +272,26 @@ export async function addRoomImage(roomId: string, imageUrl: string, caption?: s
       })
       .returning();
 
+    if (!image) {
+      console.error("addRoomImage: No image returned from database insert");
+      return { error: "Failed to create image record" };
+    }
+
+    console.log("✅ Room image saved to database:", image.id);
     return { success: true, image };
   } catch (error: any) {
+    console.error("❌ addRoomImage error:", error);
     if (error.message === "Unauthorized") {
       return { error: "Unauthorized" };
     }
-    return { error: "Failed to add room image" };
+    // Log the actual error for debugging
+    console.error("Database error details:", {
+      message: error.message,
+      code: error.code,
+      detail: error.detail,
+      constraint: error.constraint
+    });
+    return { error: error.message || "Failed to add room image" };
   }
 }
 
@@ -317,12 +335,41 @@ export async function createRoomService(data: unknown) {
 
 export async function createBooking(data: unknown) {
   try {
-    // Try to get session (works with custom JWT session)
-    const session = await getSession();
     const validated = createBookingSchema.parse(data);
     
-    // If no custom session, user might be signed in via NextAuth
-    // But we need a userId to create the booking, so we require authentication
+    // Try to get session (works with custom JWT session)
+    let session = await getSession();
+    
+    // If no JWT session, try to get NextAuth session
+    if (!session) {
+      try {
+        const { getServerSession } = await import("next-auth/next");
+        const { authOptions } = await import("@/app/api/auth/[...nextauth]/route");
+        const nextAuthSession = await getServerSession(authOptions);
+        
+        if (nextAuthSession?.user?.email) {
+          // Find user by email from NextAuth session
+          const [user] = await db
+            .select({ id: users.id, email: users.email, userType: users.userType })
+            .from(users)
+            .where(eq(users.email, nextAuthSession.user.email))
+            .limit(1);
+          
+          if (user) {
+            // Create a session-like object for NextAuth users
+            session = {
+              userId: user.id,
+              email: user.email,
+              userType: user.userType,
+            };
+          }
+        }
+      } catch (nextAuthError) {
+        console.error("Error getting NextAuth session:", nextAuthError);
+      }
+    }
+    
+    // If still no session, return error
     if (!session) {
       return { error: "Please sign in to create a booking. If you're already signed in, please try signing out and signing in again." };
     }
@@ -375,11 +422,70 @@ export async function createBooking(data: unknown) {
     );
     const totalPrice = (parseFloat(roomType.basePrice) * nights).toFixed(2);
 
+    // Handle admin booking for customer
+    let bookingUserId = session.userId;
+    let customerName = "";
+    let customerEmail = "";
+
+    if (validated.customerEmail && validated.customerName) {
+      // Admin is creating booking for a customer
+      // Find or create customer user
+      const customerUserResult = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, validated.customerEmail))
+        .limit(1);
+
+      if (customerUserResult.length === 0) {
+        // Create guest user if doesn't exist
+        const nameParts = validated.customerName.split(" ");
+        const firstName = nameParts[0] || "";
+        const lastName = nameParts.slice(1).join(" ") || null;
+        
+        const [newUser] = await db
+          .insert(users)
+          .values({
+            email: validated.customerEmail,
+            firstName: firstName,
+            lastName: lastName,
+            username: validated.customerEmail.split("@")[0],
+            password: "guest", // Temporary password, user can reset if needed
+            userType: "guest",
+            isVerified: true, // Auto-verify admin-created bookings
+          })
+          .returning();
+        bookingUserId = newUser.id;
+        customerName = validated.customerName;
+        customerEmail = validated.customerEmail;
+      } else {
+        bookingUserId = customerUserResult[0].id;
+        customerName = validated.customerName;
+        customerEmail = validated.customerEmail;
+      }
+    } else {
+      // Regular booking - use session user
+      const [customer] = await db
+        .select({
+          firstName: users.firstName,
+          lastName: users.lastName,
+          username: users.username,
+          email: users.email,
+        })
+        .from(users)
+        .where(eq(users.id, session.userId))
+        .limit(1);
+
+      customerName = customer?.firstName && customer?.lastName
+        ? `${customer.firstName} ${customer.lastName}`
+        : customer?.username || customer?.email?.split("@")[0] || "Guest";
+      customerEmail = customer?.email || "";
+    }
+
     // Create booking
     const [booking] = await db
       .insert(bookings)
       .values({
-        userId: session.userId,
+        userId: bookingUserId,
         roomId: validated.roomId,
         checkIn: checkInStr,
         checkOut: checkOutStr,
@@ -390,28 +496,42 @@ export async function createBooking(data: unknown) {
       })
       .returning();
 
-    // Get user details for notification
-    const [customer] = await db
-      .select({
-        firstName: users.firstName,
-        lastName: users.lastName,
-        username: users.username,
-        email: users.email,
-      })
-      .from(users)
-      .where(eq(users.id, session.userId))
-      .limit(1);
+    // Update room status to "occupied" (booked) when booking is created
+    // Also increment bookingCount if room was not already occupied
+    try {
+      const [currentRoom] = await db
+        .select({ status: rooms.status, bookingCount: rooms.bookingCount })
+        .from(rooms)
+        .where(eq(rooms.id, validated.roomId))
+        .limit(1);
 
-    const customerName = customer?.firstName && customer?.lastName
-      ? `${customer.firstName} ${customer.lastName}`
-      : customer?.username || customer?.email?.split("@")[0] || "Guest";
+      if (currentRoom) {
+        const wasOccupied = currentRoom.status === "occupied";
+        const updateData: { status: "occupied"; bookingCount?: number } = { status: "occupied" };
+        
+        // Only increment bookingCount if room was NOT already occupied
+        if (!wasOccupied) {
+          updateData.bookingCount = (currentRoom.bookingCount || 0) + 1;
+          console.log(`📈 Incrementing booking count for room ${room.roomNumber} (was ${currentRoom.status}, now occupied)`);
+        }
+
+        await db
+          .update(rooms)
+          .set(updateData)
+          .where(eq(rooms.id, validated.roomId));
+        console.log(`✅ Room ${room.roomNumber} status updated to 'occupied' after booking creation${!wasOccupied ? ` (booking count: ${updateData.bookingCount})` : ''}`);
+      }
+    } catch (roomUpdateError) {
+      // Log error but don't fail booking creation
+      console.error("Failed to update room status:", roomUpdateError);
+    }
 
     // Notify all admins about the new booking
     try {
       await notifyAllAdmins(
         "New Booking Created",
-        `A new booking has been created by ${customerName} (${customer?.email || "N/A"}) for Room ${room.roomNumber} from ${checkInStr} to ${checkOutStr}.`,
-        session.userId
+        `A new booking has been created by ${customerName} (${customerEmail || "N/A"}) for Room ${room.roomNumber} from ${checkInStr} to ${checkOutStr}.`,
+        bookingUserId
       );
     } catch (notificationError) {
       // Don't fail booking creation if notification fails
@@ -756,6 +876,76 @@ export async function updateRoom(roomId: string, data: unknown) {
       return { error: error.errors[0].message };
     }
     return { error: "Failed to update room" };
+  }
+}
+
+// Update Room Status Only
+export async function updateRoomStatus(roomId: string, status: string) {
+  try {
+    await requireAuth();
+
+    // Validate status
+    const validStatuses = ["available", "occupied", "cleaning", "maintenance", "unavailable"];
+    if (!validStatuses.includes(status)) {
+      return { error: "Invalid room status" };
+    }
+
+    // Get current room status and booking count
+    const [currentRoom] = await db
+      .select({ status: rooms.status, bookingCount: rooms.bookingCount, roomNumber: rooms.roomNumber })
+      .from(rooms)
+      .where(eq(rooms.id, roomId))
+      .limit(1);
+
+    if (!currentRoom) {
+      return { error: "Room not found" };
+    }
+
+    const wasOccupied = currentRoom.status === "occupied";
+    const willBeOccupied = status === "occupied";
+    
+    // Prepare update data with proper type
+    type RoomStatus = "available" | "occupied" | "cleaning" | "maintenance" | "unavailable";
+    const updateData: { status: RoomStatus; bookingCount?: number } = { 
+      status: status as RoomStatus 
+    };
+    
+    // Only increment bookingCount if changing FROM non-occupied TO occupied
+    if (!wasOccupied && willBeOccupied) {
+      updateData.bookingCount = (currentRoom.bookingCount || 0) + 1;
+      console.log(`📈 Incrementing booking count for room ${currentRoom.roomNumber} (${currentRoom.status} → occupied, count: ${updateData.bookingCount})`);
+    }
+
+    const [updated] = await db
+      .update(rooms)
+      .set(updateData)
+      .where(eq(rooms.id, roomId))
+      .returning();
+
+    if (!updated) {
+      return { error: "Room not found or status not changed" };
+    }
+
+    // Log activity
+    await logActivity({
+      action: "UPDATE_ROOM_STATUS",
+      entityType: "room",
+      entityId: roomId,
+      description: `Updated room ${updated.roomNumber} status to ${status}${!wasOccupied && willBeOccupied ? ` (booking count incremented)` : ''}`,
+      metadata: { 
+        oldStatus: currentRoom.status, 
+        newStatus: status,
+        bookingCount: updated.bookingCount || 0
+      },
+    });
+
+    return { success: true, room: updated };
+  } catch (error: any) {
+    if (error.message === "Unauthorized") {
+      return { error: "Unauthorized" };
+    }
+    console.error("Update room status error:", error);
+    return { error: "Failed to update room status" };
   }
 }
 

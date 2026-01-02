@@ -10,6 +10,7 @@ import { useSession as useCustomSession } from "@/lib/hooks/useSession";
 import { useSession as useNextAuthSession, signOut } from "next-auth/react";
 import { AlertCircle } from "lucide-react";
 import { initiatePesapalPayment } from "@/lib/actions/pesapal";
+import { googleLogin } from "@/lib/actions/auth";
 import { useRouter, useSearchParams } from "next/navigation";
 
 // helpers
@@ -35,14 +36,56 @@ export default function BookingPage() {
 }
 
 function BookingPageContent() {
-  const { user, loading: sessionLoading } = useCustomSession();
+  const { user, loading: sessionLoading, refetch: refetchSession } = useCustomSession();
   const { data: nextAuthSession, status: nextAuthStatus } = useNextAuthSession();
   const router = useRouter();
   const searchParams = useSearchParams();
   
   // Check if user is signed in via either NextAuth or custom session
-  const isSignedIn = !!user || nextAuthStatus === "authenticated";
-  const isLoadingSession = sessionLoading || nextAuthStatus === "loading";
+  const isSignedIn = !!user || (nextAuthStatus as string) === "authenticated";
+  const isLoadingSession = sessionLoading || (nextAuthStatus as string) === "loading";
+
+  // If NextAuth is authenticated but custom session isn't loaded, try to exchange token
+  useEffect(() => {
+    if (((nextAuthStatus as string) === "authenticated" || nextAuthSession) && !user && !sessionLoading) {
+      const idToken = (nextAuthSession as any)?.user?.idToken;
+      const alreadyExchanged = localStorage.getItem("google_exchanged");
+      
+      // If we have an idToken and haven't exchanged yet, trigger exchange
+      if (idToken && alreadyExchanged !== "yes") {
+        (async () => {
+          try {
+            console.log("🔄 Exchanging Google token on booking page...");
+            const result = await googleLogin({ idToken });
+            if (result.success) {
+              localStorage.setItem("google_exchanged", "yes");
+              console.log("✅ Token exchange successful, refetching session...");
+              // Refetch session to get user data
+              await refetchSession();
+            } else {
+              console.error("❌ Token exchange failed:", result.error);
+            }
+          } catch (err) {
+            console.error("Failed to exchange Google token:", err);
+          }
+        })();
+      } else if (alreadyExchanged === "yes" && !user) {
+        // If already exchanged but user not loaded, refetch with retry
+        console.log("🔄 Token already exchanged, refetching session...");
+        // Add a small delay to ensure cookies are available
+        setTimeout(async () => {
+          await refetchSession();
+          // If still no user after 1 second, try again
+          setTimeout(async () => {
+            if (!user) {
+              console.log("🔄 Retrying session refetch...");
+              await refetchSession();
+            }
+          }, 1000);
+        }, 500);
+      }
+    }
+  }, [nextAuthStatus, nextAuthSession, user, sessionLoading, refetchSession]);
 
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -67,13 +110,11 @@ function BookingPageContent() {
   const [form, setForm] = useState({
     name: "",
     email: "",
-    phone: "",
     room: "",
     checkIn: "",
     checkOut: "",
     guests: 1,
     specialRequests: "",
-    paymentMethod: "",
   });
 
   // Pre-fill form from query params (from availability page)
@@ -146,16 +187,10 @@ function BookingPageContent() {
   const validateStep1 = () => {
     if (!form.name || form.name.length < 2) return "Enter a valid name";
     if (!form.email || !form.email.includes("@")) return "Enter a valid email";
-    if (!form.phone || form.phone.length < 8) return "Enter a valid phone";
     if (!form.room) return "Choose a room";
     if (!form.checkIn) return "Select check-in date";
     if (!form.checkOut) return "Select check-out date";
     if (form.checkOut <= form.checkIn) return "Check-out must be after check-in";
-    return null;
-  };
-
-  const validateStep2 = () => {
-    if (!form.paymentMethod) return "Choose a payment method";
     return null;
   };
 
@@ -201,10 +236,21 @@ function BookingPageContent() {
     }
 
     // ensure user signed in (either NextAuth or custom session)
+    // If NextAuth is authenticated, allow booking (backend now supports NextAuth)
     if (!isSignedIn) {
-      toast.error("Please sign in before booking");
-      window.location.href = "/auth";
-      return;
+      // If NextAuth session exists, we can proceed (backend handles NextAuth)
+      if ((nextAuthStatus as string) === "authenticated") {
+        // Still try to load JWT session in background, but don't block
+        if (!user && !sessionLoading) {
+          refetchSession();
+        }
+        // Allow proceeding - NextAuth session is sufficient
+        // The createBooking function now handles NextAuth authentication
+      } else {
+        toast.error("Please sign in before booking");
+        window.location.href = "/auth";
+        return;
+      }
     }
 
     // server-side expects fields; validate once more
@@ -212,12 +258,6 @@ function BookingPageContent() {
     if (v1) {
       toast.error(v1);
       setStep(1);
-      return;
-    }
-    const v2 = validateStep2();
-    if (v2) {
-      toast.error(v2);
-      setStep(2);
       return;
     }
 
@@ -241,8 +281,8 @@ function BookingPageContent() {
 
       toast.success("Booking created successfully!");
       
-      // Redirect to payment if needed (all online payments)
-      if (form.paymentMethod && result.booking?.id) {
+      // Redirect to payment (always use Pesapal)
+      if (result.booking?.id) {
         try {
           // Initiate Pesapal payment
           const paymentResult = await initiatePesapalPayment({
@@ -340,19 +380,9 @@ function BookingPageContent() {
                 <div className={`flex-1 px-3 md:px-6 py-3 md:py-4 text-center font-medium transition-all border-t border-b border-l ${
                   step === 2 
                     ? "bg-amber-600 text-white border-amber-600" 
-                    : step > 2 
-                    ? "bg-amber-600/20 text-amber-400 border-amber-600/30" 
                     : "bg-black/5 text-gray-500 border-black/10"
                 }`} style={{ fontFamily: 'var(--font-inter)' }}>
                   <div className="text-xs md:text-sm font-semibold">Step 2</div>
-                  <div className="text-[10px] md:text-xs mt-1">Payment</div>
-                </div>
-                <div className={`flex-1 px-3 md:px-6 py-3 md:py-4 text-center font-medium transition-all border-t border-b border-l ${
-                  step === 3 
-                    ? "bg-amber-600 text-white border-amber-600" 
-                    : "bg-black/5 text-gray-500 border-black/10"
-                }`} style={{ fontFamily: 'var(--font-inter)' }}>
-                  <div className="text-xs md:text-sm font-semibold">Step 3</div>
                   <div className="text-[10px] md:text-xs mt-1">Review</div>
                 </div>
               </div>
@@ -428,7 +458,7 @@ function BookingPageContent() {
                     className="w-full bg-amber-600 text-white px-6 py-3 text-base font-semibold hover:bg-amber-700 transition uppercase tracking-wide"
                     style={{ fontFamily: 'var(--font-inter)' }}
                   >
-                    Continue to Payment
+                    Continue to Review
                   </button>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
@@ -470,22 +500,6 @@ function BookingPageContent() {
                       className="block text-xs uppercase tracking-widest text-black/60 font-medium mb-2"
                       style={{ fontFamily: 'var(--font-inter)' }}
                     >
-                      Phone Number
-                    </label>
-                    <input 
-                      className="w-full bg-transparent border-b border-gray-400/50 px-0 py-3 text-[#1a1c1e] placeholder-stone-400 focus:outline-none focus:border-b-amber-600 transition-all" 
-                      placeholder="+256 XXX XXX XXX" 
-                      value={form.phone} 
-                      onChange={(e) => update("phone", e.target.value)} 
-                      style={{ fontFamily: 'var(--font-inter)' }}
-                    />
-                  </div>
-                  
-                  <div>
-                    <label 
-                      className="block text-xs uppercase tracking-widest text-black/60 font-medium mb-2"
-                      style={{ fontFamily: 'var(--font-inter)' }}
-                    >
                       Select Room
                     </label>
                     <select 
@@ -518,71 +532,8 @@ function BookingPageContent() {
                 </div>
               )}
 
-              {/* STEP 2: PAYMENT */}
+              {/* STEP 2: REVIEW */}
               {step === 2 && (
-                <div className="space-y-6 p-4 md:p-8 border-l border-r border-black/10">
-                  <h2 
-                    className="text-xl md:text-2xl lg:text-3xl font-bold text-[#1a1c1e] mb-4 md:mb-6"
-                    style={{ fontFamily: 'var(--font-playfair)' }}
-                  >
-                    Payment Method
-                  </h2>
-                  
-                  <div>
-                    <label 
-                      className="block text-xs uppercase tracking-widest text-black/60 font-medium mb-2"
-                      style={{ fontFamily: 'var(--font-inter)' }}
-                    >
-                      Choose Payment Method
-                    </label>
-                    <select 
-                      className="w-full bg-transparent border-b border-gray-400/50 px-0 py-3 text-[#1a1c1e] focus:outline-none focus:border-b-amber-600 transition-all" 
-                      value={form.paymentMethod} 
-                      onChange={(e) => update("paymentMethod", e.target.value)}
-                      style={{ fontFamily: 'var(--font-inter)' }}
-                    >
-                      <option value="" className="bg-white">Select a payment method</option>
-                      <option className="bg-white">MTN Mobile Money</option>
-                      <option className="bg-white">Airtel Money</option>
-                      <option className="bg-white">Visa</option>
-                      <option className="bg-white">Mastercard</option>
-                    </select>
-                  </div>
-
-                  <div className="flex gap-4 pt-4">
-                    <button 
-                      onClick={() => setStep(1)} 
-                      className="flex-1 bg-transparent border border-black/20 hover:border-black/40 text-[#1a1c1e] px-4 md:px-6 py-3 text-sm md:text-base font-semibold transition uppercase tracking-wide"
-                      style={{ fontFamily: 'var(--font-inter)' }}
-                    >
-                      Back
-                    </button>
-                    <button 
-                      onClick={() => { 
-                        const err = validateStep2(); 
-                        if (err) {
-                          toast.error(err);
-                          return;
-                        }
-                        // Check session before proceeding to step 3
-                        if (!isSignedIn) {
-                          toast.error("Please sign in to continue");
-                          router.push("/auth?redirect=/booking");
-                          return;
-                        }
-                        setStep(3); 
-                      }} 
-                      className="flex-1 bg-amber-600 text-white px-4 md:px-6 py-3 text-sm md:text-base font-semibold hover:bg-amber-700 transition uppercase tracking-wide"
-                      style={{ fontFamily: 'var(--font-inter)' }}
-                    >
-                      Continue to Review
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* STEP 3: REVIEW */}
-              {step === 3 && (
                 <form 
                   onSubmit={handleSubmit}
                   className="space-y-6 p-4 md:p-8 border-l border-r border-black/10"
@@ -605,10 +556,6 @@ function BookingPageContent() {
                         <div className="font-semibold text-[#1a1c1e]">{form.email || "—"}</div>
                       </div>
                       <div>
-                        <div className="text-sm text-stone-400 mb-1">Phone</div>
-                        <div className="font-semibold text-[#1a1c1e]">{form.phone || "—"}</div>
-                      </div>
-                      <div>
                         <div className="text-sm text-stone-400 mb-1">Guests</div>
                         <div className="font-semibold text-[#1a1c1e]">{form.guests}</div>
                       </div>
@@ -628,10 +575,6 @@ function BookingPageContent() {
                         <div className="text-sm text-stone-400 mb-1">Nights</div>
                         <div className="font-semibold text-[#1a1c1e]">{nights}</div>
                       </div>
-                      <div>
-                        <div className="text-sm text-stone-400 mb-1">Payment Method</div>
-                        <div className="font-semibold text-[#1a1c1e]">{form.paymentMethod || "—"}</div>
-                      </div>
                     </div>
                     
                     <div className="pt-4 border-t border-black/10">
@@ -650,7 +593,7 @@ function BookingPageContent() {
                   <div className="flex gap-4 pt-4">
                     <button 
                       type="button"
-                      onClick={() => setStep(2)} 
+                      onClick={() => setStep(1)} 
                       className="flex-1 bg-transparent border border-black/20 hover:border-black/40 text-[#1a1c1e] px-4 md:px-6 py-3 text-sm md:text-base font-semibold transition uppercase tracking-wide"
                       style={{ fontFamily: 'var(--font-inter)' }}
                     >

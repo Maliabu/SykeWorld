@@ -1,67 +1,49 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { toast } from "sonner";
-import { Calendar, User, Mail, Phone, Bed, Users, CreditCard, DollarSign, Smartphone } from "lucide-react";
-import { createDashboardBooking } from "@/lib/actions/bookings";
-import { getAllRooms, getAllRoomTypes } from "@/lib/actions/bookings";
-import { checkUserPermission } from "@/lib/actions/permissions";
+import { getAllRooms, createBooking } from "@/lib/actions/bookings";
+import { initiatePesapalPayment } from "@/lib/actions/pesapal";
+import { useRouter } from "next/navigation";
 import { useSession } from "@/lib/hooks/useSession";
+import { checkUserPermission } from "@/lib/actions/permissions";
+
+// helpers
+const formatMoney = (n: number) => `UGX ${n.toFixed(2)}`;
 
 export default function AddBookingCard() {
   const { user } = useSession();
+  const router = useRouter();
   const [hasPermission, setHasPermission] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [checkingPermission, setCheckingPermission] = useState(true);
+  const [step, setStep] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const isSubmittingRef = useRef(false);
   const [rooms, setRooms] = useState<any[]>([]);
-  const [roomTypes, setRoomTypes] = useState<any[]>([]);
-  const [availableRooms, setAvailableRooms] = useState<any[]>([]);
-  
-  const [formData, setFormData] = useState({
-    customerName: "",
-    customerEmail: "",
-    customerPhone: "",
-    roomId: "",
+
+  // form - same structure as public booking form
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    room: "",
     checkIn: "",
     checkOut: "",
     guests: 1,
     specialRequests: "",
-    paymentMethod: "cash" as "cash" | "mtn_mobile_money" | "airtel_money" | "visa" | "mastercard",
-    // Card details for Visa/Mastercard
-    cardNumber: "",
-    cardholderName: "",
-    expiryDate: "",
-    cvv: "",
   });
 
   useEffect(() => {
     checkPermission();
     loadRooms();
-    loadRoomTypes();
   }, []);
-
-  useEffect(() => {
-    if (formData.checkIn && formData.checkOut) {
-      filterAvailableRooms();
-    }
-  }, [formData.checkIn, formData.checkOut, rooms]);
 
   const checkPermission = async () => {
     try {
-      // Admins and superusers have access by default
       if (user?.isSuperuser || user?.userType === "admin") {
         setHasPermission(true);
         setCheckingPermission(false);
         return;
       }
-      
-      // Check specific permission for staff
       const result = await checkUserPermission("bookings_add");
       setHasPermission(result.hasPermission);
     } catch (error) {
@@ -75,120 +57,124 @@ export default function AddBookingCard() {
   const loadRooms = async () => {
     try {
       const result = await getAllRooms();
-      if (result.success && result.rooms) {
-        setRooms(result.rooms);
+      if (result.error) {
+        console.error(result.error);
+        toast.error("Could not load rooms");
+        return;
       }
+      setRooms(
+        (result.rooms || []).map((r: any) => ({
+          id: r.id,
+          title: r.roomType?.name || "",
+          priceValue: Number(r.roomType?.basePrice || 0),
+        }))
+      );
     } catch (error) {
       console.error("Failed to load rooms:", error);
     }
   };
 
-  const loadRoomTypes = async () => {
+  const update = (k: string, v: any) => setForm((p) => ({ ...p, [k]: v }));
+
+  // validation (same as public form)
+  const validateStep1 = () => {
+    if (!form.name || form.name.length < 2) return "Enter a valid name";
+    if (!form.email || !form.email.includes("@")) return "Enter a valid email";
+    if (!form.room) return "Choose a room";
+    if (!form.checkIn) return "Select check-in date";
+    if (!form.checkOut) return "Select check-out date";
+    if (form.checkOut <= form.checkIn) return "Check-out must be after check-in";
+    return null;
+  };
+
+  const nights = (() => {
+    if (!form.checkIn || !form.checkOut) return 0;
     try {
-      const result = await getAllRoomTypes();
-      if (result.success && result.roomTypes) {
-        setRoomTypes(result.roomTypes);
-      }
-    } catch (error) {
-      console.error("Failed to load room types:", error);
+      const d1 = new Date(form.checkIn);
+      const d2 = new Date(form.checkOut);
+      return Math.ceil((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24));
+    } catch {
+      return 0;
     }
-  };
+  })();
 
-  const filterAvailableRooms = () => {
-    // Filter rooms that are available
-    const available = rooms.filter((room) => room.status === "available");
-    setAvailableRooms(available);
-  };
+  const selectedRoom = rooms.find((r) => r.id === form.room);
+  const totalAmount = selectedRoom ? nights * selectedRoom.priceValue : 0;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Admins and superusers have access by default
-    const canAccess = hasPermission || user?.isSuperuser || user?.userType === "admin";
-    
-    if (!canAccess) {
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) {
+      e.preventDefault();
+    }
+
+    if (isSubmittingRef.current || loading) {
+      return;
+    }
+
+    if (!hasPermission) {
       toast.error("You don't have permission to add bookings");
       return;
     }
 
-    // Validation
-    if (!formData.customerName || !formData.customerEmail || !formData.roomId || !formData.checkIn || !formData.checkOut) {
-      toast.error("Please fill in all required fields");
+    const v1 = validateStep1();
+    if (v1) {
+      toast.error(v1);
+      setStep(1);
       return;
     }
 
-    if (new Date(formData.checkOut) <= new Date(formData.checkIn)) {
-      toast.error("Check-out date must be after check-in date");
-      return;
-    }
-
-    // Validate card details if Visa or Mastercard
-    if (formData.paymentMethod === "visa" || formData.paymentMethod === "mastercard") {
-      if (!formData.cardNumber || !formData.cardholderName || !formData.expiryDate || !formData.cvv) {
-        toast.error("Please fill in all card details");
-        return;
-      }
-      if (formData.cardNumber.replace(/\s/g, "").length < 13) {
-        toast.error("Please enter a valid card number");
-        return;
-      }
-      if (formData.cvv.length < 3) {
-        toast.error("Please enter a valid CVV");
-        return;
-      }
-    }
-
+    isSubmittingRef.current = true;
     setLoading(true);
+
     try {
-      const result = await createDashboardBooking(formData);
-      
+      // Use createBooking with customer email/name for admin context
+      const result = await createBooking({
+        roomId: form.room,
+        checkIn: form.checkIn,
+        checkOut: form.checkOut,
+        guests: form.guests,
+        specialRequests: form.specialRequests,
+        customerEmail: form.email, // Admin booking for customer
+        customerName: form.name, // Admin booking for customer
+      });
+
       if (result.error) {
         toast.error(result.error);
         return;
       }
 
-      if (result.success) {
-        toast.success(`Booking created successfully! Receipt sent to ${formData.customerEmail}`);
-        // Reset form
-        setFormData({
-          customerName: "",
-          customerEmail: "",
-          customerPhone: "",
-          roomId: "",
-          checkIn: "",
-          checkOut: "",
-          guests: 1,
-          specialRequests: "",
-          paymentMethod: "cash",
-          cardNumber: "",
-          cardholderName: "",
-          expiryDate: "",
-          cvv: "",
-        });
+      toast.success("Booking created successfully!");
+
+      // Redirect to payment (always use Pesapal)
+      if (result.booking?.id) {
+        try {
+          const paymentResult = await initiatePesapalPayment({
+            bookingId: result.booking.id,
+            amount: totalAmount,
+          });
+
+          if (paymentResult.success && paymentResult.redirectUrl) {
+            toast.info("Redirecting to payment...");
+            window.location.href = paymentResult.redirectUrl;
+            return;
+          } else {
+            toast.error(paymentResult.error || "Failed to initiate payment");
+          }
+        } catch (paymentError) {
+          console.error("Payment initiation error:", paymentError);
+          toast.error("Failed to process payment. Booking created but payment not initiated.");
+        }
+      } else {
+        setTimeout(() => {
+          router.push("/admin/dashboard/bookings");
+        }, 2000);
       }
     } catch (error: any) {
       console.error("Booking error:", error);
       toast.error(error.message || "Failed to create booking");
     } finally {
+      isSubmittingRef.current = false;
       setLoading(false);
     }
-  };
-
-  const calculateNights = () => {
-    if (!formData.checkIn || !formData.checkOut) return 0;
-    const checkIn = new Date(formData.checkIn);
-    const checkOut = new Date(formData.checkOut);
-    const diffTime = Math.abs(checkOut.getTime() - checkIn.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays || 0;
-  };
-
-  const calculateTotal = () => {
-    const selectedRoom = rooms.find((r) => r.id === formData.roomId);
-    if (!selectedRoom || !selectedRoom.roomType) return 0;
-    const nights = calculateNights();
-    const pricePerNight = parseFloat(selectedRoom.roomType.basePrice || "0");
-    return nights * pricePerNight;
   };
 
   if (checkingPermission) {
@@ -200,294 +186,262 @@ export default function AddBookingCard() {
   }
 
   return (
-    <Card className="border-0 backdrop-blur-md bg-white/90 dark:bg-gray-900/90">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Bed className="h-5 w-5 text-orange-600" />
-          Add New Booking (Reception)
-        </CardTitle>
-        <CardDescription>
-          Create a booking for customers checking in at the reception
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="customerName" className="flex items-center gap-2">
-                <User className="h-4 w-4" />
-                Customer Name *
-              </Label>
-              <Input
-                id="customerName"
-                value={formData.customerName}
-                onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
-                placeholder="John Doe"
-                required
-              />
-            </div>
+    <div className="space-y-6">
+      {/* Step Indicators */}
+      <div className="flex border-b border-black/10">
+        <div
+          className={`flex-1 px-3 md:px-6 py-3 md:py-4 text-center font-medium transition-all border-t border-b border-l ${
+            step === 1
+              ? "bg-amber-600 text-white border-amber-600"
+              : "bg-black/5 text-gray-500 border-black/10"
+          }`}
+          style={{ fontFamily: "var(--font-inter)" }}
+        >
+          <div className="text-xs md:text-sm font-semibold">Step 1</div>
+          <div className="text-[10px] md:text-xs mt-1">Details</div>
+        </div>
+        <div
+          className={`flex-1 px-3 md:px-6 py-3 md:py-4 text-center font-medium transition-all border-t border-b border-l ${
+            step === 2
+              ? "bg-amber-600 text-white border-amber-600"
+              : "bg-black/5 text-gray-500 border-black/10"
+          }`}
+          style={{ fontFamily: "var(--font-inter)" }}
+        >
+          <div className="text-xs md:text-sm font-semibold">Step 2</div>
+          <div className="text-[10px] md:text-xs mt-1">Review</div>
+        </div>
+      </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="customerEmail" className="flex items-center gap-2">
-                <Mail className="h-4 w-4" />
-                Customer Email *
-              </Label>
-              <Input
-                id="customerEmail"
-                type="email"
-                value={formData.customerEmail}
-                onChange={(e) => setFormData({ ...formData, customerEmail: e.target.value })}
-                placeholder="customer@example.com"
-                required
-              />
-            </div>
+      {/* STEP 1: DETAILS */}
+      {step === 1 && (
+        <div className="space-y-6 p-4 md:p-8 border-l border-r border-black/10 bg-white">
+          <h2
+            className="text-xl md:text-2xl lg:text-3xl font-bold text-[#1a1c1e] mb-4 md:mb-6"
+            style={{ fontFamily: "var(--font-playfair)" }}
+          >
+            Booking Details
+          </h2>
 
-            <div className="space-y-2">
-              <Label htmlFor="customerPhone" className="flex items-center gap-2">
-                <Phone className="h-4 w-4" />
-                Phone Number
-              </Label>
-              <Input
-                id="customerPhone"
-                value={formData.customerPhone}
-                onChange={(e) => setFormData({ ...formData, customerPhone: e.target.value })}
-                placeholder="+256 XXX XXX XXX"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="roomId" className="flex items-center gap-2">
-                <Bed className="h-4 w-4" />
-                Room *
-              </Label>
-              <Select
-                value={formData.roomId}
-                onValueChange={(value) => setFormData({ ...formData, roomId: value })}
-                required
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div>
+              <label
+                className="block text-xs uppercase tracking-widest text-black/60 font-medium mb-2"
+                style={{ fontFamily: "var(--font-inter)" }}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a room" />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableRooms.length === 0 && formData.checkIn && formData.checkOut ? (
-                    <SelectItem value="" disabled>No available rooms for selected dates</SelectItem>
-                  ) : (
-                    rooms
-                      .filter((room) => room.status === "available")
-                      .map((room) => (
-                        <SelectItem key={room.id} value={room.id}>
-                          {room.roomNumber} - {room.roomType?.name} (UGX {parseFloat(room.roomType?.basePrice || "0").toLocaleString()}/night)
-                        </SelectItem>
-                      ))
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="checkIn" className="flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
-                Check-in Date *
-              </Label>
-              <Input
-                id="checkIn"
+                Check-in Date
+              </label>
+              <input
+                className="w-full bg-transparent border-b border-gray-400/50 px-0 py-3 text-[#1a1c1e] placeholder-gray-500 focus:outline-none focus:border-b-amber-600 transition-all"
                 type="date"
-                value={formData.checkIn}
-                onChange={(e) => setFormData({ ...formData, checkIn: e.target.value })}
-                min={new Date().toISOString().split("T")[0]}
-                required
+                value={form.checkIn}
+                onChange={(e) => update("checkIn", e.target.value)}
+                style={{ fontFamily: "var(--font-inter)" }}
               />
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="checkOut" className="flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
-                Check-out Date *
-              </Label>
-              <Input
-                id="checkOut"
+            <div>
+              <label
+                className="block text-xs uppercase tracking-widest text-black/60 font-medium mb-2"
+                style={{ fontFamily: "var(--font-inter)" }}
+              >
+                Check-out Date
+              </label>
+              <input
+                className="w-full bg-transparent border-b border-gray-400/50 px-0 py-3 text-[#1a1c1e] placeholder-gray-500 focus:outline-none focus:border-b-amber-600 transition-all"
                 type="date"
-                value={formData.checkOut}
-                onChange={(e) => setFormData({ ...formData, checkOut: e.target.value })}
-                min={formData.checkIn || new Date().toISOString().split("T")[0]}
-                required
+                value={form.checkOut}
+                onChange={(e) => update("checkOut", e.target.value)}
+                style={{ fontFamily: "var(--font-inter)" }}
               />
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="guests" className="flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                Number of Guests *
-              </Label>
-              <Input
-                id="guests"
+            <div>
+              <label
+                className="block text-xs uppercase tracking-widest text-black/60 font-medium mb-2"
+                style={{ fontFamily: "var(--font-inter)" }}
+              >
+                Number of Guests
+              </label>
+              <input
+                className="w-full bg-transparent border-b border-gray-400/50 px-0 py-3 text-[#1a1c1e] placeholder-gray-500 focus:outline-none focus:border-b-amber-600 transition-all"
                 type="number"
                 min="1"
-                value={formData.guests}
-                onChange={(e) => setFormData({ ...formData, guests: parseInt(e.target.value) || 1 })}
-                required
+                value={form.guests}
+                onChange={(e) => update("guests", parseInt(e.target.value) || 1)}
+                style={{ fontFamily: "var(--font-inter)" }}
               />
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="paymentMethod" className="flex items-center gap-2">
-                <CreditCard className="h-4 w-4" />
-                Payment Method *
-              </Label>
-              <Select
-                value={formData.paymentMethod}
-                onValueChange={(value: "cash" | "mtn_mobile_money" | "airtel_money" | "visa" | "mastercard") => 
-                  setFormData({ ...formData, paymentMethod: value, cardNumber: "", cardholderName: "", expiryDate: "", cvv: "" })
-                }
-                required
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="cash">
-                    <div className="flex items-center gap-2">
-                      <DollarSign className="h-4 w-4" />
-                      Cash
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="mtn_mobile_money">
-                    <div className="flex items-center gap-2">
-                      <Smartphone className="h-4 w-4" />
-                      MTN Mobile Money
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="airtel_money">
-                    <div className="flex items-center gap-2">
-                      <Smartphone className="h-4 w-4" />
-                      Airtel Money
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="visa">
-                    <div className="flex items-center gap-2">
-                      <CreditCard className="h-4 w-4" />
-                      Visa
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="mastercard">
-                    <div className="flex items-center gap-2">
-                      <CreditCard className="h-4 w-4" />
-                      Mastercard
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Card Details for Visa/Mastercard */}
-            {(formData.paymentMethod === "visa" || formData.paymentMethod === "mastercard") && (
-              <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                <Label className="text-sm font-medium">Card Details</Label>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="cardNumber">Card Number *</Label>
-                    <Input
-                      id="cardNumber"
-                      type="text"
-                      placeholder="1234 5678 9012 3456"
-                      value={formData.cardNumber}
-                      onChange={(e) => {
-                        const value = e.target.value.replace(/\s/g, "").replace(/\D/g, "");
-                        const formatted = value.match(/.{1,4}/g)?.join(" ") || value;
-                        setFormData({ ...formData, cardNumber: formatted });
-                      }}
-                      maxLength={19}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="cardholderName">Cardholder Name *</Label>
-                    <Input
-                      id="cardholderName"
-                      type="text"
-                      placeholder="John Doe"
-                      value={formData.cardholderName}
-                      onChange={(e) => setFormData({ ...formData, cardholderName: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="expiryDate">Expiry Date (MM/YY) *</Label>
-                    <Input
-                      id="expiryDate"
-                      type="text"
-                      placeholder="12/25"
-                      value={formData.expiryDate}
-                      onChange={(e) => {
-                        let value = e.target.value.replace(/\D/g, "");
-                        if (value.length >= 2) {
-                          value = value.slice(0, 2) + "/" + value.slice(2, 4);
-                        }
-                        setFormData({ ...formData, expiryDate: value });
-                      }}
-                      maxLength={5}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="cvv">CVV *</Label>
-                    <Input
-                      id="cvv"
-                      type="text"
-                      placeholder="123"
-                      value={formData.cvv}
-                      onChange={(e) => {
-                        const value = e.target.value.replace(/\D/g, "").slice(0, 4);
-                        setFormData({ ...formData, cvv: value });
-                      }}
-                      maxLength={4}
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="specialRequests">Special Requests</Label>
-            <Textarea
-              id="specialRequests"
-              value={formData.specialRequests}
-              onChange={(e) => setFormData({ ...formData, specialRequests: e.target.value })}
+          <button
+            onClick={() => {
+              const err = validateStep1();
+              if (err) {
+                toast.error(err);
+              } else {
+                setStep(2);
+              }
+            }}
+            className="w-full bg-amber-600 text-white px-6 py-3 text-base font-semibold hover:bg-amber-700 transition uppercase tracking-wide"
+            style={{ fontFamily: "var(--font-inter)" }}
+          >
+            Continue to Review
+          </button>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+            <div>
+              <label
+                className="block text-xs uppercase tracking-widest text-black/60 font-medium mb-2"
+                style={{ fontFamily: "var(--font-inter)" }}
+              >
+                Full Name
+              </label>
+              <input
+                className="w-full bg-transparent border-b border-gray-400/50 px-0 py-3 text-[#1a1c1e] placeholder-gray-500 focus:outline-none focus:border-b-amber-600 transition-all"
+                placeholder="Enter customer full name"
+                value={form.name}
+                onChange={(e) => update("name", e.target.value)}
+                style={{ fontFamily: "var(--font-inter)" }}
+              />
+            </div>
+            <div>
+              <label
+                className="block text-xs uppercase tracking-widest text-black/60 font-medium mb-2"
+                style={{ fontFamily: "var(--font-inter)" }}
+              >
+                Email Address
+              </label>
+              <input
+                className="w-full bg-transparent border-b border-gray-400/50 px-0 py-3 text-[#1a1c1e] placeholder-gray-500 focus:outline-none focus:border-b-amber-600 transition-all"
+                placeholder="customer.email@example.com"
+                type="email"
+                value={form.email}
+                onChange={(e) => update("email", e.target.value)}
+                style={{ fontFamily: "var(--font-inter)" }}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label
+              className="block text-xs uppercase tracking-widest text-black/60 font-medium mb-2"
+              style={{ fontFamily: "var(--font-inter)" }}
+            >
+              Select Room
+            </label>
+            <select
+              className="w-full bg-transparent border-b border-gray-400/50 px-0 py-3 text-[#1a1c1e] focus:outline-none focus:border-b-amber-600 transition-all"
+              value={form.room}
+              onChange={(e) => update("room", e.target.value)}
+              style={{ fontFamily: "var(--font-inter)" }}
+            >
+              <option value="" className="bg-white">
+                Choose your preferred room
+              </option>
+              {rooms.map((r) => (
+                <option key={r.id} value={r.id} className="bg-white">
+                  {r.title} — {r.price}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label
+              className="block text-xs uppercase tracking-widest text-black/60 font-medium mb-2"
+              style={{ fontFamily: "var(--font-inter)" }}
+            >
+              Special Requests
+            </label>
+            <textarea
+              className="w-full bg-transparent border-b border-gray-400/50 px-0 py-3 text-[#1a1c1e] placeholder-stone-400 focus:outline-none focus:border-b-amber-600 transition-all resize-none"
               placeholder="Any special requests or preferences..."
-              rows={3}
+              rows={4}
+              value={form.specialRequests}
+              onChange={(e) => update("specialRequests", e.target.value)}
+              style={{ fontFamily: "var(--font-inter)" }}
             />
           </div>
+        </div>
+      )}
 
-          {formData.roomId && formData.checkIn && formData.checkOut && (
-            <div className="bg-orange-50 dark:bg-orange-950/30 p-4 rounded-lg border border-orange-200 dark:border-orange-800">
+      {/* STEP 2: REVIEW */}
+      {step === 2 && (
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-6 p-4 md:p-8 border-l border-r border-black/10 bg-white"
+        >
+          <h2
+            className="text-xl md:text-2xl lg:text-3xl font-bold text-[#1a1c1e] mb-4 md:mb-6"
+            style={{ fontFamily: "var(--font-playfair)" }}
+          >
+            Review & Confirm
+          </h2>
+
+          <div className="p-4 md:p-6 space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <div className="text-sm text-gray-500 mb-1">Name</div>
+                <div className="font-semibold text-[#1a1c1e]">{form.name || "—"}</div>
+              </div>
+              <div>
+                <div className="text-sm text-stone-400 mb-1">Email</div>
+                <div className="font-semibold text-[#1a1c1e]">{form.email || "—"}</div>
+              </div>
+              <div>
+                <div className="text-sm text-stone-400 mb-1">Guests</div>
+                <div className="font-semibold text-[#1a1c1e]">{form.guests}</div>
+              </div>
+              <div className="col-span-2">
+                <div className="text-sm text-stone-400 mb-1">Room</div>
+                <div className="font-semibold text-[#1a1c1e]">{selectedRoom?.title ?? "—"}</div>
+              </div>
+              <div>
+                <div className="text-sm text-stone-400 mb-1">Check-in</div>
+                <div className="font-semibold text-[#1a1c1e]">{form.checkIn || "—"}</div>
+              </div>
+              <div>
+                <div className="text-sm text-stone-400 mb-1">Check-out</div>
+                <div className="font-semibold text-[#1a1c1e]">{form.checkOut || "—"}</div>
+              </div>
+              <div>
+                <div className="text-sm text-stone-400 mb-1">Nights</div>
+                <div className="font-semibold text-[#1a1c1e]">{nights}</div>
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-black/10">
               <div className="flex justify-between items-center">
-                <div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">
-                    {calculateNights()} night{calculateNights() !== 1 ? "s" : ""} × UGX{" "}
-                    {rooms.find((r) => r.id === formData.roomId)?.roomType?.basePrice
-                      ? parseFloat(rooms.find((r) => r.id === formData.roomId)?.roomType?.basePrice || "0").toLocaleString()
-                      : "0"}
-                  </div>
-                  <div className="text-lg font-bold text-orange-600 dark:text-orange-400 mt-1">
-                    Total: UGX {calculateTotal().toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </div>
+                <div className="text-lg font-semibold text-[#1a1c1e]">Total Amount</div>
+                <div
+                  className="text-2xl font-bold text-amber-600"
+                  style={{ fontFamily: "var(--font-inter)" }}
+                >
+                  {formatMoney(totalAmount)}
                 </div>
               </div>
             </div>
-          )}
+          </div>
 
-          <Button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-orange-600 hover:bg-orange-700"
-          >
-            {loading ? "Creating Booking..." : "Create Booking & Send Receipt"}
-          </Button>
+          <div className="flex gap-4 pt-4">
+            <button
+              type="button"
+              onClick={() => setStep(1)}
+              className="flex-1 bg-transparent border border-black/20 hover:border-black/40 text-[#1a1c1e] px-4 md:px-6 py-3 text-sm md:text-base font-semibold transition uppercase tracking-wide"
+              style={{ fontFamily: "var(--font-inter)" }}
+            >
+              Back
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex-1 bg-amber-600 text-white px-4 md:px-6 py-3 text-sm md:text-base font-semibold hover:bg-amber-700 transition uppercase tracking-wide disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ fontFamily: "var(--font-inter)" }}
+            >
+              {loading ? "Processing..." : "Confirm & Pay"}
+            </button>
+          </div>
         </form>
-      </CardContent>
-    </Card>
+      )}
+    </div>
   );
 }
-

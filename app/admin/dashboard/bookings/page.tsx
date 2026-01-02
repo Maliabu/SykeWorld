@@ -119,6 +119,9 @@ export default function BookingsPage() {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
             />
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 ml-1">
+              Search by: customer name, email, room number, or booking ID
+            </p>
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-48">

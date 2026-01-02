@@ -23,7 +23,7 @@ import {
 import { uploadServerFile } from "@/server/fetch.actions";
 import { createRoomSchema } from "@/lib/validations/bookings";
 import { toast } from "sonner";
-import { X, Upload, Image as ImageIcon, Plus, Check } from "lucide-react";
+import { X, Upload, Image as ImageIcon, Plus, Check, Loader2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -118,41 +118,54 @@ export default function AddRoom() {
     }
     
     setUploadingImages(true);
+    toast.loading(`Uploading ${newFiles.length} image(s) to cPanel...`, { id: 'upload-status' });
     const newUrls: string[] = [];
+    const uploadedFiles: File[] = [];
 
     try {
-      for (const file of newFiles) {
+      for (let i = 0; i < newFiles.length; i++) {
+        const file = newFiles[i];
         try {
+          toast.loading(`Uploading ${file.name} (${i + 1}/${newFiles.length})...`, { id: 'upload-status' });
+          
           const formData = new FormData();
           formData.append("file", file);
           
-          console.log('Uploading file:', file.name, 'Size:', file.size);
-          const url = await uploadServerFile(formData, "rooms"); // Pass category as second parameter
+          console.log('📤 Uploading file to cPanel:', file.name, 'Size:', (file.size / 1024 / 1024).toFixed(2), 'MB');
+          const url = await uploadServerFile(formData, "rooms"); // Uploads to cPanel via /api/server route
           
           if (url && typeof url === "string") {
-            console.log('Upload successful, URL:', url);
+            console.log('✅ Upload successful! File saved to cPanel:', url);
+            // Verify URL is from cPanel (should contain your domain)
+            if (!url.includes('http')) {
+              console.warn('⚠️ Warning: URL does not appear to be a full URL:', url);
+              toast.warning(`Uploaded ${file.name} but URL format may be incorrect: ${url}`, { id: 'upload-status' });
+            }
             newUrls.push(url);
+            uploadedFiles.push(file);
+            toast.success(`✓ ${file.name} uploaded successfully`, { id: `upload-${i}` });
           } else {
-            console.error('Upload returned invalid URL:', url);
-            throw new Error(`Failed to upload ${file.name}: No URL returned`);
+            console.error('❌ Upload returned invalid URL:', url);
+            throw new Error(`Failed to upload ${file.name}: No URL returned from cPanel`);
           }
         } catch (fileError: any) {
           console.error('Error uploading file:', file.name, fileError);
-          toast.error(`Failed to upload ${file.name}: ${fileError.message || "Unknown error"}`);
+          toast.error(`Failed to upload ${file.name}: ${fileError.message || "Unknown error"}`, { id: `upload-${i}` });
           // Continue with other files instead of stopping
         }
       }
       
+      // Update state with uploaded images
       if (newUrls.length > 0) {
-        setImageFiles((prev) => [...prev, ...newFiles.slice(0, newUrls.length)]);
+        setImageFiles((prev) => [...prev, ...uploadedFiles]);
         setImageUrls((prev) => [...prev, ...newUrls]);
-        toast.success(`${newUrls.length} image(s) uploaded successfully`);
+        toast.success(`✅ ${newUrls.length} of ${newFiles.length} image(s) uploaded successfully to cPanel!`, { id: 'upload-status' });
       } else {
-        toast.error("No images were uploaded. Please check the console for errors.");
+        toast.error("❌ No images were uploaded. Please check the console for errors.", { id: 'upload-status' });
       }
     } catch (error: any) {
       console.error('Upload error:', error);
-      toast.error("Failed to upload images: " + (error.message || "Unknown error"));
+      toast.error("Failed to upload images: " + (error.message || "Unknown error"), { id: 'upload-status' });
     } finally {
       setUploadingImages(false);
     }
@@ -267,32 +280,55 @@ export default function AddRoom() {
       const result = await createRoom(values);
       if (result.error) {
         toast.error(result.error);
+        setLoading(false);
         return;
       }
 
-      // Upload images if any - save to database
-      if (imageUrls.length > 0 && result.room?.id) {
-        console.log(`Saving ${imageUrls.length} image(s) to database for room ${result.room.id}`);
-        const imageResults = await Promise.all(
-          imageUrls.map(async (url) => {
-            const imageResult = await addRoomImage(result.room!.id, url);
-            if (imageResult.error) {
-              console.error(`Failed to save image ${url}:`, imageResult.error);
-              toast.error(`Failed to save image: ${imageResult.error}`);
-            } else {
-              console.log(`Image saved successfully: ${url}`);
-            }
-            return imageResult;
-          })
-        );
+      if (!result.room?.id) {
+        toast.error("Room created but no ID returned");
+        setLoading(false);
+        return;
+      }
+
+      const roomId = result.room.id;
+      console.log("✅ Room created with ID:", roomId);
+
+      // Save images to database after room creation
+      if (imageUrls.length > 0) {
+        console.log(`💾 Saving ${imageUrls.length} image(s) to database for room ${roomId}`);
+        console.log("Image URLs to save:", imageUrls);
         
-        const successCount = imageResults.filter(r => r.success).length;
-        if (successCount > 0) {
-          console.log(`Successfully saved ${successCount} image(s) to database`);
+        toast.loading(`Saving ${imageUrls.length} image(s) to database...`, { id: 'save-images' });
+        
+        let savedCount = 0;
+        let failedCount = 0;
+
+        for (let i = 0; i < imageUrls.length; i++) {
+          const url = imageUrls[i];
+          try {
+            console.log(`[${i + 1}/${imageUrls.length}] Saving image to DB:`, url);
+            const imageResult = await addRoomImage(roomId, url);
+            
+            if (imageResult.success && imageResult.image) {
+              savedCount++;
+              console.log(`✅ Image ${i + 1} saved to DB with ID:`, imageResult.image.id);
+            } else {
+              failedCount++;
+              console.error(`❌ Failed to save image ${i + 1}:`, imageResult.error);
+              toast.error(`Image ${i + 1} failed: ${imageResult.error}`, { id: `img-${i}` });
+            }
+          } catch (error: any) {
+            failedCount++;
+            console.error(`❌ Exception saving image ${i + 1}:`, error);
+            toast.error(`Image ${i + 1} error: ${error.message}`, { id: `img-${i}` });
+          }
         }
-      } else if (imageUrls.length > 0) {
-        console.error("Room was created but has no ID, cannot save images");
-        toast.error("Room created but images could not be saved - room ID missing");
+        
+        if (savedCount > 0) {
+          toast.success(`✅ Saved ${savedCount} image(s) to database${failedCount > 0 ? ` (${failedCount} failed)` : ''}`, { id: 'save-images' });
+        } else if (failedCount > 0) {
+          toast.error(`❌ All ${failedCount} image(s) failed to save. Check console.`, { id: 'save-images' });
+        }
       }
 
       toast.success("Room created successfully!");
@@ -684,27 +720,41 @@ export default function AddRoom() {
             {imageUrls.length > 0 && (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
                 {imageUrls.map((url, index) => (
-                  <div key={index} className="relative group">
-                    <div className="aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+                  <div key={`${url}-${index}`} className="relative group">
+                    <div className="aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800">
                       <img
                         src={url}
                         alt={`Room image ${index + 1}`}
                         className="w-full h-full object-cover"
+                        loading="lazy"
+                        onLoad={() => {
+                          console.log('✅ Image loaded from cPanel:', url);
+                        }}
                         onError={(e) => {
+                          console.error('❌ Failed to load image from cPanel:', url);
                           // Prevent infinite loop - use data URI placeholder
                           if (!e.currentTarget.src.includes('data:image')) {
-                            e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Crect fill='%23e5e7eb' width='400' height='300'/%3E%3Ctext fill='%239ca3af' font-family='sans-serif' font-size='18' x='50%25' y='50%25' text-anchor='middle' dy='.3em'%3ENo Image%3C/text%3E%3C/svg%3E";
+                            e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Crect fill='%23e5e7eb' width='400' height='300'/%3E%3Ctext fill='%239ca3af' font-family='sans-serif' font-size='18' x='50%25' y='50%25' text-anchor='middle' dy='.3em'%3EImage Not Found%3C/text%3E%3C/svg%3E";
+                            toast.error(`Failed to load image: ${url.split('/').pop()}`);
                           }
                         }}
                       />
+                      {uploadingImages && index === imageUrls.length - 1 && (
+                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                          <Loader2 className="h-8 w-8 animate-spin text-white" />
+                        </div>
+                      )}
                     </div>
                     <button
                       type="button"
                       onClick={() => removeImage(index)}
-                      className="absolute top-2 right-2 bg-orange-600 hover:bg-orange-700 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute top-2 right-2 bg-orange-600 hover:bg-orange-700 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity z-10"
                     >
                       <X className="w-4 h-4" />
                     </button>
+                    <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded truncate max-w-[calc(100%-1rem)] opacity-0 group-hover:opacity-100 transition-opacity">
+                      {url.split('/').pop()}
+                    </div>
                   </div>
                 ))}
               </div>

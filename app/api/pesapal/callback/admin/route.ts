@@ -1,47 +1,34 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { payments, bookings, transactions, rooms, roomTypes, users } from "@/lib/db/schema";
+import { payments, bookings, rooms, roomTypes, users, transactions } from "@/lib/db/schema";
 import { eq, or } from "drizzle-orm";
 import { getPesapalToken } from "@/lib/actions/pesapal";
 import { sendBookingReceipt } from "@/mail/nodemailer";
 
 // Determine if we're using sandbox/test mode
-const PESAPAL_SANDBOX = process.env.PESAPAL_SANDBOX === "true" || 
-  (process.env.NODE_ENV === "development" && process.env.PESAPAL_SANDBOX !== "false");
-const PESAPAL_BASE_URL = process.env.PESAPAL_BASE_URL || 
-  (PESAPAL_SANDBOX ? "https://cybqa.pesapal.com/pesapalv3" : "https://pay.pesapal.com/v3");
+const PESAPAL_SANDBOX = process.env.PESAPAL_SANDBOX === "true" || process.env.NODE_ENV === "development";
+const PESAPAL_BASE_URL = PESAPAL_SANDBOX
+  ? "https://cybqa.pesapal.com/pesapalv3"
+  : "https://pay.pesapal.com/v3";
 
-/**
- * Pesapal Callback Endpoint
- * 
- * Pesapal redirects users here after payment (success or failure).
- * 
- * Query parameters from Pesapal:
- * - OrderTrackingId: Pesapal's tracking ID for the transaction
- * - OrderMerchantReference: Your booking/payment ID
- * 
- * This endpoint:
- * 1. Receives the redirect from Pesapal
- * 2. Verifies the payment status
- * 3. Updates booking status if payment completed
- * 4. Redirects user to appropriate page (success/failure)
- */
+// ADMIN-SPECIFIC CALLBACK ROUTE
+// This route handles Pesapal callbacks for bookings made from the admin dashboard
+// It always redirects to admin dashboard pages, never to public website pages
 export async function GET(req: NextRequest) {
   // Extract parameters outside try block so they're available in catch
   const searchParams = req.nextUrl.searchParams;
   const OrderTrackingId = searchParams.get("OrderTrackingId");
   const OrderMerchantReference = searchParams.get("OrderMerchantReference");
 
-  console.log("Pesapal PUBLIC callback received:", { OrderTrackingId, OrderMerchantReference });
+  console.log("Pesapal ADMIN callback received:", { OrderTrackingId, OrderMerchantReference });
 
   if (!OrderTrackingId || !OrderMerchantReference) {
-    console.error("Public callback missing required parameters");
-    return redirect("/booking?error=missing_parameters");
+    console.error("Admin callback missing required parameters");
+    return redirect("/admin/dashboard/bookings?error=missing_parameters");
   }
 
   try {
-
     // Find the payment record (OrderMerchantReference is the booking ID)
     let [payment] = await db
       .select()
@@ -76,6 +63,7 @@ export async function GET(req: NextRequest) {
               method: "GET",
               headers: {
                 Accept: "application/json",
+                "Content-Type": "application/json",
                 Authorization: `Bearer ${accessToken}`,
               },
               signal: controller.signal,
@@ -117,10 +105,10 @@ export async function GET(req: NextRequest) {
                 if (updateResult.length === 0) {
                   console.error("❌ Failed to update booking - booking not found:", payment.bookingId);
                 } else {
-                  console.log("✅ Booking status updated to 'confirmed' via callback for booking:", payment.bookingId);
+                  console.log("✅ Booking status updated to 'confirmed' via admin callback for booking:", payment.bookingId);
                 }
               } catch (bookingUpdateError: any) {
-                console.error("❌ ERROR updating booking status in callback:", bookingUpdateError);
+                console.error("❌ ERROR updating booking status in admin callback:", bookingUpdateError);
                 console.error("Error details:", {
                   message: bookingUpdateError.message,
                   bookingId: payment.bookingId,
@@ -206,54 +194,68 @@ export async function GET(req: NextRequest) {
                 // Don't fail the callback if email fails
               }
             }
+
+            // Update transaction record if exists
+            const [transaction] = await db
+              .select()
+              .from(transactions)
+              .where(
+                or(
+                  eq(transactions.merchantReference, OrderMerchantReference),
+                  eq(transactions.pesapalReference, OrderTrackingId)
+                )
+              )
+              .limit(1);
+
+            if (transaction) {
+              const finalTransactionStatus = isCompleted ? "COMPLETED" : (paymentStatus?.toUpperCase() || "PENDING");
+              await db
+                .update(transactions)
+                .set({
+                  status: finalTransactionStatus,
+                  updated: new Date(),
+                })
+                .where(eq(transactions.id, transaction.id));
+            }
+
+            // Get updated payment for redirect decision
+            const [updatedPayment] = await db
+              .select()
+              .from(payments)
+              .where(eq(payments.id, payment.id))
+              .limit(1);
+
+            // ALWAYS redirect to admin dashboard (this is the admin callback route)
+            if (updatedPayment && updatedPayment.status === "COMPLETED") {
+              return redirect(`/admin/dashboard/payment/success?trackingId=${OrderTrackingId}&reference=${OrderMerchantReference}`);
+            } else {
+              return redirect(`/admin/dashboard/payment/success?trackingId=${OrderTrackingId}&reference=${OrderMerchantReference}&status=pending`);
+            }
           } else {
-            console.warn("⚠️ Failed to verify payment status from Pesapal, status:", response.status);
-            // Continue anyway - IPN will handle it
+            console.error("Failed to verify payment status with Pesapal:", response.status, response.statusText);
+            // Still redirect to admin success page with pending status
+            return redirect(`/admin/dashboard/payment/success?trackingId=${OrderTrackingId}&reference=${OrderMerchantReference}&status=pending`);
           }
         } catch (verifyError: any) {
-          console.error("Error verifying payment in callback:", verifyError);
-          // Continue with redirect even if verification fails - IPN will handle it
-          // Don't throw - just log and continue
+          console.error("Error verifying payment with Pesapal:", verifyError);
+          // Still redirect to admin success page
+          return redirect(`/admin/dashboard/payment/success?trackingId=${OrderTrackingId}&reference=${OrderMerchantReference}&status=verification_error`);
         }
       } catch (error: any) {
-        console.error("Error in payment processing:", error);
-        // Continue with redirect even if processing fails
+        console.error("Error processing admin callback:", error);
+        // Still redirect to admin success page with error
+        return redirect(`/admin/dashboard/payment/success?error=processing_error&trackingId=${OrderTrackingId || ""}&reference=${OrderMerchantReference || ""}`);
       }
     } else {
-      console.warn("⚠️ Payment record not found for callback:", { OrderTrackingId, OrderMerchantReference });
-      // Still redirect to success page - user can check status
-    }
-    
-    // Redirect to success page with status
-    // Check payment status from database (might have been updated above)
-    const [updatedPayment] = payment 
-      ? await db
-          .select({ status: payments.status })
-          .from(payments)
-          .where(eq(payments.id, payment.id))
-          .limit(1)
-      : [null];
-    
-    // ALWAYS redirect to public success page (this is the public callback route)
-    // Admin bookings use /api/pesapal/callback/admin route
-    if (updatedPayment && updatedPayment.status === "COMPLETED") {
-      return redirect(`/payment/success?trackingId=${OrderTrackingId}&reference=${OrderMerchantReference}`);
-    } else {
-      return redirect(`/payment/success?trackingId=${OrderTrackingId}&reference=${OrderMerchantReference}&status=pending`);
+      console.error("Payment not found for admin callback:", { OrderTrackingId, OrderMerchantReference });
+      return redirect(`/admin/dashboard/payment/success?error=payment_not_found&trackingId=${OrderTrackingId || ""}&reference=${OrderMerchantReference || ""}`);
     }
   } catch (error: any) {
-    // Check if this is a Next.js redirect error - if so, re-throw it
-    // Next.js uses redirect() which throws a special error that should not be caught
+    // Handle NEXT_REDIRECT errors properly
     if (error?.digest?.startsWith('NEXT_REDIRECT')) {
       throw error; // Re-throw redirect errors so Next.js can handle them properly
     }
-    
-    // This is a real error (not a redirect), log it and redirect to success page
-    console.error("⚠️ Real public callback error (not a redirect):", error.message);
-    // Still redirect to public success page - don't show error page to user
-    // IPN will handle payment verification if callback fails
-    return redirect(`/payment/success?error=callback_error&trackingId=${OrderTrackingId || ""}&reference=${OrderMerchantReference || ""}`);
+    console.error("⚠️ Real admin callback error (not a redirect):", error.message);
+    return redirect(`/admin/dashboard/payment/success?error=callback_error&trackingId=${OrderTrackingId || ""}&reference=${OrderMerchantReference || ""}`);
   }
 }
-
-

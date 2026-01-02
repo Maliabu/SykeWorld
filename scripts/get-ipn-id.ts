@@ -2,7 +2,7 @@
  * Helper script to retrieve IPN IDs from Pesapal
  * 
  * Usage:
- * 1. Make sure your .env.local has PESAPAL_CONSUMER_KEY and PESAPAL_CONSUMER_SECRET
+ * 1. Make sure your .env (or .env.local) has PESAPAL_CONSUMER_KEY and PESAPAL_CONSUMER_SECRET
  * 2. Run: npx tsx scripts/get-ipn-id.ts
  * 
  * This will list all registered IPN URLs and their associated IDs
@@ -17,7 +17,7 @@ async function main() {
 
   if (result.error) {
     console.error("❌ Error:", result.error);
-    console.log("\n💡 Tip: Make sure PESAPAL_CONSUMER_KEY and PESAPAL_CONSUMER_SECRET are set in .env.local");
+    console.log("\n💡 Tip: Make sure PESAPAL_CONSUMER_KEY and PESAPAL_CONSUMER_SECRET are set in .env (or .env.local)");
     process.exit(1);
   }
 
@@ -29,7 +29,7 @@ async function main() {
       console.log(`   Type: ${ipn.ipn_notification_type || "N/A"}`);
       console.log("");
     });
-    console.log("📋 Copy the IPN ID above and add it to your .env.local:");
+    console.log("📋 Copy the IPN ID above and add it to your .env (or .env.local):");
     console.log("   PESAPAL_IPN_ID=your-ipn-id-here\n");
   } else {
     console.log("⚠️  No IPN URLs found. You can register one:\n");

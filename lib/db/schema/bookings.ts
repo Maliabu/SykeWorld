@@ -192,6 +192,7 @@ export const rooms = pgTable("rooms", {
     .references(() => roomTypes.id),
   floor: integer("floor").notNull(),
   status: roomStatusEnum("status").notNull(),
+  bookingCount: integer("booking_count").notNull().default(0), // Tracks how many times room has been booked
   created: timestamp("created").notNull().defaultNow(), // matches DB
 });
 

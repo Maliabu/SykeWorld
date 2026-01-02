@@ -21,7 +21,7 @@ npm install
 
 ### 2. Environment Variables
 
-Create a `.env.local` file in the `web` directory:
+Create a `.env` (or `.env.local`) file in the `web` directory:
 
 ```env
 DATABASE_URL=postgresql://user:password@host:5432/database?sslmode=require
