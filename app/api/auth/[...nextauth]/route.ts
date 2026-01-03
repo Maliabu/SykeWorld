@@ -9,11 +9,6 @@ declare module "next-auth" {
 }
 
 export const authOptions: AuthOptions = {
-  // Set the base URL for NextAuth callbacks
-  // This is used to construct the callback URL: {NEXTAUTH_URL}/api/auth/callback/google
-  // Defaults to http://localhost:3000 in development
-  url: process.env.NEXTAUTH_URL || (process.env.NODE_ENV === "production" ? undefined : "http://localhost:3000"),
-  
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
