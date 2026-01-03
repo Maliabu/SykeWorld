@@ -138,7 +138,7 @@ export default function NewsletterPage() {
         </Badge>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-2">
         {/* Newsletter Form */}
         <div className="lg:col-span-2 space-y-6">
           <Card>
@@ -148,7 +148,7 @@ export default function NewsletterPage() {
             </CardHeader>
             <CardContent className="space-y-6">
               {/* From Details */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 <div>
                   <Label htmlFor="fromName">From Name</Label>
                   <Input

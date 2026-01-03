@@ -327,7 +327,7 @@ export default function ProfilePage() {
                   </Dialog>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   <div>
                     <Label htmlFor="firstName">First Name</Label>
                     <Input
@@ -375,7 +375,7 @@ export default function ProfilePage() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-2">
                   <div>
                     <Label htmlFor="gender">Gender</Label>
                     <Select

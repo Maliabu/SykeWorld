@@ -409,7 +409,7 @@ export default function EditRoom(props: { id: string, submitId: string }) {
       
     <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             <FormField
               control={form.control}
               name="roomNumber"
@@ -649,7 +649,7 @@ export default function EditRoom(props: { id: string, submitId: string }) {
                 {allServices.length === 0 ? (
                   <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">No services available. Create one to get started.</p>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                     {allServices.map((service) => {
                       const isChecked = selectedRoomTypeServices.includes(service.id);
                       const getInitials = (name: string) => {
@@ -742,7 +742,7 @@ export default function EditRoom(props: { id: string, submitId: string }) {
             {existingImages.length > 0 && (
               <div className="space-y-2">
                 <Label className="text-xs text-gray-500 dark:text-gray-400">Existing Images</Label>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                   {existingImages
                     .filter((img) => img.image && img.image.trim() !== "")
                     .map((img) => {
@@ -832,7 +832,7 @@ export default function EditRoom(props: { id: string, submitId: string }) {
             {newImageUrls.length > 0 && (
               <div className="space-y-2">
                 <Label className="text-xs text-gray-500">New Images (will be added on save)</Label>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                   {newImageUrls
                     .filter((url) => url && url.trim() !== "")
                     .map((url, index) => {

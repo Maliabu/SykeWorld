@@ -265,9 +265,22 @@ export function AppSidebar() {
   return (
     <Sidebar className="bg-white [&>div]:bg-white [&_[data-sidebar=sidebar]]:bg-white">
       <SidebarHeader>
-        <div className="p-3 flex justify-between items-center gap-4 mx-4">
-          <Image src={Logo} alt="logo" className="w-15 h-10"/>
-          <div className="text-xl font-black flex-1 text-right tracking-tight leading-tight">SYKE WORLD<br/>HOTEL</div>
+        <div className="p-3 flex justify-center items-center gap-2 mx-4 whitespace-nowrap">
+          <Image 
+            src={Logo} 
+            alt="logo" 
+            className="w-10 h-8"
+          />
+          <div 
+            className="text-2xl capitalize text-orange-400" 
+            style={{ 
+              fontFamily: "'Cooper Black', serif", 
+              letterSpacing: '0.01em',
+              lineHeight: '1.2'
+            }}
+          >
+            Syke World
+          </div>
         </div>
       </SidebarHeader>
       <SidebarContent className="p-4">

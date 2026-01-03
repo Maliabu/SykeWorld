@@ -1,38 +1,52 @@
 """
-Script to convert green colors in logo to orange
-Converts the logo.png from green/black to orange/black
+Script to convert orange colors in logo to Tailwind orange-400
+Converts any orange shades in logo.png to orange-400 (#fb923c)
 """
 from PIL import Image
 import os
+import math
 
-def convert_green_to_orange(image_path, output_path):
+def is_orange_pixel(r, g, b, threshold=30):
     """
-    Convert green colors to orange in the image
-    Green RGB ranges: (0, 100-255, 0-150) -> Orange RGB: (249, 115, 22)
+    Check if a pixel is orange (red is high, green is medium, blue is low)
+    """
+    # Orange colors typically have: high red, medium green, low blue
+    # Check if red is dominant and green is moderate
+    if r > 150 and g > 50 and b < r and (r - b) > 50:
+        # Calculate hue to verify it's in orange range (15-45 degrees)
+        # Simplified check: red > green > blue with significant difference
+        return True
+    return False
+
+def convert_orange_to_orange400(image_path, output_path):
+    """
+    Convert orange colors to Tailwind orange-400 (#fb923c = RGB(251, 146, 60))
     """
     img = Image.open(image_path).convert("RGBA")
     pixels = img.load()
     
     width, height = img.size
+    orange_400 = (251, 146, 60)  # Tailwind orange-400
+    
+    converted_count = 0
     
     for y in range(height):
         for x in range(width):
             r, g, b, a = pixels[x, y]
             
-            # Check if pixel is green (green channel is high, red and blue are low)
-            # Adjust threshold based on your logo's green shade
-            if g > 100 and r < 150 and b < 150:
-                # Convert to orange: RGB(249, 115, 22) - Tailwind orange-500
-                pixels[x, y] = (249, 115, 22, a)
-            # Keep black pixels as is (low RGB values)
-            elif r < 50 and g < 50 and b < 50:
-                pixels[x, y] = (r, g, b, a)
-            # Keep dark grey (ocean) as is
-            elif r < 100 and g < 100 and b < 100:
-                pixels[x, y] = (r, g, b, a)
+            # Skip transparent pixels
+            if a == 0:
+                continue
+            
+            # Check if pixel is orange (any shade)
+            if is_orange_pixel(r, g, b):
+                # Convert to orange-400
+                pixels[x, y] = (orange_400[0], orange_400[1], orange_400[2], a)
+                converted_count += 1
     
     img.save(output_path, "PNG")
-    print(f"✅ Logo converted and saved to: {output_path}")
+    print(f"Logo converted and saved to: {output_path}")
+    print(f"   Converted {converted_count} orange pixels to orange-400")
 
 if __name__ == "__main__":
     # Get the script directory
@@ -45,16 +59,16 @@ if __name__ == "__main__":
     
     # Check if logo exists
     if not os.path.exists(logo_path):
-        print(f"❌ Logo not found at: {logo_path}")
+        print(f"Logo not found at: {logo_path}")
         print("Please ensure logo.png exists in web/public/images/")
         exit(1)
     
     # Convert logo
-    print(f"🔄 Converting logo from green to orange...")
-    convert_green_to_orange(logo_path, logo_path)
+    print(f"Converting orange colors in logo to orange-400 (#fb923c)...")
+    convert_orange_to_orange400(logo_path, logo_path)
     
     # Also create favicon from logo
-    print(f"🔄 Creating favicon from logo...")
+    print(f"Creating favicon from logo...")
     img = Image.open(logo_path)
     
     # Resize to 32x32 for favicon (standard size)
@@ -63,10 +77,10 @@ if __name__ == "__main__":
     
     # Convert to ICO format and save
     favicon_img.save(favicon_path, format="ICO", sizes=[(32, 32)])
-    print(f"✅ Favicon created at: {favicon_path}")
+    print(f"Favicon created at: {favicon_path}")
     
-    print("\n✅ Logo conversion complete!")
-    print("📝 Files updated:")
+    print("\nLogo conversion complete!")
+    print("Files updated:")
     print(f"   - {logo_path}")
     print(f"   - {favicon_path}")
 

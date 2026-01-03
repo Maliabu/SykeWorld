@@ -25,9 +25,12 @@ import {
   Loader2,
   Clock,
 } from "lucide-react";
+import { Pagination } from "@/components/ui/pagination";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
+
+const ITEMS_PER_PAGE = 20;
 
 export default function ReportsPage() {
   const [loading, setLoading] = useState(false);
@@ -42,6 +45,7 @@ export default function ReportsPage() {
     start: "",
     end: "",
   });
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     loadReport();
@@ -105,6 +109,20 @@ export default function ReportsPage() {
       (a, b) => new Date(b.created).getTime() - new Date(a.created).getTime()
     );
   }, [payments, transactions, searchTerm, statusFilter]);
+
+  // Paginate filtered data
+  const paginatedData = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    return filteredData.slice(startIndex, endIndex);
+  }, [filteredData, currentPage]);
+
+  const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter, year, month, dateRange.start, dateRange.end]);
 
   // Export to PDF
   const exportToPDF = () => {
@@ -247,7 +265,7 @@ export default function ReportsPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
             {/* Year Select */}
             <div>
               <label className="text-sm font-medium mb-2 block">Year</label>
@@ -326,7 +344,7 @@ export default function ReportsPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-4">
             {/* Search */}
             <div>
               <label className="text-sm font-medium mb-2 block">Search</label>
@@ -363,7 +381,7 @@ export default function ReportsPage() {
 
       {/* Summary Cards */}
       {summary && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
           <Card className="border" style={{ backgroundColor: '#F9AC67', borderColor: '#F9AC67' }}>
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
@@ -454,7 +472,7 @@ export default function ReportsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredData.map((item) => (
+                  {paginatedData.map((item) => (
                     <tr
                       key={`${item.type}-${item.id}`}
                       className="border-b hover:bg-gray-50 dark:hover:bg-gray-800 transition"
@@ -488,7 +506,7 @@ export default function ReportsPage() {
                         <Badge variant="outline">{item.type}</Badge>
                       </td>
                       <td className="p-3 text-sm">{item.paymentMethod || "N/A"}</td>
-                      <td className="p-3 text-sm font-mono text-xs">
+                      <td className="p-3 text-xs font-mono">
                         {item.pesapalReference ||
                           item.pesapalOrderTrackingId ||
                           item.merchantReference ||
@@ -499,6 +517,15 @@ export default function ReportsPage() {
                 </tbody>
               </table>
             </div>
+          )}
+          {filteredData.length > 0 && (
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+              totalItems={filteredData.length}
+              itemsPerPage={ITEMS_PER_PAGE}
+            />
           )}
         </CardContent>
       </Card>

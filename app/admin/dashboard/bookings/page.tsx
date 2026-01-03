@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar, Clock, Users, MapPin, Mail, Phone, Search } from "lucide-react";
+import { Pagination } from "@/components/ui/pagination";
+
 // Simple date formatter
 const formatDate = (dateStr: string | null) => {
   if (!dateStr) return "N/A";
@@ -20,11 +22,14 @@ const formatDate = (dateStr: string | null) => {
   }
 };
 
+const ITEMS_PER_PAGE = 20;
+
 export default function BookingsPage() {
   const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     loadBookings();
@@ -95,6 +100,20 @@ export default function BookingsPage() {
     return filtered;
   }, [bookings, searchTerm]);
 
+  // Paginate filtered bookings
+  const paginatedBookings = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    return filteredBookings.slice(startIndex, endIndex);
+  }, [filteredBookings, currentPage]);
+
+  const totalPages = Math.ceil(filteredBookings.length / ITEMS_PER_PAGE);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter]);
+
   if (loading) {
     return (
       <div className="p-6">
@@ -104,21 +123,23 @@ export default function BookingsPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-semibold text-gray-900 dark:text-white">Bookings</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">Manage all hotel bookings</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-3 items-start">
           <div className="relative w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search bookings..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500 z-10 pointer-events-none" />
+              <Input
+                placeholder="Search bookings..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 ml-1">
               Search by: customer name, email, room number, or booking ID
             </p>
@@ -139,7 +160,7 @@ export default function BookingsPage() {
         </div>
       </div>
 
-      <div className="grid gap-4">
+      <div className="grid gap-2">
         {filteredBookings.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center text-gray-500 dark:text-gray-400">
@@ -147,7 +168,7 @@ export default function BookingsPage() {
             </CardContent>
           </Card>
         ) : (
-          filteredBookings.map((booking, index) => (
+          paginatedBookings.map((booking, index) => (
             <Card key={booking.id || `booking-${index}`} className="overflow-hidden border-gray-200 dark:border-gray-800">
               <CardHeader className="pb-4">
                 <div className="flex items-start justify-between">
@@ -163,7 +184,7 @@ export default function BookingsPage() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   <div className="flex items-center gap-3 text-sm">
                     <Calendar className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                     <div>
@@ -240,6 +261,16 @@ export default function BookingsPage() {
           ))
         )}
       </div>
+
+      {filteredBookings.length > 0 && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          totalItems={filteredBookings.length}
+          itemsPerPage={ITEMS_PER_PAGE}
+        />
+      )}
     </div>
   );
 }

@@ -127,7 +127,7 @@ export default function RoomTypesPage() {
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-2">
                   <div>
                     <Label htmlFor="basePrice">Base Price (UGX)</Label>
                     <Input
@@ -159,7 +159,7 @@ export default function RoomTypesPage() {
         </Dialog>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
         {roomTypes.length === 0 ? (
           <Card className="col-span-full">
             <CardContent className="py-12 text-center text-gray-500">
@@ -198,7 +198,7 @@ export default function RoomTypesPage() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center gap-4 text-sm">
+                <div className="flex items-center gap-2 text-sm">
                   <div className="flex items-center gap-2">
                     <DollarSign className="w-4 h-4 text-gray-500" />
                     <span className="font-semibold text-lg">UGX {Number(type.basePrice).toLocaleString()}</span>

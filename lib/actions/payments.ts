@@ -151,6 +151,54 @@ export async function updateTransactionStatus(
   }
 }
 
+// Get payment status by tracking ID (public - no auth required for success pages)
+export async function getPaymentStatusByTrackingId(trackingId: string) {
+  try {
+    const [payment] = await db
+      .select({
+        id: payments.id,
+        status: payments.status,
+        bookingId: payments.bookingId,
+      })
+      .from(payments)
+      .where(eq(payments.pesapalOrderTrackingId, trackingId))
+      .limit(1);
+
+    if (!payment) {
+      return { error: "Payment not found" };
+    }
+
+    return { success: true, payment };
+  } catch (error: any) {
+    console.error("Error fetching payment by tracking ID:", error);
+    return { error: "Failed to fetch payment status" };
+  }
+}
+
+// Get payment status by reference (public - no auth required for success pages)
+export async function getPaymentStatusByReference(reference: string) {
+  try {
+    const [payment] = await db
+      .select({
+        id: payments.id,
+        status: payments.status,
+        bookingId: payments.bookingId,
+      })
+      .from(payments)
+      .where(eq(payments.pesapalMerchantReference, reference))
+      .limit(1);
+
+    if (!payment) {
+      return { error: "Payment not found" };
+    }
+
+    return { success: true, payment };
+  } catch (error: any) {
+    console.error("Error fetching payment by reference:", error);
+    return { error: "Failed to fetch payment status" };
+  }
+}
+
 // Get All Payments (Admin)
 export async function getAllPayments() {
   try {

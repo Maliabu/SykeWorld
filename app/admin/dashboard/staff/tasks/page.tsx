@@ -374,7 +374,7 @@ export default function TasksPage() {
                             <DialogDescription>Create a new room</DialogDescription>
                           </DialogHeader>
                           <form onSubmit={handleAddRoom} className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-2 gap-2">
                               <div>
                                 <Label>Room Number *</Label>
                                 <Input
@@ -493,7 +493,7 @@ export default function TasksPage() {
                     rows={4}
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-2">
                   <div>
                     <Label htmlFor="dueDate">Due Date</Label>
                     <Input
@@ -563,7 +563,7 @@ export default function TasksPage() {
                       {task.details && (
                         <p className="text-sm text-muted-foreground mb-3">{task.details}</p>
                       )}
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         {task.roomId && (
                           <div className="flex items-center gap-1">
                             <Home className="h-4 w-4" />

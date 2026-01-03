@@ -1,11 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { getAllTransactions } from "@/lib/actions/payments";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Pagination } from "@/components/ui/pagination";
 import { CreditCard, Clock, CheckCircle, XCircle } from "lucide-react";
+
+const ITEMS_PER_PAGE = 20;
 
 const formatDate = (dateStr: string | null) => {
   if (!dateStr) return "N/A";
@@ -34,6 +37,7 @@ const getStatusColor = (status: string) => {
 export default function TransactionsPage() {
   const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     loadTransactions();
@@ -50,6 +54,15 @@ export default function TransactionsPage() {
     setLoading(false);
   };
 
+  // Paginate transactions
+  const paginatedTransactions = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    return transactions.slice(startIndex, endIndex);
+  }, [transactions, currentPage]);
+
+  const totalPages = Math.ceil(transactions.length / ITEMS_PER_PAGE);
+
   if (loading) {
     return (
       <div className="p-6">
@@ -65,7 +78,7 @@ export default function TransactionsPage() {
         <p className="text-gray-600 dark:text-gray-400 mt-1">View all payment transactions</p>
       </div>
 
-      <div className="grid gap-4">
+      <div className="grid gap-2">
         {transactions.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center text-gray-500">
@@ -73,7 +86,7 @@ export default function TransactionsPage() {
             </CardContent>
           </Card>
         ) : (
-          transactions.map((transaction, index) => (
+          paginatedTransactions.map((transaction, index) => (
             <Card key={transaction.id || `transaction-${index}`} className="overflow-hidden border-gray-200 dark:border-gray-800">
               <CardHeader className="pb-4">
                 <div className="flex items-start justify-between">
@@ -89,7 +102,7 @@ export default function TransactionsPage() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
-                <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="grid grid-cols-2 gap-2 text-sm">
                   <div>
                     <div className="font-medium text-gray-500">Amount</div>
                     <div className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -120,6 +133,16 @@ export default function TransactionsPage() {
           ))
         )}
       </div>
+
+      {transactions.length > 0 && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          totalItems={transactions.length}
+          itemsPerPage={ITEMS_PER_PAGE}
+        />
+      )}
     </div>
   );
 }

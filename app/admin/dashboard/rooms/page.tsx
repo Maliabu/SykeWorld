@@ -348,7 +348,7 @@ export default function AddRoom() {
       
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             <FormField
               control={form.control}
               name="roomNumber"
@@ -588,7 +588,7 @@ export default function AddRoom() {
                 {allServices.length === 0 ? (
                   <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">No services available. Create one to get started.</p>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                     {allServices.map((service) => {
                       const isChecked = selectedRoomTypeServices.includes(service.id);
                       const getInitials = (name: string) => {
@@ -718,7 +718,7 @@ export default function AddRoom() {
 
             {/* Preview Images */}
             {imageUrls.length > 0 && (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-4 mt-4">
                 {imageUrls.map((url, index) => (
                   <div key={`${url}-${index}`} className="relative group">
                     <div className="aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800">

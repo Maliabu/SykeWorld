@@ -114,7 +114,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 </div>
               </div>
             </div>
-            <div className="p-6 relative z-0">
+            <div className="p-4 relative z-0">
               {children}
             </div>
           </div>

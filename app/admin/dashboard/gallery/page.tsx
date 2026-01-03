@@ -259,7 +259,7 @@ export default function AdminGalleryPage() {
           <h1 className="text-3xl font-semibold text-gray-900 dark:text-white">Gallery</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">Manage gallery categories and images</p>
         </div>
-        <div className="flex gap-4">
+        <div className="flex gap-2">
           <Dialog open={showCategoryModal} onOpenChange={setShowCategoryModal}>
             <DialogTrigger asChild>
               <Button>
@@ -371,7 +371,7 @@ export default function AdminGalleryPage() {
 
                   {/* Preview Images */}
                   {imageUrls.length > 0 && (
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-4 mt-4">
                       {imageUrls.map((url, index) => (
                         <div key={`preview-${index}-${url.substring(0, 20)}`} className="relative group">
                           <div className="aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
@@ -462,7 +462,7 @@ export default function AdminGalleryPage() {
                 {categoryImages.length === 0 ? (
                   <div className="text-center py-8 text-gray-500 dark:text-gray-400">No images in this category</div>
                 ) : (
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                     {categoryImages
                       .filter((img: any) => img.image && img.image.trim() !== "")
                       .map((img: any, imgIndex: number) => {

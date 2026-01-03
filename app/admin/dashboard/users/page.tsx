@@ -183,7 +183,7 @@ export default function UsersPage() {
             </DialogHeader>
             <form onSubmit={handleSubmit}>
               <div className="space-y-4 py-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-2">
                   <div>
                     <Label htmlFor="email">Email *</Label>
                     <Input
@@ -227,7 +227,7 @@ export default function UsersPage() {
                     />
                   </div>
                 )}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-2">
                   <div>
                     <Label htmlFor="firstName">First Name</Label>
                     <Input
@@ -268,7 +268,7 @@ export default function UsersPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="flex gap-4">
+                <div className="flex gap-2">
                   <div className="flex items-center space-x-2">
                     <input
                       type="checkbox"
@@ -300,7 +300,7 @@ export default function UsersPage() {
         </div>
       </div>
 
-      <div className="grid gap-4">
+      <div className="grid gap-2">
         {filteredUsers.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center text-gray-500">
@@ -312,7 +312,7 @@ export default function UsersPage() {
             <Card key={user.id} className="overflow-hidden border-gray-200 dark:border-gray-800">
               <CardHeader className="pb-4">
                 <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-4 flex-1">
+                  <div className="flex items-center gap-2 flex-1">
                     <div className="relative w-12 h-12 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700">
                       {user.profilePicture && user.profilePicture !== "default.jpg" ? (
                         <img
@@ -332,7 +332,7 @@ export default function UsersPage() {
                           ? `${user.firstName} ${user.lastName}`
                           : user.username}
                       </CardTitle>
-                      <CardDescription className="mt-1 flex items-center gap-4">
+                      <CardDescription className="mt-1 flex items-center gap-2">
                         <span className="flex items-center gap-1">
                           <Mail className="w-3 h-3" />
                           {user.email}
@@ -384,7 +384,7 @@ export default function UsersPage() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm text-sm">
                   <div>
                     <div className="font-medium text-gray-500">Joined</div>
                     <div className="text-gray-900 dark:text-white">{formatDate(user.dateJoined)}</div>

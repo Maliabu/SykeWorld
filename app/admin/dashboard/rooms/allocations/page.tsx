@@ -278,7 +278,7 @@ export default function RoomAllocationsPage() {
             <TabsContent key={type.id} value={type.id} className="mt-6">
               <Card>
                 <CardHeader>
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <div>
                       <CardTitle className="text-2xl">{type.name} Rooms</CardTitle>
                       <CardDescription className="mt-1">
@@ -315,7 +315,7 @@ export default function RoomAllocationsPage() {
                       No rooms of this type found. Create rooms in the "Add Room" page.
                     </div>
                   ) : (
-                    <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-12 gap-4">
+                    <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-12 gap-2">
                       {rooms.map((room) => (
                         <div
                           key={room.id}
@@ -356,7 +356,7 @@ export default function RoomAllocationsPage() {
           <CardTitle className="text-lg">Status Legend</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 rounded-lg bg-green-500"></div>
               <span className="text-sm">Available</span>

@@ -10,6 +10,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { User, Mountain } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import Container from "./Container";
+import Logo from '@/public/images/logo.png';
 
 // Helper function to format money
 const formatMoney = (n: number) => `UGX ${n.toFixed(2)}`;
@@ -141,13 +142,32 @@ export default function Navbar() {
               href="/" 
               className="absolute left-1/2 transform -translate-x-1/2"
             >
-              <span className="hidden sm:inline text-lg md:text-xl font-normal italic text-gray-600 tracking-tight" style={{ fontFamily: 'var(--font-playfair)' }}>
+              {/* Logo + Text combination - Only on large screens */}
+              <div className="hidden lg:flex justify-center items-center gap-2 whitespace-nowrap">
+                <Image 
+                  src={Logo} 
+                  alt="logo" 
+                  className="w-10 h-8"
+                />
+                <div 
+                  className="text-2xl capitalize text-orange-400" 
+                  style={{ 
+                    fontFamily: "'Cooper Black', serif", 
+                    letterSpacing: '0.01em',
+                    lineHeight: '1.2'
+                  }}
+                >
+                  Syke World
+                </div>
+              </div>
+              {/* Fallback for smaller screens */}
+              <span className="lg:hidden hidden sm:inline text-lg md:text-xl font-normal italic text-gray-600 tracking-tight" style={{ fontFamily: 'var(--font-playfair)' }}>
                 Syke World
               </span>
               <img 
                 src="/images/logo.png" 
                 alt="Syke World" 
-                className="sm:hidden h-8 w-auto"
+                className="lg:hidden sm:hidden h-8 w-auto"
               />
             </Link>
 

@@ -236,8 +236,15 @@ export async function GET(req: NextRequest) {
     
     // ALWAYS redirect to public success page (this is the public callback route)
     // Admin bookings use /api/pesapal/callback/admin route
-    if (updatedPayment && updatedPayment.status === "COMPLETED") {
-      return redirect(`/payment/success?trackingId=${OrderTrackingId}&reference=${OrderMerchantReference}`);
+    if (updatedPayment) {
+      const paymentStatus = (updatedPayment.status || "").toUpperCase();
+      if (paymentStatus === "COMPLETED" || paymentStatus === "COMPLETE" || paymentStatus === "SUCCESS") {
+        return redirect(`/payment/success?trackingId=${OrderTrackingId}&reference=${OrderMerchantReference}`);
+      } else if (paymentStatus === "FAILED" || paymentStatus === "CANCELLED" || paymentStatus === "CANCELED") {
+        return redirect(`/payment/success?trackingId=${OrderTrackingId}&reference=${OrderMerchantReference}&status=failed`);
+      } else {
+        return redirect(`/payment/success?trackingId=${OrderTrackingId}&reference=${OrderMerchantReference}&status=pending`);
+      }
     } else {
       return redirect(`/payment/success?trackingId=${OrderTrackingId}&reference=${OrderMerchantReference}&status=pending`);
     }

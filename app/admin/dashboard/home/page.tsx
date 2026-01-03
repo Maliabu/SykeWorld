@@ -359,7 +359,7 @@ export default function DashboardHome() {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       {/* Welcome Card with Time-based Gradient */}
       <div className="space-y-4">
         <Card className="overflow-hidden border-0 backdrop-blur-md bg-white/90 dark:bg-gray-900/90">
@@ -402,7 +402,7 @@ export default function DashboardHome() {
             </h2>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Current room availability and status counts</p>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
             <div className="flex flex-col items-center justify-center p-4 bg-white dark:bg-gray-800 rounded-lg relative">
               <div className="absolute top-2 left-2 w-3 h-3 rounded-full bg-green-600"></div>
               <div className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
@@ -443,11 +443,11 @@ export default function DashboardHome() {
       </div>
 
       {/* Notification and Task Count Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
         <Card className="rounded-lg transition-all backdrop-blur-md bg-white/80 dark:bg-gray-900/80">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
                 <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: '#3A3F58' }}>
                   <Bell className="h-6 w-6 text-white" />
                 </div>
@@ -470,7 +470,7 @@ export default function DashboardHome() {
           <Card className="rounded-lg transition-all backdrop-blur-md bg-white/80 dark:bg-gray-900/80">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
                   <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: '#3A3F58' }}>
                     <ListChecks className="h-6 w-6 text-white" />
                   </div>
@@ -492,7 +492,7 @@ export default function DashboardHome() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2">
         {statCards.map((card, index) => {
           const Icon = card.icon;
           return (
@@ -588,14 +588,14 @@ export default function DashboardHome() {
       </Card>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
         <Card className="backdrop-blur-md bg-white/80 dark:bg-gray-900/80">
           <CardHeader>
             <CardTitle>Quick Actions</CardTitle>
             <CardDescription>Common tasks and shortcuts</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-2">
               <a
                 href="/admin/dashboard/rooms"
                 className="flex flex-col items-center justify-center p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-orange-50 dark:hover:bg-orange-950 transition"
@@ -662,7 +662,7 @@ export default function DashboardHome() {
       </div>
 
       {/* Users Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
         {/* Logged In Users */}
         <Card className="backdrop-blur-md bg-white/80 dark:bg-gray-900/80">
           <CardHeader>

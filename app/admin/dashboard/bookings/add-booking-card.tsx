@@ -223,7 +223,7 @@ export default function AddBookingCard() {
             Booking Details
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-6 mb-6">
             <div>
               <label
                 className="block text-xs uppercase tracking-widest text-black/60 font-medium mb-2"
@@ -287,7 +287,7 @@ export default function AddBookingCard() {
             Continue to Review
           </button>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-6 mt-6">
             <div>
               <label
                 className="block text-xs uppercase tracking-widest text-black/60 font-medium mb-2"
@@ -378,7 +378,7 @@ export default function AddBookingCard() {
           </h2>
 
           <div className="p-4 md:p-6 space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <div>
                 <div className="text-sm text-gray-500 mb-1">Name</div>
                 <div className="font-semibold text-[#1a1c1e]">{form.name || "—"}</div>
@@ -422,7 +422,7 @@ export default function AddBookingCard() {
             </div>
           </div>
 
-          <div className="flex gap-4 pt-4">
+          <div className="flex gap-2 pt-4">
             <button
               type="button"
               onClick={() => setStep(1)}

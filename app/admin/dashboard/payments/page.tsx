@@ -8,6 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Wallet, CreditCard, Clock, CheckCircle, XCircle, Search } from "lucide-react";
+import { Pagination } from "@/components/ui/pagination";
+
+const ITEMS_PER_PAGE = 20;
 
 const formatDate = (dateStr: string | null) => {
   if (!dateStr) return "N/A";
@@ -39,6 +42,7 @@ export default function PaymentsPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("payments");
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     loadData();
@@ -95,6 +99,27 @@ export default function PaymentsPage() {
     );
   }, [transactions, searchTerm]);
 
+  // Paginate filtered data
+  const paginatedPayments = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    return filteredPayments.slice(startIndex, endIndex);
+  }, [filteredPayments, currentPage]);
+
+  const paginatedTransactions = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    return filteredTransactions.slice(startIndex, endIndex);
+  }, [filteredTransactions, currentPage]);
+
+  const totalPagesPayments = Math.ceil(filteredPayments.length / ITEMS_PER_PAGE);
+  const totalPagesTransactions = Math.ceil(filteredTransactions.length / ITEMS_PER_PAGE);
+
+  // Reset to page 1 when search or tab changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, activeTab]);
+
   if (loading) {
     return (
       <div className="p-6">
@@ -135,7 +160,7 @@ export default function PaymentsPage() {
               </CardContent>
             </Card>
           ) : (
-            filteredPayments.map((payment, index) => (
+            paginatedPayments.map((payment, index) => (
               <Card key={payment.id || `payment-${index}`} className="overflow-hidden border-gray-200 dark:border-gray-800 ">
                 <CardHeader className="pb-4">
                   <div className="flex items-start justify-between">
@@ -151,7 +176,7 @@ export default function PaymentsPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="grid grid-cols-2 gap-2 text-sm text-sm">
                     <div>
                       <div className="font-medium text-gray-500">Amount</div>
                       <div className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -177,6 +202,15 @@ export default function PaymentsPage() {
               </Card>
             ))
           )}
+          {filteredPayments.length > 0 && (
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPagesPayments}
+              onPageChange={setCurrentPage}
+              totalItems={filteredPayments.length}
+              itemsPerPage={ITEMS_PER_PAGE}
+            />
+          )}
         </TabsContent>
 
         <TabsContent value="transactions" className="space-y-4 mt-6">
@@ -187,7 +221,7 @@ export default function PaymentsPage() {
               </CardContent>
             </Card>
           ) : (
-            filteredTransactions.map((transaction, index) => (
+            paginatedTransactions.map((transaction, index) => (
               <Card key={transaction.id || `transaction-${index}`} className="overflow-hidden border-gray-200 dark:border-gray-800 ">
                 <CardHeader className="pb-4">
                   <div className="flex items-start justify-between">
@@ -203,7 +237,7 @@ export default function PaymentsPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="grid grid-cols-2 gap-2 text-sm text-sm">
                     <div>
                       <div className="font-medium text-gray-500">Amount</div>
                       <div className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -232,6 +266,15 @@ export default function PaymentsPage() {
                 </CardContent>
               </Card>
             ))
+          )}
+          {filteredTransactions.length > 0 && (
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPagesTransactions}
+              onPageChange={setCurrentPage}
+              totalItems={filteredTransactions.length}
+              itemsPerPage={ITEMS_PER_PAGE}
+            />
           )}
         </TabsContent>
       </Tabs>

@@ -5,9 +5,11 @@ import Container from "./Container";
 import { toast, Toaster } from "sonner";
 import { z } from "zod";
 import Link from "next/link";
+import Image from "next/image";
 import { FaChevronCircleRight, FaFacebook, FaInstagram, FaSpa } from "react-icons/fa";
 import { FaX } from "react-icons/fa6";
 import { subscribe } from "@/lib/actions/bookings";
+import Logo from '@/public/images/logo.png';
 
 // Zod schema for validation
 const subscribeSchema = z.object({
@@ -109,17 +111,27 @@ export default function Footer() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12">
             {/* About */}
             <div>
-              <Link href="/">
-                <img src='/images/logo.png' className="h-10 w-auto mb-6 opacity-90"/>
+              <Link href="/" className="flex flex-col items-center mb-6">
+                <div className="flex flex-col items-center gap-2 whitespace-nowrap">
+                  <Image 
+                    src={Logo} 
+                    alt="logo" 
+                    className="w-10 h-8"
+                  />
+                  <div 
+                    className="text-2xl capitalize text-orange-400" 
+                    style={{ 
+                      fontFamily: "'Cooper Black', serif", 
+                      letterSpacing: '0.01em',
+                      lineHeight: '1.2'
+                    }}
+                  >
+                    Syke World
+                  </div>
+                </div>
               </Link>
-              <h4 
-                className="text-xl mb-4 font-bold text-[#1a1c1e]"
-                style={{ fontFamily: 'var(--font-playfair)' }}
-              >
-                Syke World Hotel
-              </h4>
               <p 
-                className="text-sm text-gray-600 leading-relaxed"
+                className="text-sm text-gray-600 leading-relaxed text-center"
                 style={{ fontFamily: 'var(--font-inter)' }}
               >
                 Luxury meets serenity. Experience comfort like never before.

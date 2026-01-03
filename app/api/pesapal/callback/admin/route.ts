@@ -226,8 +226,15 @@ export async function GET(req: NextRequest) {
               .limit(1);
 
             // ALWAYS redirect to admin dashboard (this is the admin callback route)
-            if (updatedPayment && updatedPayment.status === "COMPLETED") {
-              return redirect(`/admin/dashboard/payment/success?trackingId=${OrderTrackingId}&reference=${OrderMerchantReference}`);
+            if (updatedPayment) {
+              const paymentStatus = (updatedPayment.status || "").toUpperCase();
+              if (paymentStatus === "COMPLETED" || paymentStatus === "COMPLETE" || paymentStatus === "SUCCESS") {
+                return redirect(`/admin/dashboard/payment/success?trackingId=${OrderTrackingId}&reference=${OrderMerchantReference}`);
+              } else if (paymentStatus === "FAILED" || paymentStatus === "CANCELLED" || paymentStatus === "CANCELED") {
+                return redirect(`/admin/dashboard/payment/success?trackingId=${OrderTrackingId}&reference=${OrderMerchantReference}&status=failed`);
+              } else {
+                return redirect(`/admin/dashboard/payment/success?trackingId=${OrderTrackingId}&reference=${OrderMerchantReference}&status=pending`);
+              }
             } else {
               return redirect(`/admin/dashboard/payment/success?trackingId=${OrderTrackingId}&reference=${OrderMerchantReference}&status=pending`);
             }

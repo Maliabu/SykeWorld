@@ -2,6 +2,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cooper+Black&display=swap');
 @import "tailwindcss";
 
 /* SF Pro Font for Dashboard - Uses system font stack */
@@ -31,6 +32,96 @@
 .dashboard-font [class*="border-0"],
 .dashboard-font [class*="border border"] {
   border: none !important;
+}
+
+/* Ensure input fields always have visible borders - HIGHEST PRIORITY */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="tel"],
+input[type="url"],
+input[type="search"],
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"],
+input[data-slot="input"],
+input:not([type="file"]):not([type="checkbox"]):not([type="radio"]),
+textarea,
+select,
+[role="combobox"],
+button[role="combobox"] {
+  border: 1px solid #9ca3af !important; /* gray-400 */
+  border-width: 1px !important;
+  border-style: solid !important;
+  border-color: #9ca3af !important;
+}
+
+.dark input[type="text"],
+.dark input[type="email"],
+.dark input[type="password"],
+.dark input[type="number"],
+.dark input[type="tel"],
+.dark input[type="url"],
+.dark input[type="search"],
+.dark input[type="date"],
+.dark input[type="time"],
+.dark input[type="datetime-local"],
+.dark input[data-slot="input"],
+.dark input:not([type="file"]):not([type="checkbox"]):not([type="radio"]),
+.dark textarea,
+.dark select,
+.dark [role="combobox"],
+.dark button[role="combobox"] {
+  border: 1px solid #6b7280 !important; /* gray-500 */
+  border-width: 1px !important;
+  border-style: solid !important;
+  border-color: #6b7280 !important;
+}
+
+/* Override any dashboard font rules for inputs */
+.dashboard-font input[type="text"],
+.dashboard-font input[type="email"],
+.dashboard-font input[type="password"],
+.dashboard-font input[type="number"],
+.dashboard-font input[type="tel"],
+.dashboard-font input[type="url"],
+.dashboard-font input[type="search"],
+.dashboard-font input[type="date"],
+.dashboard-font input[type="time"],
+.dashboard-font input[type="datetime-local"],
+.dashboard-font input[data-slot="input"],
+.dashboard-font input:not([type="file"]):not([type="checkbox"]):not([type="radio"]),
+.dashboard-font textarea,
+.dashboard-font select,
+.dashboard-font [role="combobox"],
+.dashboard-font button[role="combobox"] {
+  border: 1px solid #9ca3af !important;
+  border-width: 1px !important;
+  border-style: solid !important;
+  border-color: #9ca3af !important;
+}
+
+.dark .dashboard-font input[type="text"],
+.dark .dashboard-font input[type="email"],
+.dark .dashboard-font input[type="password"],
+.dark .dashboard-font input[type="number"],
+.dark .dashboard-font input[type="tel"],
+.dark .dashboard-font input[type="url"],
+.dark .dashboard-font input[type="search"],
+.dark .dashboard-font input[type="date"],
+.dark .dashboard-font input[type="time"],
+.dark .dashboard-font input[type="datetime-local"],
+.dark .dashboard-font input[data-slot="input"],
+.dark .dashboard-font input:not([type="file"]):not([type="checkbox"]):not([type="radio"]),
+.dark .dashboard-font textarea,
+.dark .dashboard-font select,
+.dark .dashboard-font [role="combobox"],
+.dark .dashboard-font button[role="combobox"] {
+  border: 1px solid #6b7280 !important;
+  border-width: 1px !important;
+  border-style: solid !important;
+  border-color: #6b7280 !important;
 }
 
 /* Remove all shadows from cards */

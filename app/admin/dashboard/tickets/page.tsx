@@ -194,7 +194,7 @@ export default function TicketsPage() {
         </Dialog>
       </div>
 
-      <div className="grid gap-4">
+      <div className="grid gap-2">
         {tickets.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center text-muted-foreground">

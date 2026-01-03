@@ -262,7 +262,7 @@ export default function NotificationsPage() {
                               <DialogDescription>Create a new user account</DialogDescription>
                             </DialogHeader>
                             <form onSubmit={handleAddUser} className="space-y-4">
-                              <div className="grid grid-cols-2 gap-4">
+                              <div className="grid grid-cols-2 gap-2">
                                 <div>
                                   <Label>Email *</Label>
                                   <Input
@@ -290,7 +290,7 @@ export default function NotificationsPage() {
                                   required
                                 />
                               </div>
-                              <div className="grid grid-cols-2 gap-4">
+                              <div className="grid grid-cols-2 gap-2">
                                 <div>
                                   <Label>First Name</Label>
                                   <Input
@@ -404,7 +404,7 @@ export default function NotificationsPage() {
         )}
       </div>
 
-      <div className="grid gap-4">
+      <div className="grid gap-2">
         {notifications.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center text-muted-foreground">

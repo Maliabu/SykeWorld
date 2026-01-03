@@ -109,7 +109,7 @@ export default function ActivityLogPage() {
                   key={log.id}
                   className="p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition"
                 >
-                  <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 space-y-2">
                       <div className="flex items-center gap-2 flex-wrap">
                         <Badge className={getActionColor(log.action)}>
@@ -127,7 +127,7 @@ export default function ActivityLogPage() {
                         {log.description}
                       </p>
 
-                      <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
                         <div className="flex items-center gap-1">
                           <User className="h-3 w-3" />
                           <span>{log.userName}</span>
