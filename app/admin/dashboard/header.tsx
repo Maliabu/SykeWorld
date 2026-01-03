@@ -275,8 +275,8 @@ export default function Header(){
           </Popover>
           {/* Logged In Users Avatars */}
           {loggedInUsers.length > 0 && (
-            <div className="hidden md:flex relative w-48 lg:w-64 h-8 sm:h-9 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md px-2 sm:px-3 items-center gap-1 sm:gap-2">
-              <span className="text-[10px] sm:text-xs font-medium text-gray-600 dark:text-gray-400 whitespace-nowrap">Logged In:</span>
+            <div className="hidden md:flex relative w-48 lg:w-64 h-8 sm:h-9 rounded-md px-2 sm:px-3 items-center gap-1 sm:gap-2" style={{ backgroundColor: '#3A3F58' }}>
+              <span className="text-[10px] sm:text-xs font-medium text-white whitespace-nowrap">Logged In:</span>
               <div className="flex items-center -space-x-1.5 sm:-space-x-2 flex-1 justify-end">
                 {loggedInUsers.slice(0, 5).map((loggedUser, index) => {
                   const userName = loggedUser.firstName && loggedUser.lastName
@@ -356,7 +356,7 @@ export default function Header(){
                   </div>
                   <div className="flex items-center gap-1.5 sm:gap-2 mt-0.5">
                     {user.isSuperuser && (
-                      <Badge className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 text-[10px] sm:text-xs px-1 sm:px-1.5 py-0">
+                      <Badge className="bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200 text-[10px] sm:text-xs px-1 sm:px-1.5 py-0">
                         Admin
                       </Badge>
                     )}
@@ -379,9 +379,10 @@ export default function Header(){
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="relative h-8 w-8 sm:h-9 sm:w-9 hover:bg-orange-100 dark:hover:bg-orange-900/20"
+                  className="relative h-8 w-8 sm:h-9 sm:w-9"
+                  style={{ backgroundColor: '#3A3F58' }}
                 >
-                  <Bell className="h-4 w-4 sm:h-5 sm:w-5 text-gray-700 dark:text-gray-300" />
+                  <Bell className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                   {notificationCount > 0 && (
                     <span className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1 h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-orange-500 text-white text-[10px] sm:text-xs flex items-center justify-center font-semibold">
                       {notificationCount > 9 ? "9+" : notificationCount}
@@ -402,9 +403,10 @@ export default function Header(){
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="relative h-8 w-8 sm:h-9 sm:w-9 hover:bg-orange-100 dark:hover:bg-orange-900/20"
+                  className="relative h-8 w-8 sm:h-9 sm:w-9"
+                  style={{ backgroundColor: '#3A3F58' }}
                 >
-                  <Ticket className="h-4 w-4 sm:h-5 sm:w-5 text-gray-700 dark:text-gray-300" />
+                  <Ticket className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                   {ticketCount > 0 && (
                     <span className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1 h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-orange-500 text-white text-[10px] sm:text-xs flex items-center justify-center font-semibold">
                       {ticketCount > 9 ? "9+" : ticketCount}
@@ -426,9 +428,10 @@ export default function Header(){
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="relative h-8 w-8 sm:h-9 sm:w-9 hover:bg-orange-100 dark:hover:bg-orange-900/20"
+                    className="relative h-8 w-8 sm:h-9 sm:w-9"
+                    style={{ backgroundColor: '#3A3F58' }}
                   >
-                    <ListChecks className="h-4 w-4 sm:h-5 sm:w-5 text-gray-700 dark:text-gray-300" />
+                    <ListChecks className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                     {taskCount > 0 && (
                       <span className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1 h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-orange-500 text-white text-[10px] sm:text-xs flex items-center justify-center font-semibold">
                         {taskCount > 9 ? "9+" : taskCount}
@@ -450,9 +453,10 @@ export default function Header(){
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="relative h-8 w-8 sm:h-9 sm:w-9 hover:bg-orange-100 dark:hover:bg-orange-900/20"
+                  className="relative h-8 w-8 sm:h-9 sm:w-9"
+                  style={{ backgroundColor: '#3A3F58' }}
                 >
-                  <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5 text-gray-700 dark:text-gray-300" />
+                  <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                 </Button>
               </Link>
             </TooltipTrigger>
@@ -463,11 +467,11 @@ export default function Header(){
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon" className="border border-black dark:border-white/50 shadow-none text-foreground sm:w-auto sm:px-3">
+              <Button variant="outline" size="icon" className="border-none shadow-none sm:w-auto sm:px-3 bg-white dark:bg-gray-800">
                 <div className="flex justify-center border-none items-center gap-1.5 sm:gap-2">
-                  <Sun className="h-4 w-4 sm:h-[1.2rem] sm:w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                  <Moon className="h-4 w-4 sm:h-[1.2rem] sm:w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-                  <span className="hidden sm:inline text-foreground text-xs sm:text-sm">Light/Dark</span>
+                  <Sun className="h-4 w-4 sm:h-[1.2rem] sm:w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0 text-gray-900 dark:text-white" />
+                  <Moon className="h-4 w-4 sm:h-[1.2rem] sm:w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100 text-gray-900 dark:text-white" />
+                  <span className="hidden sm:inline text-gray-900 dark:text-white text-xs sm:text-sm">Light/Dark</span>
                 </div>
               </Button>
             </DropdownMenuTrigger>

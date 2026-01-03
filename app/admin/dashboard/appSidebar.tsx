@@ -263,17 +263,17 @@ export const navigationData = {
 
 export function AppSidebar() {
   return (
-    <Sidebar className="border-r border-gray-200/50 dark:border-gray-800/50 bg-transparent [&>div]:bg-transparent [&_[data-sidebar=sidebar]]:bg-transparent">
+    <Sidebar className="bg-white [&>div]:bg-white [&_[data-sidebar=sidebar]]:bg-white">
       <SidebarHeader>
-        <div className="p-3 flex justify-between items-center gap-4 border-b border-gray-200 dark:border-gray-800 mx-4">
+        <div className="p-3 flex justify-between items-center gap-4 mx-4">
           <Image src={Logo} alt="logo" className="w-15 h-10"/>
-          <div className="text-xl font-bold flex-1 text-right">SYKE WORLD<br/>HOTEL</div>
+          <div className="text-xl font-black flex-1 text-right tracking-tight leading-tight">SYKE WORLD<br/>HOTEL</div>
         </div>
       </SidebarHeader>
       <SidebarContent className="p-4">
         <NavMain items={navigationData.navMain} />
       </SidebarContent>
-      <SidebarFooter className="border-t border-gray-200 dark:border-gray-800 p-4 space-y-2">
+      <SidebarFooter className="p-4 space-y-2">
         <Logged/>
         <Logout/>
         <p className="text-xs text-center text-gray-500 dark:text-gray-400 pt-2">

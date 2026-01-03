@@ -88,7 +88,7 @@ export default function MessagesPage() {
         </div>
       </div>
 
-      <div className="grid gap-6">
+      <div className="grid gap-4">
         {filteredMessages.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center text-gray-500">

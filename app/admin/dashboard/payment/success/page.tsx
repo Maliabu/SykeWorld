@@ -40,7 +40,7 @@ export default function AdminPaymentSuccessPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#fafafa] px-4">
-      <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8 text-center">
+      <div className="max-w-md w-full bg-white rounded-xl p-8 text-center">
         {status === "loading" && (
           <>
             <Loader2 className="h-16 w-16 text-amber-600 mx-auto mb-4 animate-spin" />

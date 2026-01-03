@@ -46,7 +46,8 @@ export default function Logged(){
     return(
         <button
             onClick={handleClick}
-            className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition text-left"
+            className="w-full flex items-center justify-between gap-3 p-3 rounded-lg transition"
+            style={{ backgroundColor: '#3A3F58' }}
         >
             <div className="w-10 h-10 rounded-full bg-orange-500 flex items-center justify-center text-white font-semibold overflow-hidden">
               {profilePicture && profilePicture !== "default.jpg" ? (
@@ -59,11 +60,11 @@ export default function Logged(){
                 displayName.charAt(0).toUpperCase()
               )}
             </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+            <div className="min-w-0 text-right">
+              <div className="text-sm font-semibold text-white truncate">
                 {displayName}
               </div>
-              <div className="text-xs text-gray-500 dark:text-gray-400">View Profile</div>
+              <div className="text-xs text-white/80">View Profile</div>
             </div>
         </button>
     )

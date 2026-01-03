@@ -4,6 +4,94 @@
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
 @import "tailwindcss";
 
+/* SF Pro Font for Dashboard - Uses system font stack */
+.dashboard-font {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Slightly rounded borders for buttons in dashboard */
+.dashboard-font button,
+.dashboard-font .btn,
+.dashboard-font [role="button"] {
+  border-radius: 4px !important;
+}
+
+/* Remove borders and shadows from all cards in dashboard */
+.dashboard-font [class*="rounded-xl"],
+.dashboard-font [class*="rounded-lg"],
+.dashboard-font [class*="rounded-md"],
+.dashboard-font [class*="rounded"] {
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Also target cards that might have border classes explicitly */
+.dashboard-font [class*="border-0"],
+.dashboard-font [class*="border border"] {
+  border: none !important;
+}
+
+/* Remove all shadows from cards */
+.dashboard-font [class*="shadow"],
+.dashboard-font [style*="box-shadow"] {
+  box-shadow: none !important;
+}
+
+/* Hide sidebar scrollbar */
+.dashboard-font [data-sidebar="content"],
+.dashboard-font [data-slot="sidebar-content"] {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.dashboard-font [data-sidebar="content"]::-webkit-scrollbar,
+.dashboard-font [data-slot="sidebar-content"]::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+/* Remove all borders and shadows from sidebar and set white background */
+.dashboard-font [data-sidebar="sidebar"],
+.dashboard-font [data-slot="sidebar"],
+.dashboard-font [data-slot="sidebar-inner"],
+.dashboard-font [data-slot="sidebar-gap"],
+.dashboard-font [data-sidebar="header"],
+.dashboard-font [data-sidebar="footer"],
+.dashboard-font [data-sidebar="content"],
+.dashboard-font [data-slot="sidebar-header"],
+.dashboard-font [data-slot="sidebar-footer"],
+.dashboard-font [data-slot="sidebar-content"] {
+  border: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-top: none !important;
+  border-bottom: none !important;
+  box-shadow: none !important;
+  background-color: white !important;
+}
+
+/* Remove borders from all sidebar children */
+.dashboard-font [data-sidebar="sidebar"] *,
+.dashboard-font [data-slot="sidebar"] *,
+.dashboard-font [data-slot="sidebar-inner"] *,
+.dashboard-font [data-slot="sidebar-gap"] * {
+  border: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-top: none !important;
+  border-bottom: none !important;
+  box-shadow: none !important;
+}
+
+/* Specifically target border-r and border-l classes */
+.dashboard-font [class*="border-r"],
+.dashboard-font [class*="border-l"],
+.dashboard-font [class*="border-t"],
+.dashboard-font [class*="border-b"] {
+  border: none !important;
+}
+
 /* TipTap Editor Styles */
 .ProseMirror {
   outline: none;

@@ -300,7 +300,7 @@ export default function UsersPage() {
         </div>
       </div>
 
-      <div className="grid gap-6">
+      <div className="grid gap-4">
         {filteredUsers.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center text-gray-500">

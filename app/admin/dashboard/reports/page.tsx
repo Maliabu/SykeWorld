@@ -216,7 +216,10 @@ export default function ReportsPage() {
           <Button
             onClick={exportToPDF}
             disabled={loading || filteredData.length === 0}
-            className="bg-orange-600 hover:bg-orange-700 text-white"
+            className="text-white"
+            style={{ backgroundColor: '#F9AC67' }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#EE6A59'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#F9AC67'}
           >
             <FileDown className="h-4 w-4 mr-2" />
             Export PDF
@@ -224,7 +227,10 @@ export default function ReportsPage() {
           <Button
             onClick={exportToExcel}
             disabled={loading || filteredData.length === 0}
-            className="bg-orange-600 hover:bg-orange-700 text-white"
+            className="text-white"
+            style={{ backgroundColor: '#F9AC67' }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#EE6A59'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#F9AC67'}
           >
             <Download className="h-4 w-4 mr-2" />
             Export Excel
@@ -358,56 +364,56 @@ export default function ReportsPage() {
       {/* Summary Cards */}
       {summary && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="bg-orange-50 dark:bg-orange-950 border-orange-200 dark:border-orange-800">
+          <Card className="border" style={{ backgroundColor: '#F9AC67', borderColor: '#F9AC67' }}>
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Total Earnings</p>
-                  <p className="text-2xl font-bold text-orange-600">
+                  <p className="text-sm text-white/90">Total Earnings</p>
+                  <p className="text-2xl font-bold text-white">
                     UGX {summary.totalEarnings.toLocaleString()}
                   </p>
                 </div>
-                <DollarSign className="h-8 w-8 text-orange-600" />
+                <DollarSign className="h-8 w-8 text-white" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
+          <Card className="border" style={{ backgroundColor: '#3A3F58', borderColor: '#3A3F58' }}>
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Total Transactions</p>
-                  <p className="text-2xl font-bold text-blue-600">{summary.totalTransactions}</p>
+                  <p className="text-sm text-white/90">Total Transactions</p>
+                  <p className="text-2xl font-bold text-white">{summary.totalTransactions}</p>
                 </div>
-                <TrendingUp className="h-8 w-8 text-blue-600" />
+                <TrendingUp className="h-8 w-8 text-white" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800">
+          <Card className="bg-green-600 dark:bg-green-700 border-green-700 dark:border-green-800">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Completed</p>
-                  <p className="text-2xl font-bold text-green-600">
+                  <p className="text-sm text-white/90">Completed</p>
+                  <p className="text-2xl font-bold text-white">
                     {summary.completedTransactions}
                   </p>
                 </div>
-                <Calendar className="h-8 w-8 text-green-600" />
+                <Calendar className="h-8 w-8 text-white" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-yellow-50 dark:bg-yellow-950 border-yellow-200 dark:border-yellow-800">
+          <Card className="border" style={{ backgroundColor: '#F9AC67', borderColor: '#F9AC67' }}>
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Pending</p>
-                  <p className="text-2xl font-bold text-yellow-600">
+                  <p className="text-sm text-white/90">Pending</p>
+                  <p className="text-2xl font-bold text-white">
                     {summary.pendingTransactions}
                   </p>
                 </div>
-                <Clock className="h-8 w-8 text-yellow-600" />
+                <Clock className="h-8 w-8 text-white" />
               </div>
             </CardContent>
           </Card>

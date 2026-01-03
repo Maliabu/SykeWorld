@@ -34,10 +34,11 @@ import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
 import { useSession } from "@/lib/hooks/useSession";
 import {
-  LineChart as RechartsLineChart,
-  Line,
-  BarChart as RechartsBarChart,
-  Bar,
+  AreaChart as RechartsAreaChart,
+  Area,
+  PieChart as RechartsPieChart,
+  Pie,
+  Cell,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -285,45 +286,35 @@ export default function DashboardHome() {
       value: stats.totalRooms,
       description: `${stats.availableRooms} available`,
       icon: Home,
-      color: "text-orange-600",
-      bgColor: "bg-orange-50 dark:bg-orange-950",
-      borderColor: "border-orange-200 dark:border-orange-800",
+      iconBgColor: "#3A3F58", // Dark color
     },
     {
       title: "Total Bookings",
       value: stats.totalBookings,
       description: `${stats.confirmedBookings} confirmed`,
       icon: Calendar,
-      color: "text-orange-600",
-      bgColor: "bg-orange-50 dark:bg-orange-950",
-      borderColor: "border-orange-200 dark:border-orange-800",
+      iconBgColor: "#3A3F58", // Dark color
     },
     {
       title: "Pending Bookings",
       value: stats.pendingBookings,
       description: "Requires attention",
       icon: Clock,
-      color: "text-orange-600",
-      bgColor: "bg-orange-50 dark:bg-orange-950",
-      borderColor: "border-orange-200 dark:border-orange-800",
+      iconBgColor: "#3A3F58", // Dark color
     },
     {
       title: "Total Revenue",
       value: `UGX ${stats.totalRevenue.toLocaleString()}`,
       description: `UGX ${stats.monthlyRevenue.toLocaleString()} this month`,
       icon: DollarSign,
-      color: "text-orange-600",
-      bgColor: "bg-orange-50 dark:bg-orange-950",
-      borderColor: "border-orange-200 dark:border-orange-800",
+      iconBgColor: "#3A3F58", // Dark color
     },
     {
       title: "Subscriptions",
       value: stats.totalSubscriptions,
       description: "Newsletter subscribers",
       icon: Mailbox,
-      color: "text-orange-600",
-      bgColor: "bg-orange-50 dark:bg-orange-950",
-      borderColor: "border-orange-200 dark:border-orange-800",
+      iconBgColor: "#3A3F58", // Dark color
     },
   ];
 
@@ -378,12 +369,12 @@ export default function DashboardHome() {
                 <h1 className={`text-3xl md:text-4xl font-bold ${textColor} mb-8`}>
                   {getGreeting()}!
                 </h1>
-                <p className={`text-xl md:text-2xl ${textColor} opacity-90 font-medium`}>
+                <p className={`text-sm font-bold ${textColor} opacity-90`}>
                   Hi, {user?.firstName && user?.lastName 
                     ? `${user.firstName} ${user.lastName}`
                     : user?.username || user?.email?.split('@')[0] || "there"},!
                 </p>
-                <p className={`text-lg ${textColor} opacity-80 mt-2`}>
+                <p className={`text-sm ${textColor} opacity-80 mt-2`}>
                   Here's what's happening with your hotel today.
                 </p>
               </div>
@@ -403,59 +394,62 @@ export default function DashboardHome() {
         </Card>
 
         {/* Rooms Tally Card */}
-        <Card className="border-0 backdrop-blur-md bg-white/90 dark:bg-gray-900/90">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+        <div>
+          <div className="mb-4">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
               <Bed className="h-5 w-5 text-orange-600" />
               Room Status Overview
-            </CardTitle>
-            <CardDescription>Current room availability and status counts</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-              <div className="flex flex-col items-center justify-center p-4 bg-green-50 dark:bg-green-950 rounded-lg border border-green-200 dark:border-green-800">
-                <div className="text-3xl font-bold text-green-600 dark:text-green-400 mb-1">
-                  {roomStatusCounts.available}
-                </div>
-                <div className="text-sm font-medium text-green-700 dark:text-green-300">Available</div>
+            </h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Current room availability and status counts</p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div className="flex flex-col items-center justify-center p-4 bg-white dark:bg-gray-800 rounded-lg relative">
+              <div className="absolute top-2 left-2 w-3 h-3 rounded-full bg-green-600"></div>
+              <div className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
+                {roomStatusCounts.available}
               </div>
-              <div className="flex flex-col items-center justify-center p-4 bg-orange-50 dark:bg-orange-950 rounded-lg border border-orange-200 dark:border-orange-800">
-                <div className="text-3xl font-bold text-orange-600 dark:text-orange-400 mb-1">
-                  {roomStatusCounts.occupied}
-                </div>
-                <div className="text-sm font-medium text-orange-700 dark:text-orange-300">Booked</div>
-              </div>
-              <div className="flex flex-col items-center justify-center p-4 bg-yellow-50 dark:bg-yellow-950 rounded-lg border border-yellow-200 dark:border-yellow-800">
-                <div className="text-3xl font-bold text-yellow-600 dark:text-yellow-400 mb-1">
-                  {roomStatusCounts.cleaning}
-                </div>
-                <div className="text-sm font-medium text-yellow-700 dark:text-yellow-300">Cleaning</div>
-              </div>
-              <div className="flex flex-col items-center justify-center p-4 bg-red-50 dark:bg-red-950 rounded-lg border border-red-200 dark:border-red-800">
-                <div className="text-3xl font-bold text-red-600 dark:text-red-400 mb-1">
-                  {roomStatusCounts.maintenance}
-                </div>
-                <div className="text-sm font-medium text-red-700 dark:text-red-300">Maintenance</div>
-              </div>
-              <div className="flex flex-col items-center justify-center p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                <div className="text-3xl font-bold text-gray-600 dark:text-gray-400 mb-1">
-                  {roomStatusCounts.unavailable}
-                </div>
-                <div className="text-sm font-medium text-gray-700 dark:text-gray-300">Unavailable</div>
-              </div>
+              <div className="text-sm font-medium text-gray-700 dark:text-gray-300">Available</div>
             </div>
-          </CardContent>
-        </Card>
+            <div className="flex flex-col items-center justify-center p-4 bg-white dark:bg-gray-800 rounded-lg relative">
+              <div className="absolute top-2 left-2 w-3 h-3 rounded-full" style={{ backgroundColor: '#F9AC67' }}></div>
+              <div className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
+                {roomStatusCounts.occupied}
+              </div>
+              <div className="text-sm font-medium text-gray-700 dark:text-gray-300">Booked</div>
+            </div>
+            <div className="flex flex-col items-center justify-center p-4 bg-white dark:bg-gray-800 rounded-lg relative">
+              <div className="absolute top-2 left-2 w-3 h-3 rounded-full" style={{ backgroundColor: '#ECE6CD' }}></div>
+              <div className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
+                {roomStatusCounts.cleaning}
+              </div>
+              <div className="text-sm font-medium text-gray-700 dark:text-gray-300">Cleaning</div>
+            </div>
+            <div className="flex flex-col items-center justify-center p-4 bg-white dark:bg-gray-800 rounded-lg relative">
+              <div className="absolute top-2 left-2 w-3 h-3 rounded-full" style={{ backgroundColor: '#EE6A59' }}></div>
+              <div className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
+                {roomStatusCounts.maintenance}
+              </div>
+              <div className="text-sm font-medium text-gray-700 dark:text-gray-300">Maintenance</div>
+            </div>
+            <div className="flex flex-col items-center justify-center p-4 bg-white dark:bg-gray-800 rounded-lg relative">
+              <div className="absolute top-2 left-2 w-3 h-3 rounded-full" style={{ backgroundColor: '#3A3F58' }}></div>
+              <div className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
+                {roomStatusCounts.unavailable}
+              </div>
+              <div className="text-sm font-medium text-gray-700 dark:text-gray-300">Unavailable</div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Notification and Task Count Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card className="border-0 rounded-lg  transition-all backdrop-blur-md bg-white/80 dark:bg-gray-900/80">
+        <Card className="rounded-lg transition-all backdrop-blur-md bg-white/80 dark:bg-gray-900/80">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-orange-100 dark:bg-orange-900 flex items-center justify-center">
-                  <Bell className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+                <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: '#3A3F58' }}>
+                  <Bell className="h-6 w-6 text-white" />
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Notifications</p>
@@ -473,12 +467,12 @@ export default function DashboardHome() {
         </Card>
 
         {(user?.isStaff || user?.isSuperuser) && (
-          <Card className="border-0 rounded-lg  transition-all backdrop-blur-md bg-white/80 dark:bg-gray-900/80">
+          <Card className="rounded-lg transition-all backdrop-blur-md bg-white/80 dark:bg-gray-900/80">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-orange-100 dark:bg-orange-900 flex items-center justify-center">
-                    <ListChecks className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+                  <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: '#3A3F58' }}>
+                    <ListChecks className="h-6 w-6 text-white" />
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Tasks</p>
@@ -498,7 +492,7 @@ export default function DashboardHome() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         {statCards.map((card, index) => {
           const Icon = card.icon;
           return (
@@ -510,8 +504,8 @@ export default function DashboardHome() {
                 <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">
                   {card.title}
                 </CardTitle>
-                <div className={`${card.bgColor} ${card.color} p-2 rounded-lg`}>
-                  <Icon className="h-5 w-5" />
+                <div className="p-2 rounded-lg" style={{ backgroundColor: card.iconBgColor }}>
+                  <Icon className="h-5 w-5 text-white" />
                 </div>
               </CardHeader>
               <CardContent>
@@ -528,7 +522,7 @@ export default function DashboardHome() {
       </div>
 
       {/* Monthly Earnings Chart */}
-      <Card className="border-0  backdrop-blur-md bg-white/80 dark:bg-gray-900/80">
+      <Card className="backdrop-blur-md bg-white/80 dark:bg-gray-900/80">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
@@ -553,8 +547,14 @@ export default function DashboardHome() {
             </div>
           ) : (
             <ResponsiveContainer width="100%" height={300}>
-              <RechartsLineChart data={monthlyEarnings}>
-                <CartesianGrid strokeDasharray="3 3" />
+              <RechartsAreaChart data={monthlyEarnings}>
+                <defs>
+                  <linearGradient id="colorEarnings" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#F9AC67" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="#F9AC67" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 <XAxis
                   dataKey="formattedMonth"
                   tick={{ fontSize: 12 }}
@@ -569,25 +569,27 @@ export default function DashboardHome() {
                 <Tooltip
                   formatter={(value: number | undefined) => [`UGX ${(value || 0).toLocaleString()}`, "Earnings"]}
                   labelStyle={{ color: "#000" }}
+                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}
                 />
                 <Legend />
-                <Line
+                <Area
                   type="monotone"
                   dataKey="total"
-                  stroke="rgb(249 115 22)"
-                  strokeWidth={3}
-                  dot={{ fill: "rgb(249 115 22)", r: 4 }}
+                  stroke="#F9AC67"
+                  strokeWidth={2}
+                  fillOpacity={1}
+                  fill="url(#colorEarnings)"
                   name="Earnings (UGX)"
                 />
-              </RechartsLineChart>
+              </RechartsAreaChart>
             </ResponsiveContainer>
           )}
         </CardContent>
       </Card>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="border-0  backdrop-blur-md bg-white/80 dark:bg-gray-900/80">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Card className="backdrop-blur-md bg-white/80 dark:bg-gray-900/80">
           <CardHeader>
             <CardTitle>Quick Actions</CardTitle>
             <CardDescription>Common tasks and shortcuts</CardDescription>
@@ -626,33 +628,33 @@ export default function DashboardHome() {
           </CardContent>
         </Card>
 
-        <Card className="border-0  backdrop-blur-md bg-white/80 dark:bg-gray-900/80">
+        <Card className="backdrop-blur-md bg-white/80 dark:bg-gray-900/80">
           <CardHeader>
             <CardTitle>Booking Status</CardTitle>
             <CardDescription>Current booking overview</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-950 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-green-600 dark:bg-green-700 rounded-lg">
                 <div className="flex items-center gap-3">
-                  <CheckCircle2 className="h-5 w-5 text-green-600" />
-                  <span className="font-medium">Confirmed</span>
+                  <CheckCircle2 className="h-5 w-5 text-white" />
+                  <span className="font-medium text-white">Confirmed</span>
                 </div>
-                <span className="text-2xl font-bold text-green-600">{stats.confirmedBookings}</span>
+                <span className="text-2xl font-bold text-white">{stats.confirmedBookings}</span>
               </div>
-              <div className="flex items-center justify-between p-3 bg-orange-50 dark:bg-orange-950 rounded-lg">
+              <div className="flex items-center justify-between p-3 rounded-lg" style={{ backgroundColor: '#F9AC67' }}>
                 <div className="flex items-center gap-3">
-                  <Clock className="h-5 w-5 text-orange-600" />
-                  <span className="font-medium">Pending</span>
+                  <Clock className="h-5 w-5 text-white" />
+                  <span className="font-medium text-white">Pending</span>
                 </div>
-                <span className="text-2xl font-bold text-orange-600">{stats.pendingBookings}</span>
+                <span className="text-2xl font-bold text-white">{stats.pendingBookings}</span>
               </div>
-              <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              <div className="flex items-center justify-between p-3 rounded-lg" style={{ backgroundColor: '#3A3F58' }}>
                 <div className="flex items-center gap-3">
-                  <XCircle className="h-5 w-5 text-gray-600" />
-                  <span className="font-medium">Total</span>
+                  <XCircle className="h-5 w-5 text-white" />
+                  <span className="font-medium text-white">Total</span>
                 </div>
-                <span className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalBookings}</span>
+                <span className="text-2xl font-bold text-white">{stats.totalBookings}</span>
               </div>
             </div>
           </CardContent>
@@ -660,9 +662,9 @@ export default function DashboardHome() {
       </div>
 
       {/* Users Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Logged In Users */}
-        <Card className="border-0  backdrop-blur-md bg-white/80 dark:bg-gray-900/80">
+        <Card className="backdrop-blur-md bg-white/80 dark:bg-gray-900/80">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
@@ -755,7 +757,7 @@ export default function DashboardHome() {
         </Card>
 
         {/* Recently Added Users */}
-        <Card className="border-0  backdrop-blur-md bg-white/80 dark:bg-gray-900/80">
+        <Card className="backdrop-blur-md bg-white/80 dark:bg-gray-900/80">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
@@ -847,7 +849,7 @@ export default function DashboardHome() {
 
       {/* User Activity Analytics */}
       <div className="mt-8">
-        <Card className="border-0  backdrop-blur-md bg-white/80 dark:bg-gray-900/80">
+        <Card className="backdrop-blur-md bg-white/80 dark:bg-gray-900/80">
           <CardHeader>
             <div className="flex items-center gap-2">
               <Activity className="h-5 w-5 text-orange-500" />
@@ -863,39 +865,37 @@ export default function DashboardHome() {
                 No activity data available yet.
               </div>
             ) : (
-              <div className="flex gap-6">
-                {/* Bar Chart */}
-                <div className="flex-1 h-96">
+              <div className="flex flex-col md:flex-row gap-6 items-center justify-center">
+                {/* Pie Chart */}
+                <div className="w-full md:w-1/2 h-96">
                   <ResponsiveContainer width="100%" height="100%">
-                    <RechartsBarChart
-                      data={userActivityStats.map((stat, index) => ({
-                        userId: stat.userId,
-                        name: stat.userName,
-                        activities: stat.activityCount,
-                        profilePicture: stat.profilePicture,
-                        username: stat.username,
-                        email: stat.email,
-                        index: index,
-                      }))}
-                      margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" className="stroke-gray-300 dark:stroke-gray-700" />
-                      <XAxis
-                        dataKey="index"
-                        tick={false}
-                        axisLine={false}
-                        label={{ value: "Users", position: "insideBottom", offset: -10 }}
-                      />
-                      <YAxis
-                        tick={{ fill: "currentColor" }}
-                        label={{ value: "Activity Count", angle: -90, position: "insideLeft" }}
-                      />
+                    <RechartsPieChart>
+                      <Pie
+                        data={userActivityStats.map((stat) => ({
+                          name: stat.userName || stat.username || stat.email,
+                          value: stat.activityCount,
+                          userId: stat.userId,
+                          profilePicture: stat.profilePicture,
+                        }))}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                        outerRadius={100}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {userActivityStats.map((stat, index) => {
+                          const colors = ['#F9AC67', '#EE6A59', '#3A3F58', '#ECE6CD', '#10b981'];
+                          return <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />;
+                        })}
+                      </Pie>
                       <Tooltip
                         content={({ active, payload }) => {
                           if (active && payload && payload.length) {
                             const data = payload[0].payload;
                             return (
-                              <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-md rounded-lg  p-3">
+                              <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-md rounded-lg p-3">
                                 <div className="flex items-center gap-2 mb-2">
                                   {data.profilePicture && data.profilePicture !== "default.jpg" ? (
                                     <img
@@ -905,16 +905,15 @@ export default function DashboardHome() {
                                     />
                                   ) : (
                                     <div className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center text-white text-xs font-semibold uppercase">
-                                      {(data.name?.[0] || data.username?.[0] || "U").toUpperCase()}
+                                      {(data.name?.[0] || "U").toUpperCase()}
                                     </div>
                                   )}
                                   <div>
                                     <p className="font-semibold text-foreground">{data.name}</p>
-                                    <p className="text-xs text-muted-foreground">{data.username || data.email}</p>
                                   </div>
                                 </div>
                                 <p className="text-sm text-muted-foreground">
-                                  Activities: <span className="font-semibold text-orange-600 dark:text-orange-400">{payload[0].value}</span>
+                                  Activities: <span className="font-semibold text-orange-600 dark:text-orange-400">{data.value}</span>
                                 </p>
                               </div>
                             );
@@ -922,80 +921,40 @@ export default function DashboardHome() {
                           return null;
                         }}
                       />
-                      <Bar
-                        dataKey="activities"
-                        fill="#f97316"
-                        radius={[8, 8, 0, 0]}
-                        className="hover:opacity-80 transition-opacity"
-                      />
-                    </RechartsBarChart>
+                      <Legend />
+                    </RechartsPieChart>
                   </ResponsiveContainer>
-                  {/* Avatar labels below X-axis */}
-                  <div className="flex justify-around -mt-12 px-4 relative z-10">
-                    {userActivityStats.map((stat, index) => (
-                      <div
-                        key={stat.userId}
-                        className="flex flex-col items-center gap-1"
-                        style={{ width: `${100 / userActivityStats.length}%` }}
-                      >
-                        {stat.profilePicture && stat.profilePicture !== "default.jpg" ? (
-                          <img
-                            src={stat.profilePicture}
-                            alt={stat.userName}
-                            className="w-8 h-8 rounded-full object-cover border-2 border-orange-500"
-                            title={stat.userName}
-                          />
-                        ) : (
-                          <div
-                            className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center text-white text-xs font-semibold border-2 border-orange-600 uppercase"
-                            title={stat.userName}
-                          >
-                            {(stat.userName?.[0] || stat.username?.[0] || stat.email?.[0] || "U").toUpperCase()}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
                 </div>
 
                 {/* User List */}
-                <div className="w-64 border-l border-white/20 dark:border-white/10 pl-6">
-                  <h3 className="font-semibold text-sm text-foreground mb-4">User Activity List</h3>
-                  <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
-                    {userActivityStats.map((stat) => (
-                      <div
-                        key={stat.userId}
-                        className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition"
-                      >
-                        <div className="flex-shrink-0">
+                <div className="w-full md:w-1/2 space-y-3">
+                  {userActivityStats.map((stat, index) => {
+                    const colors = ['#F9AC67', '#EE6A59', '#3A3F58', '#ECE6CD', '#10b981'];
+                    const total = userActivityStats.reduce((sum, s) => sum + s.activityCount, 0);
+                    const percentage = ((stat.activityCount / total) * 100).toFixed(1);
+                    return (
+                      <div key={stat.userId} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: colors[index % colors.length] }}></div>
+                        <div className="flex items-center gap-2 flex-1">
                           {stat.profilePicture && stat.profilePicture !== "default.jpg" ? (
                             <img
                               src={stat.profilePicture}
                               alt={stat.userName}
-                              className="w-10 h-10 rounded-full object-cover"
+                              className="w-8 h-8 rounded-full object-cover"
                             />
                           ) : (
-                            <div className="w-10 h-10 rounded-full bg-orange-500 flex items-center justify-center text-white font-semibold text-sm uppercase">
-                              {(stat.userName?.[0] || stat.username?.[0] || stat.email?.[0] || "U").toUpperCase()}
+                            <div className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center text-white text-xs font-semibold uppercase">
+                              {(stat.userName?.[0] || stat.username?.[0] || "U").toUpperCase()}
                             </div>
                           )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm text-foreground truncate">
-                            {stat.userName}
-                          </p>
-                          <p className="text-xs text-muted-foreground truncate">
-                            {stat.email}
-                          </p>
-                        </div>
-                        <div className="flex-shrink-0">
-                          <Badge className="bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
-                            {stat.activityCount}
-                          </Badge>
+                          <div className="flex-1">
+                            <p className="font-medium text-sm">{stat.userName || stat.username || stat.email}</p>
+                            <p className="text-xs text-muted-foreground">{stat.activityCount} activities ({percentage}%)</p>
+                          </div>
                         </div>
                       </div>
-                    ))}
-                  </div>
+                    );
+                  })}
                 </div>
               </div>
             )}

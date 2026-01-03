@@ -364,7 +364,7 @@ export default function POSPage() {
         <p className="text-gray-600 dark:text-gray-400">Restaurant & Bar</p>
       </div>
 
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 overflow-hidden">
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-4 overflow-hidden">
         {/* Items Section */}
         <div className="lg:col-span-2 flex flex-col overflow-hidden">
           <div className="mb-4 flex gap-2">

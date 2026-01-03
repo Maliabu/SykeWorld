@@ -33,7 +33,10 @@ export const metadata: Metadata = {
   title: "Syke World Hotel",
   description: "Luxury meets serenity. Experience comfort at Syke World Hotel.",
   icons: {
-    icon: "/images/logo.png",
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/images/logo.png", type: "image/png" },
+    ],
     shortcut: "/images/logo.png",
     apple: "/images/logo.png",
   },

@@ -96,7 +96,7 @@ export default function ReviewsPage() {
         </div>
       </div>
 
-      <div className="grid gap-6">
+      <div className="grid gap-4">
         {filteredReviews.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center text-gray-500">

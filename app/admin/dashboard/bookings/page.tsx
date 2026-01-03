@@ -139,7 +139,7 @@ export default function BookingsPage() {
         </div>
       </div>
 
-      <div className="grid gap-6">
+      <div className="grid gap-4">
         {filteredBookings.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center text-gray-500 dark:text-gray-400">

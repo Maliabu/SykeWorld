@@ -104,15 +104,32 @@ export default function RoomAllocationsPage() {
       case "available":
         return "bg-green-500 hover:bg-green-600";
       case "occupied":
-        return "bg-orange-500 hover:bg-orange-600";
+        return "hover:opacity-90";
       case "cleaning":
-        return "bg-yellow-500 hover:bg-yellow-600";
+        return "hover:opacity-90";
       case "maintenance":
-        return "bg-red-500 hover:bg-red-600";
+        return "hover:opacity-90";
       case "unavailable":
-        return "bg-gray-500 hover:bg-gray-600";
+        return "hover:opacity-90";
       default:
         return "bg-gray-400 hover:bg-gray-500";
+    }
+  };
+
+  const getStatusBgColor = (status: string) => {
+    switch (status) {
+      case "available":
+        return "#10b981"; // green-500
+      case "occupied":
+        return "#F9AC67"; // warm orange/peach
+      case "cleaning":
+        return "#ECE6CD"; // light creamy yellow
+      case "maintenance":
+        return "#EE6A59"; // coral/red
+      case "unavailable":
+        return "#3A3F58"; // dark navy
+      default:
+        return "#9ca3af"; // gray-400
     }
   };
 
@@ -241,7 +258,7 @@ export default function RoomAllocationsPage() {
                           <span className="text-xs font-medium">{counts.available}</span>
                         </div>
                         <div className="flex items-center gap-1.5">
-                          <div className="w-2.5 h-2.5 rounded-full bg-orange-500"></div>
+                          <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#F9AC67' }}></div>
                           <span className="text-xs font-medium">{counts.occupied}</span>
                         </div>
                       </div>
@@ -269,24 +286,24 @@ export default function RoomAllocationsPage() {
                       </CardDescription>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      <Badge variant="outline" className="flex items-center gap-1.5 px-3 py-1">
-                        <div className="w-2.5 h-2.5 rounded-full bg-green-500"></div>
-                        <span className="font-medium">Available: {counts.available}</span>
+                      <Badge variant="outline" className="flex items-center gap-1.5 px-3 py-1 bg-green-600 border-green-600">
+                        <div className="w-2.5 h-2.5 rounded-full bg-white"></div>
+                        <span className="font-medium text-white">Available: {counts.available}</span>
                       </Badge>
-                      <Badge variant="outline" className="flex items-center gap-1.5 px-3 py-1">
-                        <div className="w-2.5 h-2.5 rounded-full bg-orange-500"></div>
-                        <span className="font-medium">Booked: {counts.occupied}</span>
+                      <Badge variant="outline" className="flex items-center gap-1.5 px-3 py-1 border" style={{ backgroundColor: '#F9AC67', borderColor: '#F9AC67' }}>
+                        <div className="w-2.5 h-2.5 rounded-full bg-white"></div>
+                        <span className="font-medium text-white">Booked: {counts.occupied}</span>
                       </Badge>
                       {counts.cleaning > 0 && (
-                        <Badge variant="outline" className="flex items-center gap-1.5 px-3 py-1">
-                          <div className="w-2.5 h-2.5 rounded-full bg-yellow-500"></div>
-                          <span className="font-medium">Cleaning: {counts.cleaning}</span>
+                        <Badge variant="outline" className="flex items-center gap-1.5 px-3 py-1 border" style={{ backgroundColor: '#ECE6CD', borderColor: '#ECE6CD' }}>
+                          <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#3A3F58' }}></div>
+                          <span className="font-medium" style={{ color: '#3A3F58' }}>Cleaning: {counts.cleaning}</span>
                         </Badge>
                       )}
                       {counts.maintenance > 0 && (
-                        <Badge variant="outline" className="flex items-center gap-1.5 px-3 py-1">
-                          <div className="w-2.5 h-2.5 rounded-full bg-red-500"></div>
-                          <span className="font-medium">Maintenance: {counts.maintenance}</span>
+                        <Badge variant="outline" className="flex items-center gap-1.5 px-3 py-1 border" style={{ backgroundColor: '#EE6A59', borderColor: '#EE6A59' }}>
+                          <div className="w-2.5 h-2.5 rounded-full bg-white"></div>
+                          <span className="font-medium text-white">Maintenance: {counts.maintenance}</span>
                         </Badge>
                       )}
                     </div>
@@ -306,9 +323,8 @@ export default function RoomAllocationsPage() {
                         >
                           <div
                             onClick={() => openStatusDialog(room)}
-                            className={`w-full aspect-square rounded-lg ${getStatusColor(
-                              room.status
-                            )} transition-all duration-200 cursor-pointer shadow-md hover:shadow-xl hover:scale-105`}
+                            className="w-full aspect-square transition-all duration-200 cursor-pointer hover:scale-105"
+                            style={{ backgroundColor: getStatusBgColor(room.status) }}
                             title={`Room ${room.roomNumber} - ${getStatusLabel(room.status)} (Floor ${room.floor}) - Click to change status`}
                           >
                           </div>
@@ -346,19 +362,19 @@ export default function RoomAllocationsPage() {
               <span className="text-sm">Available</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded-lg bg-orange-500"></div>
+              <div className="w-4 h-4 rounded-lg" style={{ backgroundColor: '#F9AC67' }}></div>
               <span className="text-sm">Booked</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded-lg bg-yellow-500"></div>
+              <div className="w-4 h-4 rounded-lg" style={{ backgroundColor: '#ECE6CD' }}></div>
               <span className="text-sm">Cleaning</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded-lg bg-red-500"></div>
+              <div className="w-4 h-4 rounded-lg" style={{ backgroundColor: '#EE6A59' }}></div>
               <span className="text-sm">Maintenance</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded-lg bg-gray-500"></div>
+              <div className="w-4 h-4 rounded-lg" style={{ backgroundColor: '#3A3F58' }}></div>
               <span className="text-sm">Unavailable</span>
             </div>
           </div>
@@ -381,11 +397,11 @@ export default function RoomAllocationsPage() {
             {(["available", "occupied", "cleaning", "maintenance", "unavailable"] as const).map((status) => {
               const isCurrentStatus = selectedRoom?.status === status;
               const statusColors: Record<string, string> = {
-                available: "bg-green-500",
-                occupied: "bg-orange-500",
-                cleaning: "bg-yellow-500",
-                maintenance: "bg-red-500",
-                unavailable: "bg-gray-500",
+                available: "#10b981", // green-500
+                occupied: "#F9AC67", // warm orange/peach
+                cleaning: "#ECE6CD", // light creamy yellow
+                maintenance: "#EE6A59", // coral/red
+                unavailable: "#3A3F58", // dark navy
               };
               
               return (
@@ -394,9 +410,9 @@ export default function RoomAllocationsPage() {
                   onClick={() => handleStatusChange(status)}
                   disabled={updatingStatus || isCurrentStatus}
                   variant={isCurrentStatus ? "default" : "outline"}
-                  className="w-full justify-start gap-3 h-auto py-3"
+                  className="w-full justify-start gap-3 h-auto py-3 rounded-none"
                 >
-                  <div className={`w-4 h-4 rounded-lg ${statusColors[status]}`}></div>
+                  <div className="w-4 h-4 rounded-lg" style={{ backgroundColor: statusColors[status] }}></div>
                   <div className="flex flex-col items-start">
                     <span className="font-semibold">{getStatusLabel(status)}</span>
                     {isCurrentStatus && (

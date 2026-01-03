@@ -65,7 +65,7 @@ export default function TransactionsPage() {
         <p className="text-gray-600 dark:text-gray-400 mt-1">View all payment transactions</p>
       </div>
 
-      <div className="grid gap-6">
+      <div className="grid gap-4">
         {transactions.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center text-gray-500">
