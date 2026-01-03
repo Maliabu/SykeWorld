@@ -147,7 +147,7 @@ export default function Navbar() {
                 <Image 
                   src={Logo} 
                   alt="logo" 
-                  className="w-10 h-8"
+                  className="w-8 h-6"
                 />
                 <div 
                   className="text-2xl capitalize text-orange-400" 
