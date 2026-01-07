@@ -180,7 +180,7 @@ export default function AvailabilityContent() {
           </div>
           <h1 
             className="text-4xl md:text-5xl font-bold text-[#1a1c1e] mb-4"
-            style={{ fontFamily: 'var(--font-playfair)' }}
+            style={{ fontFamily: 'var(--font-cal-sans)', fontWeight: 400 }}
           >
             Check Availability
           </h1>
@@ -232,7 +232,7 @@ export default function AvailabilityContent() {
                       <div>
                         <h3 
                           className="text-xl font-bold text-[#1a1c1e] mb-1"
-                          style={{ fontFamily: 'var(--font-playfair)' }}
+                          style={{ fontFamily: 'var(--font-cal-sans)', fontWeight: 400 }}
                         >
                           {room.roomType?.name || "Room"}
                         </h3>
@@ -280,7 +280,7 @@ export default function AvailabilityContent() {
                         <span className="text-sm text-gray-600" style={{ fontFamily: 'var(--font-inter)' }}>
                           {formatMoney(basePrice)}/night
                         </span>
-                        <span className="text-lg font-bold text-[#1a1c1e]" style={{ fontFamily: 'var(--font-playfair)' }}>
+                        <span className="text-lg font-bold text-[#1a1c1e]" style={{ fontFamily: 'var(--font-cal-sans)', fontWeight: 400 }}>
                           {formatMoney(totalPrice)}
                         </span>
                       </div>

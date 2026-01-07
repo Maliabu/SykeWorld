@@ -218,7 +218,7 @@ export default function AddBookingCard() {
         <div className="space-y-6 p-4 md:p-8 border-l border-r border-black/10 bg-white">
           <h2
             className="text-xl md:text-2xl lg:text-3xl font-bold text-[#1a1c1e] mb-4 md:mb-6"
-            style={{ fontFamily: "var(--font-playfair)" }}
+            style={{ fontFamily: "var(--font-cal-sans)", fontWeight: 400 }}
           >
             Booking Details
           </h2>
@@ -372,7 +372,7 @@ export default function AddBookingCard() {
         >
           <h2
             className="text-xl md:text-2xl lg:text-3xl font-bold text-[#1a1c1e] mb-4 md:mb-6"
-            style={{ fontFamily: "var(--font-playfair)" }}
+            style={{ fontFamily: "var(--font-cal-sans)", fontWeight: 400 }}
           >
             Review & Confirm
           </h2>

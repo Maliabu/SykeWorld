@@ -37,7 +37,7 @@ export default function FeatureCard({ icon, title, description }: FeatureCardPro
       )}
       <h3 
         className="font-semibold text-lg text-stone-900"
-        style={{ fontFamily: 'var(--font-playfair)' }}
+        style={{ fontFamily: 'var(--font-cal-sans)', fontWeight: 400 }}
       >
         {title}
       </h3>

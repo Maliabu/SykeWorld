@@ -45,7 +45,7 @@ export default function RoomCard({ room }: RoomCardProps) {
         <div className="p-4">
           <h3 
             className="text-xl font-semibold text-stone-900 mb-2"
-            style={{ fontFamily: 'var(--font-playfair)' }}
+            style={{ fontFamily: 'var(--font-cal-sans)', fontWeight: 400 }}
           >
             {room.roomType?.name || "Unknown Room Type"}
           </h3>

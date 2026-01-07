@@ -1,4 +1,4 @@
-import { Geist, Geist_Mono, Playfair_Display, Inter } from "next/font/google";
+import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 import SessionProviderWrapper from "./sessionProviderWrapper";
@@ -17,11 +17,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const playfairDisplay = Playfair_Display({
-  variable: "--font-playfair",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800", "900"],
-});
+// Cal Sans is loaded via CSS import in globals.css
 
 const inter = Inter({
   variable: "--font-inter",
@@ -50,7 +46,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${playfairDisplay.variable} ${inter.variable} antialiased bg-white`}
+        className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} antialiased bg-white`}
       >
         <ThemeProvider
           attribute="class"

@@ -66,7 +66,7 @@ export default function Footer() {
             </div>
             <h2 
               className="text-4xl md:text-5xl font-bold text-[#1a1c1e] mb-4"
-              style={{ fontFamily: 'var(--font-playfair)' }}
+              style={{ fontFamily: 'var(--font-cal-sans)', fontWeight: 400 }}
             >
               Stay Connected
             </h2>
@@ -116,12 +116,13 @@ export default function Footer() {
                   <Image 
                     src={Logo} 
                     alt="logo" 
-                    className="w-10 h-8"
+                    className="w-10 h-7"
                   />
                   <div 
-                    className="text-2xl capitalize text-[#1a1c1e]" 
+                    className="text-2xl capitalize text-[#1a1c1e] font-bold" 
                     style={{ 
-                      fontFamily: "'Cooper Black', serif", 
+                      fontFamily: 'var(--font-cal-sans)', 
+                      fontWeight: 400,
                       letterSpacing: '0.01em',
                       lineHeight: '1.2'
                     }}
@@ -216,7 +217,7 @@ export default function Footer() {
                   </div>
                   <p 
                     className="text-2xl font-bold text-[#1a1c1e] mb-1 leading-tight"
-                    style={{ fontFamily: 'var(--font-playfair)' }}
+                    style={{ fontFamily: 'var(--font-cal-sans)', fontWeight: 400 }}
                   >
                     Paidha
                   </p>
@@ -250,7 +251,7 @@ export default function Footer() {
                   </div>
                   <p 
                     className="text-2xl font-bold text-[#1a1c1e] mb-1 leading-tight"
-                    style={{ fontFamily: 'var(--font-playfair)' }}
+                    style={{ fontFamily: 'var(--font-cal-sans)', fontWeight: 400 }}
                   >
                     Bar & Restaurant
                   </p>

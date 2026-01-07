@@ -272,9 +272,10 @@ export function AppSidebar() {
             className="w-10 h-8"
           />
           <div 
-            className="text-2xl capitalize text-orange-400" 
+            className="text-2xl capitalize text-orange-400 font-bold" 
             style={{ 
-              fontFamily: "'Cooper Black', serif", 
+              fontFamily: 'var(--font-cal-sans)', 
+              fontWeight: 400,
               letterSpacing: '0.01em',
               lineHeight: '1.2'
             }}

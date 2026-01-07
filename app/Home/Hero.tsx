@@ -28,7 +28,7 @@ export default function Hero() {
             {/* Main Heading with elegant typography */}
             <h1 
               className="text-5xl md:text-6xl lg:text-7xl font-bold text-[#1a1c1e] leading-[1.1] tracking-tight"
-              style={{ fontFamily: 'var(--font-playfair)' }}
+              style={{ fontFamily: 'var(--font-cal-sans)', fontWeight: 400 }}
             >
               Welcome to<br />
               <span className="text-[#1a1c1e]">Syke World</span>

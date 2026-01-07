@@ -136,7 +136,7 @@ The following pages use the dark theme and would need conversion:
 ## Notes
 
 - **Accent colors remain the same** in both themes (amber-600, amber-700)
-- **Font families remain the same** (Playfair Display for headings, Inter for body)
+- **Font families remain the same** (Cal Sans for headings, Inter for body)
 - **Layout and structure remain the same** - only colors change
 - **Images and content remain the same** - no content changes needed
 

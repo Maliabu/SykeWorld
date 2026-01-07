@@ -310,7 +310,7 @@ export default function Page() {
           </div>
           <h1 
             className="text-4xl md:text-5xl font-bold text-[#1a1c1e] mb-4"
-            style={{ fontFamily: 'var(--font-playfair)' }}
+            style={{ fontFamily: 'var(--font-cal-sans)', fontWeight: 400 }}
           >
             Our Rooms
           </h1>
@@ -341,7 +341,7 @@ export default function Page() {
                 </div>
                 <h3 
                   className="text-2xl md:text-3xl font-bold text-[#1a1c1e] mb-6"
-                  style={{ fontFamily: 'var(--font-playfair)' }}
+                  style={{ fontFamily: 'var(--font-cal-sans)', fontWeight: 400 }}
                 >
                   Filters
                 </h3>
@@ -423,7 +423,7 @@ export default function Page() {
                   <div>
                     <h2 
                       className="text-3xl md:text-4xl font-bold text-[#1a1c1e] mb-2"
-                      style={{ fontFamily: 'var(--font-playfair)' }}
+                      style={{ fontFamily: 'var(--font-cal-sans)', fontWeight: 400 }}
                     >
                       {room.roomType?.name}
                     </h2>

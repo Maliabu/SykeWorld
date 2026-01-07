@@ -78,7 +78,7 @@ export default function RoomsSection() {
           </div>
           <h2 
             className="text-4xl md:text-5xl font-bold text-[#1a1c1e] mb-4"
-            style={{ fontFamily: 'var(--font-playfair)' }}
+            style={{ fontFamily: 'var(--font-cal-sans)', fontWeight: 400 }}
           >
             Our Rooms
           </h2>
@@ -110,7 +110,7 @@ export default function RoomsSection() {
                 <div className="flex flex-col space-y-6 p-6">
                   <h3 
                     className="text-3xl md:text-4xl font-bold text-[#1a1c1e] leading-tight"
-                    style={{ fontFamily: 'var(--font-playfair)' }}
+                    style={{ fontFamily: 'var(--font-cal-sans)', fontWeight: 400 }}
                   >
                     {room.roomType?.name || 'Luxury Room'}
                   </h3>

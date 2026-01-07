@@ -54,7 +54,7 @@ export default function Home() {
             </div>
             <h2 
               className="text-4xl md:text-5xl font-bold text-[#1a1c1e] mb-4"
-              style={{ fontFamily: 'var(--font-playfair)' }}
+              style={{ fontFamily: 'var(--font-cal-sans)', fontWeight: 400 }}
             >
               Experience Luxury
             </h2>
@@ -73,7 +73,7 @@ export default function Home() {
               <div className="md:col-span-4 flex flex-col justify-start space-y-8">
                 <h3 
                   className="text-4xl md:text-5xl font-bold text-[#1a1c1e] leading-tight"
-                  style={{ fontFamily: 'var(--font-playfair)' }}
+                  style={{ fontFamily: 'var(--font-cal-sans)', fontWeight: 400 }}
                 >
                   Luxury Suites
                 </h3>
@@ -196,7 +196,7 @@ export default function Home() {
               <div className="flex flex-col space-y-8 text-center">
                 <h3 
                   className="text-4xl md:text-5xl font-bold text-[#1a1c1e] leading-tight"
-                  style={{ fontFamily: 'var(--font-playfair)' }}
+                  style={{ fontFamily: 'var(--font-cal-sans)', fontWeight: 400 }}
                 >
                   Elegant Lobby
                 </h3>
@@ -266,7 +266,7 @@ export default function Home() {
               <div className="md:col-span-4 flex flex-col justify-start space-y-8">
                 <h3 
                   className="text-4xl md:text-5xl font-bold text-[#1a1c1e] leading-tight"
-                  style={{ fontFamily: 'var(--font-playfair)' }}
+                  style={{ fontFamily: 'var(--font-cal-sans)', fontWeight: 400 }}
                 >
                   Premium Amenities
                 </h3>
@@ -355,7 +355,7 @@ export default function Home() {
             </div>
             <h2 
               className="text-4xl md:text-5xl font-bold text-[#1a1c1e] mb-4"
-              style={{ fontFamily: 'var(--font-playfair)' }}
+              style={{ fontFamily: 'var(--font-cal-sans)', fontWeight: 400 }}
             >
               Explore Paidha
             </h2>
@@ -372,7 +372,7 @@ export default function Home() {
             <div className="md:col-span-4 flex flex-col justify-start space-y-8">
               <h3 
               className="text-4xl md:text-5xl font-bold text-[#1a1c1e] leading-tight"
-              style={{ fontFamily: 'var(--font-playfair)' }}
+              style={{ fontFamily: 'var(--font-cal-sans)', fontWeight: 400 }}
             >
               Discover Paidha
               </h3>

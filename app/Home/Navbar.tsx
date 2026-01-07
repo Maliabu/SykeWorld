@@ -151,9 +151,10 @@ export default function Navbar() {
                   className="w-8 h-6"
                 />
                 <div 
-                  className="text-2xl capitalize text-[#1a1c1e]" 
+                  className="text-2xl capitalize text-[#1a1c1e] font-bold" 
                   style={{ 
-                    fontFamily: "'Cooper Black', serif", 
+                    fontFamily: 'var(--font-cal-sans)', 
+                    fontWeight: 400,
                     letterSpacing: '0.01em',
                     lineHeight: '1.2'
                   }}
@@ -162,7 +163,7 @@ export default function Navbar() {
                 </div>
               </div>
               {/* Fallback for smaller screens */}
-              <span className="lg:hidden hidden sm:inline text-lg md:text-xl font-normal italic text-gray-600 tracking-tight" style={{ fontFamily: 'var(--font-playfair)' }}>
+              <span className="lg:hidden hidden sm:inline text-lg md:text-xl font-normal italic text-gray-600 tracking-tight" style={{ fontFamily: 'var(--font-cal-sans)', fontWeight: 400 }}>
                 Syke World
               </span>
               <img 
@@ -282,7 +283,7 @@ export default function Navbar() {
                   </div>
                   <p 
                     className="text-2xl font-bold text-[#1a1c1e] mb-1 leading-tight"
-                    style={{ fontFamily: 'var(--font-playfair)' }}
+                    style={{ fontFamily: 'var(--font-cal-sans)', fontWeight: 400 }}
                   >
                     Paidha
                   </p>
@@ -337,7 +338,7 @@ export default function Navbar() {
                     </div>
                     <p 
                       className="text-2xl font-bold text-[#1a1c1e] mb-1 leading-tight"
-                      style={{ fontFamily: 'var(--font-playfair)' }}
+                      style={{ fontFamily: 'var(--font-cal-sans)', fontWeight: 400 }}
                     >
                       Bar & Restaurant
                     </p>
@@ -378,7 +379,7 @@ export default function Navbar() {
       <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
         <SheetContent side="left" className="w-80 bg-white border-r border-gray-300 p-0">
           <SheetHeader className="p-6 border-b border-gray-300">
-            <SheetTitle className="text-[#1a1c1e] text-xl" style={{ fontFamily: 'var(--font-playfair)' }}>
+            <SheetTitle className="text-[#1a1c1e] text-xl" style={{ fontFamily: 'var(--font-cal-sans)', fontWeight: 400 }}>
               Syke World
             </SheetTitle>
           </SheetHeader>

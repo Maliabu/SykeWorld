@@ -420,7 +420,7 @@ function BookingPageContent() {
               </div>
               <h1 
                 className="text-3xl md:text-4xl lg:text-5xl font-bold text-[#1a1c1e] mb-4"
-                style={{ fontFamily: 'var(--font-playfair)' }}
+                style={{ fontFamily: 'var(--font-cal-sans)', fontWeight: 400 }}
               >
                 Book Your Stay
               </h1>
@@ -480,7 +480,7 @@ function BookingPageContent() {
                 <div className="space-y-6 p-4 md:p-8 border-l border-r border-black/10">
                   <h2 
                     className="text-xl md:text-2xl lg:text-3xl font-bold text-[#1a1c1e] mb-4 md:mb-6"
-                    style={{ fontFamily: 'var(--font-playfair)' }}
+                    style={{ fontFamily: 'var(--font-cal-sans)', fontWeight: 400 }}
                   >
                     Booking Details
                   </h2>
@@ -494,7 +494,7 @@ function BookingPageContent() {
                         Check-in Date
                       </label>
                       <input 
-                        className="w-full bg-transparent border border-gray-400/50 rounded-lg px-4 py-3 text-[#1a1c1e] placeholder-gray-500 focus:outline-none focus:border-amber-600 focus:ring-1 focus:ring-amber-600 transition-all" 
+                        className="w-full bg-transparent border border-gray-400/50 rounded px-4 py-3 text-[#1a1c1e] placeholder-gray-500 focus:outline-none focus:border-amber-600 focus:ring-1 focus:ring-amber-600 transition-all" 
                         type="date" 
                         value={form.checkIn} 
                         onChange={(e) => update("checkIn", e.target.value)}
@@ -510,7 +510,7 @@ function BookingPageContent() {
                         Check-out Date
                       </label>
                       <input 
-                        className="w-full bg-transparent border border-gray-400/50 rounded-lg px-4 py-3 text-[#1a1c1e] placeholder-gray-500 focus:outline-none focus:border-amber-600 focus:ring-1 focus:ring-amber-600 transition-all" 
+                        className="w-full bg-transparent border border-gray-400/50 rounded px-4 py-3 text-[#1a1c1e] placeholder-gray-500 focus:outline-none focus:border-amber-600 focus:ring-1 focus:ring-amber-600 transition-all" 
                         type="date" 
                         value={form.checkOut} 
                         onChange={(e) => update("checkOut", e.target.value)}
@@ -526,7 +526,7 @@ function BookingPageContent() {
                         Number of Guests
                       </label>
                       <input 
-                        className="w-full bg-transparent border border-gray-400/50 rounded-lg px-4 py-3 text-[#1a1c1e] placeholder-gray-500 focus:outline-none focus:border-amber-600 focus:ring-1 focus:ring-amber-600 transition-all" 
+                        className="w-full bg-transparent border border-gray-400/50 rounded px-4 py-3 text-[#1a1c1e] placeholder-gray-500 focus:outline-none focus:border-amber-600 focus:ring-1 focus:ring-amber-600 transition-all" 
                         type="number" 
                         min="1" 
                         value={form.guests} 
@@ -560,7 +560,7 @@ function BookingPageContent() {
                         Full Name
                       </label>
                       <input 
-                        className="w-full bg-transparent border border-gray-400/50 rounded-lg px-4 py-3 text-[#1a1c1e] placeholder-gray-500 focus:outline-none focus:border-amber-600 focus:ring-1 focus:ring-amber-600 transition-all" 
+                        className="w-full bg-transparent border border-gray-400/50 rounded px-4 py-3 text-[#1a1c1e] placeholder-gray-500 focus:outline-none focus:border-amber-600 focus:ring-1 focus:ring-amber-600 transition-all" 
                         placeholder="Enter your full name" 
                         value={form.name} 
                         onChange={(e) => update("name", e.target.value)} 
@@ -575,7 +575,7 @@ function BookingPageContent() {
                         Email Address
                       </label>
                       <input 
-                        className="w-full bg-transparent border border-gray-400/50 rounded-lg px-4 py-3 text-[#1a1c1e] placeholder-gray-500 focus:outline-none focus:border-amber-600 focus:ring-1 focus:ring-amber-600 transition-all" 
+                        className="w-full bg-transparent border border-gray-400/50 rounded px-4 py-3 text-[#1a1c1e] placeholder-gray-500 focus:outline-none focus:border-amber-600 focus:ring-1 focus:ring-amber-600 transition-all" 
                         placeholder="your.email@example.com" 
                         type="email"
                         value={form.email} 
@@ -593,7 +593,7 @@ function BookingPageContent() {
                       Select Room Type
                     </label>
                     <select 
-                      className="w-full bg-transparent border border-gray-400/50 rounded-lg px-4 py-3 text-[#1a1c1e] focus:outline-none focus:border-amber-600 focus:ring-1 focus:ring-amber-600 transition-all" 
+                      className="w-full bg-transparent border border-gray-400/50 rounded px-4 py-3 text-[#1a1c1e] focus:outline-none focus:border-amber-600 focus:ring-1 focus:ring-amber-600 transition-all" 
                       value={form.roomType} 
                       onChange={(e) => update("roomType", e.target.value)}
                       style={{ fontFamily: 'var(--font-inter)' }}
@@ -622,7 +622,7 @@ function BookingPageContent() {
                       Special Requests
                     </label>
                     <textarea 
-                      className="w-full bg-transparent border border-gray-400/50 rounded-lg px-4 py-3 text-[#1a1c1e] placeholder-stone-400 focus:outline-none focus:border-amber-600 focus:ring-1 focus:ring-amber-600 transition-all resize-none" 
+                      className="w-full bg-transparent border border-gray-400/50 rounded px-4 py-3 text-[#1a1c1e] placeholder-stone-400 focus:outline-none focus:border-amber-600 focus:ring-1 focus:ring-amber-600 transition-all resize-none" 
                       placeholder="Any special requests or preferences..." 
                       rows={4} 
                       value={form.specialRequests} 
@@ -641,7 +641,7 @@ function BookingPageContent() {
                 >
                   <h2 
                     className="text-xl md:text-2xl lg:text-3xl font-bold text-[#1a1c1e] mb-4 md:mb-6"
-                    style={{ fontFamily: 'var(--font-playfair)' }}
+                    style={{ fontFamily: 'var(--font-cal-sans)', fontWeight: 400 }}
                   >
                     Review & Confirm
                   </h2>
@@ -727,7 +727,7 @@ function BookingPageContent() {
                   </div>
                   <h3 
                     className="text-xl md:text-2xl lg:text-3xl font-bold text-[#1a1c1e] mb-4"
-                    style={{ fontFamily: 'var(--font-playfair)' }}
+                    style={{ fontFamily: 'var(--font-cal-sans)', fontWeight: 400 }}
                   >
                     Recommended Rooms
                   </h3>
@@ -751,7 +751,7 @@ function BookingPageContent() {
                         <div className="p-3">
                           <div 
                             className="font-semibold text-[#1a1c1e]"
-                            style={{ fontFamily: 'var(--font-playfair)' }}
+                            style={{ fontFamily: 'var(--font-cal-sans)', fontWeight: 400 }}
                           >
                             {room.title}
                           </div>
@@ -798,7 +798,7 @@ function BookingPageContent() {
                   </div>
                   <h3 
                     className="text-xl md:text-2xl lg:text-3xl font-bold text-[#1a1c1e] mb-4"
-                    style={{ fontFamily: 'var(--font-playfair)' }}
+                    style={{ fontFamily: 'var(--font-cal-sans)', fontWeight: 400 }}
                   >
                     Booking Summary
                   </h3>

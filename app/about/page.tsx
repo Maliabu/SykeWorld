@@ -92,7 +92,7 @@ export default function AboutPage() {
             </div>
             <h1 
               className="text-4xl md:text-5xl lg:text-6xl font-bold text-[#1a1c1e] mb-6 tracking-tight"
-              style={{ fontFamily: 'var(--font-playfair)' }}
+              style={{ fontFamily: 'var(--font-cal-sans)', fontWeight: 400 }}
             >
               Welcome to Syke World
             </h1>
@@ -121,7 +121,7 @@ export default function AboutPage() {
               </div>
               <h2 
                 className="text-4xl md:text-5xl font-bold text-[#1a1c1e] mb-4"
-                style={{ fontFamily: 'var(--font-playfair)' }}
+                style={{ fontFamily: 'var(--font-cal-sans)', fontWeight: 400 }}
               >
                 Our Story
               </h2>
@@ -157,7 +157,7 @@ export default function AboutPage() {
               </div>
               <h2 
                 className="text-4xl md:text-5xl font-bold text-[#1a1c1e] mb-4"
-                style={{ fontFamily: 'var(--font-playfair)' }}
+                style={{ fontFamily: 'var(--font-cal-sans)', fontWeight: 400 }}
               >
                 Located in the Heart of Paidha
               </h2>
@@ -202,7 +202,7 @@ export default function AboutPage() {
                 </div>
                 <h2 
                   className="text-2xl md:text-3xl font-bold text-[#1a1c1e] mb-4"
-                  style={{ fontFamily: 'var(--font-playfair)' }}
+                  style={{ fontFamily: 'var(--font-cal-sans)', fontWeight: 400 }}
                 >
                   Client Reviews
                 </h2>
@@ -282,7 +282,7 @@ export default function AboutPage() {
                 </div>
                 <h2 
                   className="text-2xl md:text-3xl font-bold text-[#1a1c1e] mb-4"
-                  style={{ fontFamily: 'var(--font-playfair)' }}
+                  style={{ fontFamily: 'var(--font-cal-sans)', fontWeight: 400 }}
                 >
                   Get in Touch
                 </h2>

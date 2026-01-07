@@ -92,7 +92,7 @@ export default function ServicesPage() {
           </div>
           <h1 
             className="text-4xl md:text-5xl font-bold text-[#1a1c1e] mb-4 tracking-tight"
-            style={{ fontFamily: 'var(--font-playfair)' }}
+            style={{ fontFamily: 'var(--font-cal-sans)', fontWeight: 400 }}
           >
             Our Services
           </h1>
@@ -120,7 +120,7 @@ export default function ServicesPage() {
         <div className="text-center mb-12">
           <h2 
             className="text-3xl md:text-4xl font-bold text-[#1a1c1e] mb-4"
-            style={{ fontFamily: 'var(--font-playfair)' }}
+            style={{ fontFamily: 'var(--font-cal-sans)', fontWeight: 400 }}
           >
             Recommended Rooms
           </h2>
@@ -154,7 +154,7 @@ export default function ServicesPage() {
                   <div className="p-6">
                     <h3 
                       className="text-2xl font-bold text-[#1a1c1e] mb-2"
-                      style={{ fontFamily: 'var(--font-playfair)' }}
+                      style={{ fontFamily: 'var(--font-cal-sans)', fontWeight: 400 }}
                     >
                       {room.roomType?.name}
                     </h3>

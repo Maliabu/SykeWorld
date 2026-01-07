@@ -34,7 +34,7 @@ export default function VisitPaidha() {
           <div className="max-w-3xl">
             <h1 
               className="text-4xl md:text-5xl lg:text-6xl font-bold text-white drop-shadow-lg"
-              style={{ fontFamily: 'var(--font-playfair)' }}
+              style={{ fontFamily: 'var(--font-cal-sans)', fontWeight: 400 }}
             >
               Discover Paidha
             </h1>
@@ -77,7 +77,7 @@ export default function VisitPaidha() {
                 </div>
                 <h2 
                   className="text-3xl md:text-4xl font-bold text-[#1a1c1e] mb-4"
-                  style={{ fontFamily: 'var(--font-playfair)' }}
+                  style={{ fontFamily: 'var(--font-cal-sans)', fontWeight: 400 }}
                 >
                   Greetings from West Nile
                 </h2>
@@ -106,7 +106,7 @@ export default function VisitPaidha() {
             </div>
             <h2 
               className="text-4xl md:text-5xl font-bold text-[#1a1c1e] mb-4"
-              style={{ fontFamily: 'var(--font-playfair)' }}
+              style={{ fontFamily: 'var(--font-cal-sans)', fontWeight: 400 }}
             >
               Welcome to Paidha
             </h2>
@@ -188,7 +188,7 @@ export default function VisitPaidha() {
             </div>
             <h2 
               className="text-4xl md:text-5xl font-bold text-[#1a1c1e] mb-4"
-              style={{ fontFamily: 'var(--font-playfair)' }}
+              style={{ fontFamily: 'var(--font-cal-sans)', fontWeight: 400 }}
             >
               Suggested 2-Day Itinerary
             </h2>
@@ -198,7 +198,7 @@ export default function VisitPaidha() {
             <div className="bg-black/2 border border-black/10 rounded-lg p-8">
               <h3 
                 className="text-2xl md:text-3xl font-bold text-[#1a1c1e] mb-4"
-                style={{ fontFamily: 'var(--font-playfair)' }}
+                style={{ fontFamily: 'var(--font-cal-sans)', fontWeight: 400 }}
               >
                 Day 1
               </h3>
@@ -214,7 +214,7 @@ export default function VisitPaidha() {
             <div className="bg-black/2 border border-black/10 rounded-lg p-8">
               <h3 
                 className="text-2xl md:text-3xl font-bold text-[#1a1c1e] mb-4"
-                style={{ fontFamily: 'var(--font-playfair)' }}
+                style={{ fontFamily: 'var(--font-cal-sans)', fontWeight: 400 }}
               >
                 Day 2
               </h3>
@@ -241,7 +241,7 @@ export default function VisitPaidha() {
           </div>
           <h2 
             className="text-4xl md:text-5xl font-bold text-[#1a1c1e] mb-4"
-            style={{ fontFamily: 'var(--font-playfair)' }}
+            style={{ fontFamily: 'var(--font-cal-sans)', fontWeight: 400 }}
           >
             Why Visit Paidha?
           </h2>
@@ -276,7 +276,7 @@ function CategorySection({ title, description, images }: CategorySectionProps) {
         <div className="mb-12">
           <h2 
             className="text-4xl md:text-5xl font-bold text-[#1a1c1e] mb-4"
-            style={{ fontFamily: 'var(--font-playfair)' }}
+            style={{ fontFamily: 'var(--font-cal-sans)', fontWeight: 400 }}
           >
             {title}
           </h2>

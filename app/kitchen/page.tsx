@@ -187,7 +187,7 @@ export default function BarRestaurantPage() {
               </div>
               <h2 
                 className="text-4xl md:text-5xl font-bold text-[#1a1c1e] mb-4"
-                style={{ fontFamily: 'var(--font-playfair)' }}
+                style={{ fontFamily: 'var(--font-cal-sans)', fontWeight: 400 }}
               >
                 Our Drinks
               </h2>
@@ -226,7 +226,7 @@ export default function BarRestaurantPage() {
                     <div className="p-4">
                       <h3 
                         className="font-semibold text-lg text-[#1a1c1e]"
-                        style={{ fontFamily: 'var(--font-playfair)' }}
+                        style={{ fontFamily: 'var(--font-cal-sans)', fontWeight: 400 }}
                       >
                         {item.name}
                       </h3>
@@ -260,7 +260,7 @@ export default function BarRestaurantPage() {
               </div>
               <h2 
                 className="text-4xl md:text-5xl font-bold text-[#1a1c1e] mb-4"
-                style={{ fontFamily: 'var(--font-playfair)' }}
+                style={{ fontFamily: 'var(--font-cal-sans)', fontWeight: 400 }}
               >
                 Our Menu
               </h2>
@@ -299,7 +299,7 @@ export default function BarRestaurantPage() {
                     <div className="p-4">
                       <h3 
                         className="font-semibold text-lg text-[#1a1c1e]"
-                        style={{ fontFamily: 'var(--font-playfair)' }}
+                        style={{ fontFamily: 'var(--font-cal-sans)', fontWeight: 400 }}
                       >
                         {item.name}
                       </h3>

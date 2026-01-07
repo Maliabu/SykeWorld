@@ -348,7 +348,7 @@ export default function AuthTabs() {
                 <div className="border border-black/10 p-6 bg-white/50 backdrop-blur-sm">
                   <h3 
                     className="text-2xl font-bold text-[#1a1c1e] mb-2"
-                    style={{ fontFamily: 'var(--font-playfair)' }}
+                    style={{ fontFamily: 'var(--font-cal-sans)', fontWeight: 400 }}
                   >
                     Paidha
                   </h3>
@@ -373,7 +373,7 @@ export default function AuthTabs() {
                 <div className="border border-black/10 p-6 bg-white/50 backdrop-blur-sm">
                   <h3 
                     className="text-2xl font-bold text-[#1a1c1e] mb-2"
-                    style={{ fontFamily: 'var(--font-playfair)' }}
+                    style={{ fontFamily: 'var(--font-cal-sans)', fontWeight: 400 }}
                   >
                     Bar & Restaurant
                   </h3>

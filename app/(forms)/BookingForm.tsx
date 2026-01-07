@@ -104,7 +104,7 @@ export default function BookingForm() {
         </div>
         <h2 
           className="text-3xl md:text-4xl font-bold text-[#1a1c1e] mb-2"
-          style={{ fontFamily: 'var(--font-playfair)' }}
+          style={{ fontFamily: 'var(--font-cal-sans)', fontWeight: 400 }}
         >
           Check Availability
         </h2>
@@ -122,7 +122,7 @@ export default function BookingForm() {
           value={checkIn}
           onChange={(e) => setCheckIn(e.target.value)}
           min={today}
-          className="bg-transparent border border-gray-400/50 rounded-lg px-4 py-3 text-[#1a1c1e] placeholder-gray-500 focus:outline-none focus:border-amber-600 focus:ring-1 focus:ring-amber-600 transition-all w-full"
+          className="bg-transparent border border-gray-400/50 rounded px-4 py-3 text-[#1a1c1e] placeholder-gray-500 focus:outline-none focus:border-amber-600 focus:ring-1 focus:ring-amber-600 transition-all w-full"
           style={{ fontFamily: 'var(--font-inter)' }}
           required
         />
@@ -140,7 +140,7 @@ export default function BookingForm() {
           value={checkOut}
           onChange={(e) => setCheckOut(e.target.value)}
           min={checkIn || today}
-          className="bg-transparent border border-gray-400/50 rounded-lg px-4 py-3 text-[#1a1c1e] placeholder-gray-500 focus:outline-none focus:border-amber-600 focus:ring-1 focus:ring-amber-600 transition-all w-full"
+          className="bg-transparent border border-gray-400/50 rounded px-4 py-3 text-[#1a1c1e] placeholder-gray-500 focus:outline-none focus:border-amber-600 focus:ring-1 focus:ring-amber-600 transition-all w-full"
           style={{ fontFamily: 'var(--font-inter)' }}
           required
         />
@@ -158,7 +158,7 @@ export default function BookingForm() {
           min={1}
           value={guests}
           onChange={(e) => setGuests(parseInt(e.target.value) || 1)}
-          className="bg-transparent border border-gray-400/50 rounded-lg px-4 py-3 text-[#1a1c1e] placeholder-gray-500 focus:outline-none focus:border-amber-600 focus:ring-1 focus:ring-amber-600 transition-all w-full text-center"
+          className="bg-transparent border border-gray-400/50 rounded px-4 py-3 text-[#1a1c1e] placeholder-gray-500 focus:outline-none focus:border-amber-600 focus:ring-1 focus:ring-amber-600 transition-all w-full text-center"
           style={{ fontFamily: 'var(--font-inter)' }}
           required
         />
@@ -174,7 +174,7 @@ export default function BookingForm() {
         <select
           value={roomTypeId}
           onChange={(e) => setRoomTypeId(e.target.value)}
-          className="bg-transparent border border-gray-400/50 rounded-lg px-4 py-3 text-[#1a1c1e] focus:outline-none focus:border-amber-600 focus:ring-1 focus:ring-amber-600 transition-all w-full text-center cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          className="bg-transparent border border-gray-400/50 rounded px-4 py-3 text-[#1a1c1e] focus:outline-none focus:border-amber-600 focus:ring-1 focus:ring-amber-600 transition-all w-full text-center cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           style={{ fontFamily: 'var(--font-inter)' }}
           disabled={!checkIn || !checkOut || loadingRoomTypes}
         >

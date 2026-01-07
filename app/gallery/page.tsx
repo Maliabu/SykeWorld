@@ -70,7 +70,7 @@ export default function GalleryPage() {
           </div>
           <h1 
             className="text-4xl md:text-5xl font-bold text-[#1a1c1e] mb-4"
-            style={{ fontFamily: 'var(--font-playfair)' }}
+            style={{ fontFamily: 'var(--font-cal-sans)', fontWeight: 400 }}
           >
             Gallery
           </h1>
