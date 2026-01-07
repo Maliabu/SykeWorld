@@ -32,6 +32,8 @@ import { notifyAllAdmins } from "@/lib/actions/notifications";
 
 export async function getAllRooms() {
   try {
+    // Get all rooms with status 'available' only
+    // Note: We don't filter by active bookings here - that should be done when checking availability for specific dates
     const allRooms = await db
       .select({
         id: rooms.id,
@@ -47,16 +49,20 @@ export async function getAllRooms() {
         },
       })
       .from(rooms)
-      .innerJoin(roomTypes, eq(rooms.roomTypeId, roomTypes.id));
+      .innerJoin(roomTypes, eq(rooms.roomTypeId, roomTypes.id))
+      .where(eq(rooms.status, 'available'));
 
     // If no rooms, return empty array
     if (!allRooms || allRooms.length === 0) {
       return { success: true, rooms: [] };
     }
 
+    // Use all rooms (don't filter by bookings - that's for availability checking)
+    const filteredRooms = allRooms;
+
     // Get images and services for each room
     const roomsWithImages = await Promise.all(
-      allRooms.map(async (room) => {
+      filteredRooms.map(async (room) => {
         try {
           const images = await db
             .select()
@@ -301,6 +307,147 @@ export async function getAllRoomTypes() {
     return { success: true, roomTypes: types };
   } catch (error) {
     return { error: "Failed to fetch room types" };
+  }
+}
+
+export async function getAvailableRoomTypes(data: { checkIn?: string; checkOut?: string; guests?: number }) {
+  try {
+    const { checkIn, checkOut, guests } = data;
+    
+    // If dates are provided, filter by availability
+    if (checkIn && checkOut) {
+      const checkInDate = new Date(checkIn);
+      const checkOutDate = new Date(checkOut);
+      const checkInStr = checkInDate.toISOString().split("T")[0];
+      const checkOutStr = checkOutDate.toISOString().split("T")[0];
+      const guestsCount = guests || 1;
+
+      // Build where conditions for rooms
+      const whereConditions = [eq(rooms.status, "available")];
+      if (guestsCount && guestsCount > 0) {
+        whereConditions.push(gte(roomTypes.maxGuests, guestsCount));
+      }
+
+      // Get all available rooms matching criteria
+      const allRooms = await db
+        .select({
+          id: rooms.id,
+          roomTypeId: rooms.roomTypeId,
+          roomType: {
+            id: roomTypes.id,
+            name: roomTypes.name,
+            description: roomTypes.description,
+            basePrice: roomTypes.basePrice,
+            maxGuests: roomTypes.maxGuests,
+          },
+        })
+        .from(rooms)
+        .innerJoin(roomTypes, eq(rooms.roomTypeId, roomTypes.id))
+        .where(and(...whereConditions));
+
+      // Filter out rooms with overlapping bookings
+      const availableRooms = await Promise.all(
+        allRooms.map(async (room) => {
+          const overlappingBookings = await db
+            .select()
+            .from(bookings)
+            .where(
+              and(
+                eq(bookings.roomId, room.id),
+                or(
+                  eq(bookings.status, "confirmed"),
+                  eq(bookings.status, "checked_in")
+                ),
+                or(
+                  and(
+                    gte(bookings.checkIn, checkInStr),
+                    lte(bookings.checkIn, checkOutStr)
+                  ),
+                  and(
+                    gte(bookings.checkOut, checkInStr),
+                    lte(bookings.checkOut, checkOutStr)
+                  ),
+                  and(
+                    lte(bookings.checkIn, checkInStr),
+                    gte(bookings.checkOut, checkOutStr)
+                  )
+                )
+              )
+            );
+
+          return overlappingBookings.length === 0 ? room : null;
+        })
+      );
+
+      const filtered = availableRooms.filter((room) => room !== null);
+      
+      // Get unique room types that have at least one available room
+      const roomTypeMap = new Map();
+      filtered.forEach((room) => {
+        if (room && !roomTypeMap.has(room.roomType.id)) {
+          roomTypeMap.set(room.roomType.id, room.roomType);
+        }
+      });
+
+      const availableTypes = Array.from(roomTypeMap.values());
+      
+      // Get images for each room type (use first room's images)
+      const typesWithImages = await Promise.all(
+        availableTypes.map(async (roomType) => {
+          // Get first available room of this type for images
+          const firstRoom = filtered.find((r) => r && r.roomType.id === roomType.id);
+          if (firstRoom) {
+            const images = await db
+              .select()
+              .from(roomImages)
+              .where(eq(roomImages.roomId, firstRoom.id))
+              .limit(1);
+            
+            return {
+              ...roomType,
+              image: images[0]?.image || null,
+            };
+          }
+          return { ...roomType, image: null };
+        })
+      );
+
+      return { success: true, roomTypes: typesWithImages };
+    } else {
+      // If no dates provided, return all room types with images (for initial form load)
+      const allTypes = await db.select().from(roomTypes);
+      
+      // Get images for each room type (use first room of each type)
+      const typesWithImages = await Promise.all(
+        allTypes.map(async (roomType) => {
+          // Get first room of this type
+          const [firstRoom] = await db
+            .select({ id: rooms.id })
+            .from(rooms)
+            .where(eq(rooms.roomTypeId, roomType.id))
+            .limit(1);
+          
+          if (firstRoom) {
+            const images = await db
+              .select()
+              .from(roomImages)
+              .where(eq(roomImages.roomId, firstRoom.id))
+              .limit(1);
+            
+            return {
+              ...roomType,
+              image: images[0]?.image || null,
+            };
+          }
+          return { ...roomType, image: null };
+        })
+      );
+      
+      return { success: true, roomTypes: typesWithImages };
+    }
+  } catch (error: any) {
+    console.error("getAvailableRoomTypes error:", error);
+    return { error: "Failed to fetch available room types" };
   }
 }
 
@@ -701,6 +848,67 @@ export async function checkAvailability(data: unknown) {
     }
     console.error("checkAvailability error:", error);
     return { error: "Failed to check availability" };
+  }
+}
+
+export async function findAvailableRoomForType(data: { roomTypeId: string; checkIn: string; checkOut: string }) {
+  try {
+    const { roomTypeId, checkIn, checkOut } = data;
+    const checkInDate = new Date(checkIn);
+    const checkOutDate = new Date(checkOut);
+    const checkInStr = checkInDate.toISOString().split("T")[0];
+    const checkOutStr = checkOutDate.toISOString().split("T")[0];
+
+    // Get all available rooms of this type
+    const allRooms = await db
+      .select({
+        id: rooms.id,
+        roomNumber: rooms.roomNumber,
+      })
+      .from(rooms)
+      .where(and(
+        eq(rooms.roomTypeId, roomTypeId),
+        eq(rooms.status, "available")
+      ));
+
+    // Find first room without overlapping bookings
+    for (const room of allRooms) {
+      const overlappingBookings = await db
+        .select()
+        .from(bookings)
+        .where(
+          and(
+            eq(bookings.roomId, room.id),
+            or(
+              eq(bookings.status, "confirmed"),
+              eq(bookings.status, "checked_in")
+            ),
+            or(
+              and(
+                gte(bookings.checkIn, checkInStr),
+                lte(bookings.checkIn, checkOutStr)
+              ),
+              and(
+                gte(bookings.checkOut, checkInStr),
+                lte(bookings.checkOut, checkOutStr)
+              ),
+              and(
+                lte(bookings.checkIn, checkInStr),
+                gte(bookings.checkOut, checkOutStr)
+              )
+            )
+          )
+        );
+
+      if (overlappingBookings.length === 0) {
+        return { success: true, roomId: room.id };
+      }
+    }
+
+    return { error: "No available room found for this type and dates" };
+  } catch (error: any) {
+    console.error("findAvailableRoomForType error:", error);
+    return { error: "Failed to find available room" };
   }
 }
 

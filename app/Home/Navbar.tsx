@@ -60,6 +60,7 @@ function BookingTotalDisplay() {
 export default function Navbar() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [kitchenCardClosed, setKitchenCardClosed] = useState(false);
+  const [paidhaCardClosed, setPaidhaCardClosed] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const { data: session } = useSession();
   const pathname = usePathname();
@@ -150,7 +151,7 @@ export default function Navbar() {
                   className="w-8 h-6"
                 />
                 <div 
-                  className="text-2xl capitalize text-orange-400" 
+                  className="text-2xl capitalize text-[#1a1c1e]" 
                   style={{ 
                     fontFamily: "'Cooper Black', serif", 
                     letterSpacing: '0.01em',
@@ -255,12 +256,9 @@ export default function Navbar() {
             {/* Promotional Cards - Fixed positioned, overlay - Hidden on mobile */}
             <div className="hidden md:flex absolute left-8 top-full mt-2 items-center gap-4 z-50">
               {/* Paidha Card - Hidden on auth page */}
-              {pathname !== '/auth' && (
-              <Link 
-                href="/visit"
-                className="w-full max-w-[400px] group relative overflow-hidden rounded-lg p-4 backdrop-blur-md bg-black/2 border border-black/10 hover:bg-black/5 hover:border-black/20 transition-all duration-300"
-              >
-                <div className="relative z-10">
+              {pathname !== '/auth' && !paidhaCardClosed && (
+              <div className="w-full max-w-[400px] group relative overflow-hidden rounded-lg p-4 backdrop-blur-md bg-black/2 border border-black/10 hover:bg-black/5 hover:border-black/20 transition-all duration-300">
+                <Link href="/visit" className="relative z-10 block">
                   <div className="flex items-center mb-2">
                     <h3 
                       className="text-sm font-semibold text-[#1a1c1e] uppercase tracking-wider ml-2"
@@ -299,8 +297,22 @@ export default function Navbar() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                     </svg>
                   </div>
-                </div>
-              </Link>
+                </Link>
+                {/* Close Button - Only visible on hover */}
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setPaidhaCardClosed(true);
+                  }}
+                  className="absolute top-2 right-2 z-20 w-6 h-6 flex items-center justify-center rounded-full bg-black/50 hover:bg-black/70 text-white transition-all opacity-0 group-hover:opacity-100"
+                  aria-label="Close"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
               )}
 
               {/* Bar & Restaurant Card */}

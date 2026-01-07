@@ -97,7 +97,7 @@ export default function ServicesPage() {
             Our Services
           </h1>
           <p 
-            className="text-sm md:text-base text-gray-600 max-w-3xl mx-auto"
+            className="text-sm text-gray-600 max-w-3xl mx-auto"
             style={{ fontFamily: 'var(--font-inter)' }}
           >
             Everything you need for a perfect stay
@@ -125,7 +125,7 @@ export default function ServicesPage() {
             Recommended Rooms
           </h2>
           <p 
-            className="text-base text-gray-600"
+            className="text-sm text-gray-600"
             style={{ fontFamily: 'var(--font-inter)' }}
           >
             Handpicked selections for your perfect stay
@@ -137,36 +137,42 @@ export default function ServicesPage() {
             {topRooms.map((room) => (
               <div
                 key={room.id}
-                className="bg-black/2 border border-black/10 rounded-lg overflow-hidden hover:border-black/20 transition-all duration-300 transform hover:-translate-y-2 group"
+                className="bg-black/2 border border-black/10 rounded-lg overflow-hidden hover:border-black/20 transition-all duration-300 transform hover:-translate-y-2 group relative"
               >
-                <div className="relative h-64 overflow-hidden">
-                  <img
-                    src={room.images[0]?.image || "/images/default.jpg"}
-                    alt={room.roomType?.name || "Room"}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                  />
-                </div>
-                <div className="p-6">
-                  <h3 
-                    className="text-2xl font-bold text-[#1a1c1e] mb-2"
-                    style={{ fontFamily: 'var(--font-playfair)' }}
-                  >
-                    {room.roomType?.name}
-                  </h3>
-
-                  <div 
-                    className="text-2xl font-bold text-amber-600 mb-4"
-                    style={{ fontFamily: 'var(--font-inter)' }}
-                  >
-                    UGX {room.roomType?.basePrice?.toLocaleString()}/night
+                <div 
+                  className="absolute inset-0 opacity-[0.12] bg-cover bg-center bg-no-repeat pointer-events-none"
+                  style={{ backgroundImage: 'url(/images/bg.jpeg)' }}
+                />
+                <div className="relative z-10">
+                  <div className="relative h-64 overflow-hidden">
+                    <img
+                      src={room.images[0]?.image || "/images/default.jpg"}
+                      alt={room.roomType?.name || "Room"}
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    />
                   </div>
+                  <div className="p-6">
+                    <h3 
+                      className="text-2xl font-bold text-[#1a1c1e] mb-2"
+                      style={{ fontFamily: 'var(--font-playfair)' }}
+                    >
+                      {room.roomType?.name}
+                    </h3>
 
-                  <p 
-                    className="text-gray-600 leading-relaxed"
-                    style={{ fontFamily: 'var(--font-inter)' }}
-                  >
-                    {room.roomType?.description}
-                  </p>
+                    <div 
+                      className="text-2xl font-bold text-amber-600 mb-4"
+                      style={{ fontFamily: 'var(--font-inter)' }}
+                    >
+                      UGX {room.roomType?.basePrice?.toLocaleString()}/night
+                    </div>
+
+                    <p 
+                      className="text-gray-600 leading-relaxed"
+                      style={{ fontFamily: 'var(--font-inter)' }}
+                    >
+                      {room.roomType?.description}
+                    </p>
+                  </div>
                 </div>
               </div>
             ))}

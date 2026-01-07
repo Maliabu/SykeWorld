@@ -97,7 +97,7 @@ export default function AboutPage() {
               Welcome to Syke World
             </h1>
             <p 
-              className="text-sm md:text-base text-gray-600 max-w-3xl mx-auto leading-relaxed"
+              className="text-sm text-gray-600 max-w-3xl mx-auto leading-relaxed"
               style={{ fontFamily: 'var(--font-inter)' }}
             >
               A peaceful hideaway in the heart of Paidha — where hospitality,

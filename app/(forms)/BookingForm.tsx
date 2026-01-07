@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
-import { getAllRoomTypes } from "@/lib/actions/bookings";
+import { getAvailableRoomTypes } from "@/lib/actions/bookings";
 
 // Zod schema with more validations
 const bookingSchema = z
@@ -35,11 +35,16 @@ export default function BookingForm() {
   // Get today's date in YYYY-MM-DD format for min date
   const today = new Date().toISOString().split('T')[0];
 
-  // Fetch room types on mount
+  // Fetch available room types based on selected dates and guests
   useEffect(() => {
     const fetchRoomTypes = async () => {
       try {
-        const result = await getAllRoomTypes();
+        setLoadingRoomTypes(true);
+        const result = await getAvailableRoomTypes({
+          checkIn: checkIn || undefined,
+          checkOut: checkOut || undefined,
+          guests: guests || undefined,
+        });
         if (result.success && result.roomTypes) {
           setRoomTypes(result.roomTypes);
         }
@@ -50,7 +55,7 @@ export default function BookingForm() {
       }
     };
     fetchRoomTypes();
-  }, []);
+  }, [checkIn, checkOut, guests]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -117,7 +122,7 @@ export default function BookingForm() {
           value={checkIn}
           onChange={(e) => setCheckIn(e.target.value)}
           min={today}
-          className="bg-transparent border-b border-gray-400/50 px-0 py-3 text-[#1a1c1e] placeholder-gray-500 focus:outline-none focus:border-b-amber-600 transition-all"
+          className="bg-transparent border border-gray-400/50 rounded-lg px-4 py-3 text-[#1a1c1e] placeholder-gray-500 focus:outline-none focus:border-amber-600 focus:ring-1 focus:ring-amber-600 transition-all w-full"
           style={{ fontFamily: 'var(--font-inter)' }}
           required
         />
@@ -135,7 +140,7 @@ export default function BookingForm() {
           value={checkOut}
           onChange={(e) => setCheckOut(e.target.value)}
           min={checkIn || today}
-          className="bg-transparent border-b border-gray-400/50 px-0 py-3 text-[#1a1c1e] placeholder-gray-500 focus:outline-none focus:border-b-amber-600 transition-all"
+          className="bg-transparent border border-gray-400/50 rounded-lg px-4 py-3 text-[#1a1c1e] placeholder-gray-500 focus:outline-none focus:border-amber-600 focus:ring-1 focus:ring-amber-600 transition-all w-full"
           style={{ fontFamily: 'var(--font-inter)' }}
           required
         />
@@ -153,7 +158,7 @@ export default function BookingForm() {
           min={1}
           value={guests}
           onChange={(e) => setGuests(parseInt(e.target.value) || 1)}
-          className="bg-transparent border-b border-gray-400/50 px-0 py-3 text-[#1a1c1e] placeholder-gray-500 focus:outline-none focus:border-b-amber-600 transition-all w-full text-center"
+          className="bg-transparent border border-gray-400/50 rounded-lg px-4 py-3 text-[#1a1c1e] placeholder-gray-500 focus:outline-none focus:border-amber-600 focus:ring-1 focus:ring-amber-600 transition-all w-full text-center"
           style={{ fontFamily: 'var(--font-inter)' }}
           required
         />
@@ -169,19 +174,24 @@ export default function BookingForm() {
         <select
           value={roomTypeId}
           onChange={(e) => setRoomTypeId(e.target.value)}
-          className="bg-transparent border-b border-gray-400/50 px-0 py-3 text-[#1a1c1e] focus:outline-none focus:border-b-amber-600 transition-all w-full text-center cursor-pointer"
+          className="bg-transparent border border-gray-400/50 rounded-lg px-4 py-3 text-[#1a1c1e] focus:outline-none focus:border-amber-600 focus:ring-1 focus:ring-amber-600 transition-all w-full text-center cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           style={{ fontFamily: 'var(--font-inter)' }}
+          disabled={!checkIn || !checkOut || loadingRoomTypes}
         >
-          <option value="">All Room Types</option>
-          {loadingRoomTypes ? (
-            <option value="" disabled>Loading room types...</option>
-          ) : (
-            roomTypes.map((rt: any) => (
-              <option key={rt.id} value={rt.id}>
-                {rt.name}
-              </option>
-            ))
-          )}
+          <option value="">
+            {!checkIn || !checkOut 
+              ? "Select check-in and check-out dates first" 
+              : loadingRoomTypes
+              ? "Loading available room types..."
+              : roomTypes.length === 0
+              ? "No rooms available for selected dates"
+              : "All Room Types"}
+          </option>
+          {!loadingRoomTypes && roomTypes.map((rt: any) => (
+            <option key={rt.id} value={rt.id}>
+              {rt.name}
+            </option>
+          ))}
         </select>
       </div>
 

@@ -86,6 +86,8 @@ export default function Page() {
       getAllRooms()
         .then((result) => {
           if (result.success) {
+            console.log('✅ getAllRooms returned:', result.rooms?.length || 0, 'rooms');
+            console.log('Room types in data:', [...new Set(result.rooms?.map((r: any) => r.roomType?.name || r.roomType?.id))]);
             setRoomsData({ rooms: result.rooms || [] });
           } else {
             console.error("getAllRooms error:", result.error, result.details);
@@ -106,28 +108,48 @@ export default function Page() {
     });
   }, []);
 
-  // Map API → Room[]
+  // Map API → Room[] and group by room type (only show unique room types with available rooms)
   const rooms: Room[] = useMemo(() => {
     if (!roomsData?.rooms) return [];
 
-    return roomsData.rooms.map((r: any) => ({
-      id: r.id.toString(),
-      roomNumber: r.roomNumber,
-      floor: r.floor,
-      status: r.status,
-      roomType: {
-        id: Number(r.roomType.id),
-        name: r.roomType.name,
-        description: r.roomType.description || "",
-        basePrice: Number(r.roomType.basePrice),
-        maxGuests: r.roomType.maxGuests,
-        services: (r.roomType.services || []).map((s: any) => ({
-          id: Number(s.id),
-          name: s.name,
-          description: s.description || "",
-          icon: s.icon || undefined,
-        })),
-      },
+    // Debug: Log first room structure
+    if (roomsData.rooms.length > 0) {
+      console.log('First room structure:', JSON.stringify(roomsData.rooms[0], null, 2));
+      console.log('Room type structure:', roomsData.rooms[0]?.roomType);
+    }
+
+    // Map all rooms
+    const allRooms = roomsData.rooms.map((r: any) => {
+      // Debug: Log room structure
+      if (!r.roomType) {
+        console.warn('Room missing roomType:', r);
+      }
+      
+      // Handle roomType.id - it's a UUID string, keep it as string
+      const roomTypeId = r.roomType?.id;
+      
+      if (!roomTypeId) {
+        console.error('Room missing roomType.id:', r.id, 'Full room:', r);
+      }
+      
+      return {
+        id: r.id.toString(),
+        roomNumber: r.roomNumber,
+        floor: r.floor,
+        status: r.status,
+        roomType: {
+          id: roomTypeId || "", // Keep as string (UUID)
+          name: r.roomType?.name || "",
+          description: r.roomType?.description || "",
+          basePrice: Number(r.roomType?.basePrice || 0),
+          maxGuests: r.roomType?.maxGuests || 2,
+          services: (r.roomType?.services || []).map((s: any) => ({
+            id: Number(s.id),
+            name: s.name,
+            description: s.description || "",
+            icon: s.icon || undefined,
+          })),
+        },
       images: (r.images || []).map((img: any) => ({
         id: Number(img.id),
         image: img.image,
@@ -147,7 +169,45 @@ export default function Page() {
         avatar: rev.avatar || undefined,
         created_at: rev.created || new Date().toISOString(),
       })),
-    }));
+      };
+    });
+
+    // Group by room type ID and keep only one room per type (the first one with images if available)
+    // This shows room types, not individual rooms - users can book any room of that type
+    // Note: roomType.id is a UUID string, not a number
+    const roomTypeMap = new Map<string | number, Room>();
+    
+    allRooms.forEach((room: Room) => {
+      const roomTypeId = room.roomType.id;
+      
+      // Skip rooms with invalid room type IDs
+      if (!roomTypeId || roomTypeId === 0) {
+        console.warn('Skipping room with invalid roomType.id:', roomTypeId, room);
+        return;
+      }
+      
+      // Convert to string for consistent comparison (UUIDs are strings)
+      const roomTypeIdKey = String(roomTypeId);
+      
+      if (!roomTypeMap.has(roomTypeIdKey)) {
+        // First room of this type - add it
+        roomTypeMap.set(roomTypeIdKey, room);
+      } else {
+        // If current room has more images, use it instead
+        const existingRoom = roomTypeMap.get(roomTypeIdKey)!;
+        if (room.images.length > existingRoom.images.length) {
+          roomTypeMap.set(roomTypeIdKey, room);
+        }
+      }
+    });
+
+    // Debug: Log room types found
+    console.log('Room types found:', Array.from(roomTypeMap.keys()));
+    console.log('Total rooms before grouping:', allRooms.length);
+    console.log('Total room types after grouping:', roomTypeMap.size);
+
+    // Return unique room types only (showing all available room types)
+    return Array.from(roomTypeMap.values());
   }, [roomsData]);
 
   // Services for filters
@@ -246,7 +306,7 @@ export default function Page() {
             <p className="text-xs uppercase tracking-widest text-black/60 font-medium" style={{ fontFamily: 'var(--font-inter)' }}>
               Accommodations
             </p>
-            <div className="h-px w-12 bg-white/50"></div>
+            <div className="h-px w-12 bg-black/20"></div>
           </div>
           <h1 
             className="text-4xl md:text-5xl font-bold text-[#1a1c1e] mb-4"
@@ -255,7 +315,7 @@ export default function Page() {
             Our Rooms
           </h1>
           <p 
-            className="text-sm md:text-base text-gray-600 max-w-3xl mx-auto leading-relaxed"
+            className="text-sm text-gray-600 max-w-3xl mx-auto leading-relaxed"
             style={{ fontFamily: 'var(--font-inter)' }}
           >
             Choose your perfect stay — luxury, comfort, family-friendly, and more. Each room is thoughtfully designed for your comfort.
@@ -264,7 +324,12 @@ export default function Page() {
 
         <div className="mt-16 grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Filters */}
-          <div className="p-6 border-l border-r border-black/10 flex flex-col justify-between h-full">
+          <div className="p-6 bg-white flex flex-col justify-between h-full relative overflow-hidden">
+            <div 
+              className="absolute inset-0 opacity-[0.08] bg-cover bg-center bg-no-repeat pointer-events-none"
+              style={{ backgroundImage: 'url(/images/bg.jpeg)' }}
+            />
+            <div className="relative z-10 flex flex-col justify-between h-full">
             <div>
               <div className="mb-6">
                 <div className="flex items-center gap-3 mb-4">
@@ -327,11 +392,12 @@ export default function Page() {
                 ))}
               </div>
             </div>
+            </div>
 
           </div>
 
           {/* Rooms */}
-          <div className="md:col-span-3 space-y-20">
+          <div className="md:col-span-3 space-y-8">
             {filteredRooms.length === 0 && (
               <div className="p-6 border-l border-r border-black/10 text-center text-gray-600" style={{ fontFamily: 'var(--font-inter)' }}>
                 No rooms match your filters.
@@ -341,16 +407,22 @@ export default function Page() {
             {filteredRooms.map((room, index) => (
               <div
                 key={index}
-                className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start p-8 border-l border-r border-black/10 hover:border-black/20 transition-all"
+                className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start bg-white transition-all relative overflow-hidden"
               >
-                <Carousel
-                  images={room.images?.map((img) => img.image) || []}
+                <div 
+                  className="absolute inset-0 opacity-[0.10] bg-cover bg-center bg-no-repeat pointer-events-none"
+                  style={{ backgroundImage: 'url(/images/bg.jpeg)' }}
                 />
+                <div className="relative z-10">
+                  <Carousel
+                    images={room.images?.map((img) => img.image) || []}
+                  />
+                </div>
 
-                <div className="space-y-6">
+                <div className="space-y-6 p-8 relative z-10">
                   <div>
                     <h2 
-                      className="text-4xl md:text-5xl font-bold text-[#1a1c1e] mb-2"
+                      className="text-3xl md:text-4xl font-bold text-[#1a1c1e] mb-2"
                       style={{ fontFamily: 'var(--font-playfair)' }}
                     >
                       {room.roomType?.name}
@@ -400,7 +472,7 @@ export default function Page() {
                   </div>
 
                   <p 
-                    className="text-gray-600 leading-relaxed"
+                    className="text-xs text-gray-600 leading-relaxed"
                     style={{ fontFamily: 'var(--font-inter)' }}
                   >
                     {room.roomType?.description}
@@ -419,8 +491,8 @@ export default function Page() {
                   </div>
 
                   <a
-                    href={`/booking?room=${encodeURIComponent(
-                      room.roomType?.name || ""
+                    href={`/booking?roomTypeId=${room.roomType?.id ?? ""}&roomTypeName=${encodeURIComponent(
+                      room.roomType?.name ?? ""
                     )}`}
                     className="inline-block mt-4 bg-amber-600 hover:bg-amber-700 text-white px-6 py-3 text-sm font-medium tracking-wide uppercase transition"
                     style={{ fontFamily: 'var(--font-inter)' }}

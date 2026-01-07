@@ -42,7 +42,7 @@ export default function Home() {
       <Hero />
 
       {/* Luxury Section */}
-      <section className="py-24 md:py-32 bg-[#fafafa]" id="next-section">
+      <section className="pt-12 md:pt-16 pb-24 md:pb-32 bg-[#fafafa]" id="next-section">
         <Container>
           <div className="text-center mb-16">
             <div className="flex items-center justify-center gap-3 mb-4">
@@ -59,7 +59,7 @@ export default function Home() {
               Experience Luxury
             </h2>
             <p 
-              className="text-sm md:text-base text-gray-600 max-w-2xl mx-auto leading-relaxed"
+              className="text-sm text-gray-600 max-w-2xl mx-auto leading-relaxed"
               style={{ fontFamily: 'var(--font-inter)' }}
             >
               Discover our elegant spaces designed for your comfort and relaxation
@@ -69,8 +69,8 @@ export default function Home() {
           {/* Alternating Image-Text Layout */}
           <div className="space-y-16 md:space-y-24">
             {/* First: Image Right, Text Left */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-center">
-              <div className="flex flex-col justify-center space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-16 items-start">
+              <div className="md:col-span-4 flex flex-col justify-start space-y-8">
                 <h3 
                   className="text-4xl md:text-5xl font-bold text-[#1a1c1e] leading-tight"
                   style={{ fontFamily: 'var(--font-playfair)' }}
@@ -87,28 +87,40 @@ export default function Home() {
                     SLEEPING ARRANGEMENTS
                   </h4>
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="border border-gray-300/50 p-4 space-y-3">
-                      <div className="w-6 h-6 text-gray-500">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                        </svg>
-                      </div>
-                      <div>
-                        <p className="text-[#1a1c1e] font-medium mb-1" style={{ fontFamily: 'var(--font-inter)' }}>BEDROOM AREA</p>
-                        <p className="text-gray-500 text-sm" style={{ fontFamily: 'var(--font-inter)' }}>1 king-size bed</p>
-                        <p className="text-gray-500 text-sm" style={{ fontFamily: 'var(--font-inter)' }}>1 designer lounge sofa</p>
+                    <div className="border border-gray-300/50 rounded-lg p-4 space-y-3 relative overflow-hidden">
+                      <div 
+                        className="absolute inset-0 opacity-[0.08] bg-cover bg-center bg-no-repeat pointer-events-none"
+                        style={{ backgroundImage: 'url(/images/bg.jpeg)' }}
+                      />
+                      <div className="relative z-10">
+                        <div className="w-6 h-6 text-gray-500">
+                          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="text-[#1a1c1e] font-medium mb-1" style={{ fontFamily: 'var(--font-inter)' }}>BEDROOM AREA</p>
+                          <p className="text-gray-500 text-sm" style={{ fontFamily: 'var(--font-inter)' }}>1 king-size bed</p>
+                          <p className="text-gray-500 text-sm" style={{ fontFamily: 'var(--font-inter)' }}>1 designer lounge sofa</p>
+                        </div>
                       </div>
                     </div>
-                    <div className="border border-gray-300/50 p-4 space-y-3">
-                      <div className="w-6 h-6 text-gray-500">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-                        </svg>
-                      </div>
-                      <div>
-                        <p className="text-[#1a1c1e] font-medium mb-1" style={{ fontFamily: 'var(--font-inter)' }}>BATHROOM</p>
-                        <p className="text-gray-500 text-sm" style={{ fontFamily: 'var(--font-inter)' }}>1 spa-inspired en-suite</p>
-                        <p className="text-gray-500 text-sm" style={{ fontFamily: 'var(--font-inter)' }}>Rain shower & heated floors</p>
+                    <div className="border border-gray-300/50 rounded-lg p-4 space-y-3 relative overflow-hidden">
+                      <div 
+                        className="absolute inset-0 opacity-[0.08] bg-cover bg-center bg-no-repeat pointer-events-none"
+                        style={{ backgroundImage: 'url(/images/bg.jpeg)' }}
+                      />
+                      <div className="relative z-10">
+                        <div className="w-6 h-6 text-gray-500">
+                          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="text-[#1a1c1e] font-medium mb-1" style={{ fontFamily: 'var(--font-inter)' }}>BATHROOM</p>
+                          <p className="text-gray-500 text-sm" style={{ fontFamily: 'var(--font-inter)' }}>1 spa-inspired en-suite</p>
+                          <p className="text-gray-500 text-sm" style={{ fontFamily: 'var(--font-inter)' }}>Rain shower & heated floors</p>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -145,63 +157,43 @@ export default function Home() {
                   </div>
                 </div>
               </div>
-              <div className="relative group overflow-hidden -mx-4 md:mx-0">
-                <div className="aspect-[4/3] overflow-hidden">
-                  <img
-                    src="/images/pexels-creative-vix-370984.jpg"
-                    alt="Luxury Suites"
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                  />
-                </div>
-                {/* Overlay Card */}
-                <div className="absolute top-4 right-4 max-w-[300px] z-10">
-                  <div className="bg-white/90 backdrop-blur-sm rounded-lg p-4 border border-black/10">
-                    <h4 
-                      className="text-xl font-bold text-[#1a1c1e] mb-1"
-                      style={{ fontFamily: 'var(--font-playfair)' }}
-                    >
-                      Luxury Suites
-                    </h4>
-                    <p 
-                      className="text-sm text-gray-600"
-                      style={{ fontFamily: 'var(--font-inter)' }}
-                    >
-                      Elegant accommodations for your comfort
-                    </p>
-                  </div>
+              <div className="md:col-span-8 space-y-8 -mx-4 md:mx-0 border border-black/10 rounded-lg p-[10%]">
+                <div className="grid grid-cols-3 grid-rows-auto gap-4 auto-rows-[150px] grid-flow-dense">
+                  {[
+                    "/images/pexels-creative-vix-370984.jpg",
+                    "/images/lobby.png",
+                    "/images/bg-3.jpg",
+                    "/images/pexels-creative-vix-370984.jpg",
+                    "/images/lobby.png"
+                  ].map((img, idx) => {
+                    const rowSpans = ["row-span-2", "row-span-3", "row-span-1", "row-span-2", "row-span-2"];
+                    return (
+                      <div
+                        key={idx}
+                        className={`overflow-hidden rounded-lg border border-black/10 transform hover:scale-105 transition-all duration-500 hover:border-black/20 cursor-pointer group ${
+                          rowSpans[idx % rowSpans.length]
+                        }`}
+                      >
+                        <img
+                          src={img}
+                          alt={`Luxury Suites ${idx + 1}`}
+                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                          onError={(e) => {
+                            if (!e.currentTarget.src.includes('data:image')) {
+                              e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Crect fill='%23333' width='400' height='300'/%3E%3Ctext fill='%239ca3af' font-family='sans-serif' font-size='18' x='50%25' y='50%25' text-anchor='middle' dy='.3em'%3ENo Image%3C/text%3E%3C/svg%3E";
+                            }
+                          }}
+                        />
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
 
-            {/* Second: Image Left, Text Right */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-center">
-              <div className="relative group overflow-hidden order-2 md:order-1 -mx-4 md:mx-0">
-                <div className="aspect-[4/3] overflow-hidden">
-                  <img
-                    src="/images/lobby.png"
-                    alt="Elegant Lobby"
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                  />
-                </div>
-                {/* Overlay Card */}
-                <div className="absolute top-4 right-4 max-w-[300px] z-10">
-                  <div className="bg-white/90 backdrop-blur-sm rounded-lg p-4 border border-black/10">
-                    <h4 
-                      className="text-xl font-bold text-[#1a1c1e] mb-1"
-                      style={{ fontFamily: 'var(--font-playfair)' }}
-                    >
-                      Elegant Lobby
-                    </h4>
-                    <p 
-                      className="text-sm text-gray-600"
-                      style={{ fontFamily: 'var(--font-inter)' }}
-                    >
-                      Timeless elegance meets contemporary design
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="flex flex-col justify-center order-1 md:order-2 space-y-8">
+            {/* Second: Text Above Images */}
+            <div className="flex flex-col gap-8 md:gap-16 max-w-5xl mx-auto">
+              <div className="flex flex-col space-y-8 text-center">
                 <h3 
                   className="text-4xl md:text-5xl font-bold text-[#1a1c1e] leading-tight"
                   style={{ fontFamily: 'var(--font-playfair)' }}
@@ -217,31 +209,61 @@ export default function Home() {
                   >
                     LOBBY FEATURES
                   </h4>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-12 gap-6">
                     {[
                       { icon: "M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z", label: "Soaring ceilings with grand architecture" },
                       { icon: "M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z", label: "Bespoke furnishings & curated art" },
                       { icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z", label: "24/7 concierge service" },
                       { icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01", label: "Restaurant reservations & local excursions" },
                       { icon: "M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4", label: "Timeless elegance & contemporary design" }
-                    ].map((item, idx) => (
-                      <div key={idx} className="flex flex-col items-center text-center space-y-2">
-                        <div className="w-8 h-8 text-gray-500">
-                          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className="w-full h-full">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
-                          </svg>
+                    ].map((item, idx) => {
+                      const colSpans = ["lg:col-span-2", "lg:col-span-2", "lg:col-span-2", "lg:col-span-3", "lg:col-span-3"];
+                      return (
+                        <div key={idx} className={`flex flex-col items-center text-center space-y-2 ${colSpans[idx]}`}>
+                          <div className="w-8 h-8 text-gray-500">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className="w-full h-full">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
+                            </svg>
+                          </div>
+                          <p className="text-gray-600 text-xs" style={{ fontFamily: 'var(--font-inter)' }}>{item.label}</p>
                         </div>
-                        <p className="text-gray-600 text-xs" style={{ fontFamily: 'var(--font-inter)' }}>{item.label}</p>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
+                </div>
+              </div>
+              <div className="space-y-8 -mx-4 md:mx-0">
+                <div className="grid grid-cols-3 gap-4">
+                  {[
+                    "/images/lobby.png",
+                    "/images/pexels-creative-vix-370984.jpg",
+                    "/images/bg-3.jpg",
+                    "/images/lobby.png",
+                    "/images/pexels-creative-vix-370984.jpg"
+                  ].map((img, idx) => (
+                    <div
+                      key={idx}
+                      className="overflow-hidden rounded-lg border border-black/10 transform hover:scale-105 transition-all duration-500 hover:border-black/20 cursor-pointer group aspect-square"
+                    >
+                      <img
+                        src={img}
+                        alt={`Elegant Lobby ${idx + 1}`}
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        onError={(e) => {
+                          if (!e.currentTarget.src.includes('data:image')) {
+                            e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Crect fill='%23333' width='400' height='300'/%3E%3Ctext fill='%239ca3af' font-family='sans-serif' font-size='18' x='50%25' y='50%25' text-anchor='middle' dy='.3em'%3ENo Image%3C/text%3E%3C/svg%3E";
+                          }
+                        }}
+                      />
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
 
             {/* Third: Image Right, Text Left */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-center">
-              <div className="flex flex-col justify-center space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-16 items-start">
+              <div className="md:col-span-4 flex flex-col justify-start space-y-8">
                 <h3 
                   className="text-4xl md:text-5xl font-bold text-[#1a1c1e] leading-tight"
                   style={{ fontFamily: 'var(--font-playfair)' }}
@@ -279,30 +301,36 @@ export default function Home() {
                   </div>
                 </div>
               </div>
-              <div className="relative group overflow-hidden -mx-4 md:mx-0">
-                <div className="aspect-[4/3] overflow-hidden">
-                  <img
-                    src="/images/bg-3.jpg"
-                    alt="Premium Amenities"
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                  />
-                </div>
-                {/* Overlay Card */}
-                <div className="absolute top-4 right-4 max-w-[300px] z-10">
-                  <div className="bg-white/90 backdrop-blur-sm rounded-lg p-4 border border-black/10">
-                    <h4 
-                      className="text-xl font-bold text-[#1a1c1e] mb-1"
-                      style={{ fontFamily: 'var(--font-playfair)' }}
-                    >
-                      Premium Amenities
-                    </h4>
-                    <p 
-                      className="text-sm text-gray-600"
-                      style={{ fontFamily: 'var(--font-inter)' }}
-                    >
-                      World-class facilities at your service
-                    </p>
-                  </div>
+              <div className="md:col-span-8 space-y-8 -mx-4 md:mx-0 border border-black/10 rounded-lg p-[10%]">
+                <div className="grid grid-cols-3 grid-rows-auto gap-4 auto-rows-[150px] grid-flow-dense">
+                  {[
+                    "/images/bg-3.jpg",
+                    "/images/pexels-creative-vix-370984.jpg",
+                    "/images/lobby.png",
+                    "/images/bg-3.jpg",
+                    "/images/pexels-creative-vix-370984.jpg"
+                  ].map((img, idx) => {
+                    const rowSpans = ["row-span-2", "row-span-3", "row-span-1", "row-span-2", "row-span-2"];
+                    return (
+                      <div
+                        key={idx}
+                        className={`overflow-hidden rounded-lg border border-black/10 transform hover:scale-105 transition-all duration-500 hover:border-black/20 cursor-pointer group ${
+                          rowSpans[idx % rowSpans.length]
+                        }`}
+                      >
+                        <img
+                          src={img}
+                          alt={`Premium Amenities ${idx + 1}`}
+                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                          onError={(e) => {
+                            if (!e.currentTarget.src.includes('data:image')) {
+                              e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Crect fill='%23333' width='400' height='300'/%3E%3Ctext fill='%239ca3af' font-family='sans-serif' font-size='18' x='50%25' y='50%25' text-anchor='middle' dy='.3em'%3ENo Image%3C/text%3E%3C/svg%3E";
+                            }
+                          }}
+                        />
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -332,16 +360,16 @@ export default function Home() {
               Explore Paidha
             </h2>
             <p 
-              className="text-sm md:text-base text-gray-600 max-w-2xl mx-auto leading-relaxed"
+              className="text-sm text-gray-600 max-w-2xl mx-auto leading-relaxed"
               style={{ fontFamily: 'var(--font-inter)' }}
             >
               Discover the beauty around us
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-center">
-            {/* Left: Features with Icons */}
-            <div className="flex flex-col justify-center space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-16 items-start">
+            {/* Left: Features with Icons - 4 columns */}
+            <div className="md:col-span-4 flex flex-col justify-start space-y-8">
               <h3 
               className="text-4xl md:text-5xl font-bold text-[#1a1c1e] leading-tight"
               style={{ fontFamily: 'var(--font-playfair)' }}
@@ -352,7 +380,7 @@ export default function Home() {
               {/* Paidha Features */}
               <div className="space-y-4">
                 <h4 
-                  className="text-sm uppercase tracking-widest text-white font-medium"
+                  className="text-sm uppercase tracking-widest text-[#1a1c1e] font-medium"
                   style={{ fontFamily: 'var(--font-inter)' }}
                 >
                   LOCAL ATTRACTIONS
@@ -391,65 +419,37 @@ export default function Home() {
               </Link>
             </div>
 
-            {/* Right: Images */}
-            <div className="space-y-8 -mx-4 md:mx-0">
-              {/* Large image */}
-              <div className="relative group overflow-hidden h-[400px]">
-                <img
-                  src="/images/weather.jpg"
-                  alt="Explore Paidha"
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                />
-                {/* Overlay Card */}
-                <div className="absolute top-4 right-4 max-w-[300px] z-10">
-                  <div className="bg-white/90 backdrop-blur-sm rounded-lg p-4 border border-black/10">
-                    <h4 
-                      className="text-xl font-bold text-[#1a1c1e] mb-1"
-                      style={{ fontFamily: 'var(--font-playfair)' }}
+            {/* Right: Images Grid - 8 columns */}
+            <div className="md:col-span-8 space-y-8 -mx-4 md:mx-0 border border-black/10 rounded-lg p-4">
+              <div className="grid grid-cols-3 grid-rows-auto gap-4 auto-rows-[150px] grid-flow-dense">
+                {[
+                  "/images/weather.jpg",
+                  "/images/pba.jpg",
+                  "/images/hat.jpg",
+                  "/images/music.jpg",
+                  "/images/craft.jpg"
+                ].map((img, idx) => {
+                  const rowSpans = ["row-span-2", "row-span-3", "row-span-1", "row-span-2", "row-span-2"];
+                  return (
+                    <div
+                      key={idx}
+                      className={`overflow-hidden rounded-lg border border-black/10 transform hover:scale-105 transition-all duration-500 hover:border-black/20 cursor-pointer group ${
+                        rowSpans[idx % rowSpans.length]
+                      }`}
                     >
-                      Discover Paidha
-                    </h4>
-                    <p 
-                      className="text-sm text-gray-600"
-                      style={{ fontFamily: 'var(--font-inter)' }}
-                    >
-                      The Hidden Gem of West Nile
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Two stacked images */}
-              <div className="grid grid-cols-2 gap-4 md:gap-8">
-                {[ 
-                  { src: "/images/pba.jpg", title: "Local Culture", desc: "Rich Alur heritage" },
-                  { src: "/images/hat.jpg", title: "Natural Beauty", desc: "Scenic landscapes" }
-                ].map((item, idx) => (
-                  <div key={idx} className="relative group overflow-hidden h-64">
-                    <img
-                      src={item.src}
-                      alt="Explore Paidha"
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                    />
-                    {/* Overlay Card */}
-                    <div className="absolute top-4 right-4 max-w-[300px] z-10">
-                      <div className="bg-white/50 backdrop-blur-sm rounded-lg p-4 border border-white/10">
-                        <h4 
-                          className="text-xl font-bold text-black mb-1"
-                          style={{ fontFamily: 'var(--font-playfair)' }}
-                        >
-                          {item.title}
-                        </h4>
-                        <p 
-                          className="text-sm text-stone-800"
-                          style={{ fontFamily: 'var(--font-inter)' }}
-                        >
-                          {item.desc}
-                        </p>
-                      </div>
+                      <img
+                        src={img}
+                        alt={`Paidha attraction ${idx + 1}`}
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        onError={(e) => {
+                          if (!e.currentTarget.src.includes('data:image')) {
+                            e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Crect fill='%23333' width='400' height='300'/%3E%3Ctext fill='%239ca3af' font-family='sans-serif' font-size='18' x='50%25' y='50%25' text-anchor='middle' dy='.3em'%3ENo Image%3C/text%3E%3C/svg%3E";
+                          }
+                        }}
+                      />
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>

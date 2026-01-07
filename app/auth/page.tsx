@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSession, signIn, signOut } from "next-auth/react";
+import { useSession as useNextAuthSession, signIn, signOut } from "next-auth/react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { login, registerGuest, googleLogin } from "@/lib/actions/auth";
 import { useRouter } from "next/navigation";
+import { useSession as useCustomSession } from "@/lib/hooks/useSession";
 
 const SignInSchema = z.object({
   email: z.string().email(),
@@ -26,8 +27,12 @@ const SignUpSchema = z
   });
 
 export default function AuthTabs() {
-  const { data: session, status } = useSession();
+  const { data: nextAuthSession, status: nextAuthStatus } = useNextAuthSession();
+  const { user: customUser, loading: customSessionLoading, refetch: refetchCustomSession } = useCustomSession();
   const router = useRouter();
+  
+  // Check if user is signed in via either method
+  const isSignedIn = (nextAuthStatus === "authenticated") || !!customUser;
 
   const [tab, setTab] = useState<"signin" | "signup">("signin");
 
@@ -48,9 +53,9 @@ export default function AuthTabs() {
   // GOOGLE LOGIN → Exchange idToken for Next.js JWTs (once)
   // -----------------------
   useEffect(() => {
-    if (status !== "authenticated") return;
+    if (nextAuthStatus !== "authenticated") return;
 
-    const idToken = (session as any)?.user?.idToken;
+    const idToken = (nextAuthSession as any)?.user?.idToken;
     if (!idToken) return;
 
     // Prevent infinite retry loop
@@ -74,6 +79,9 @@ export default function AuthTabs() {
         localStorage.setItem("google_exchanged", "yes");
         toast.success("Signed in with Google successfully!");
         
+        // Refetch custom session to get user data
+        await refetchCustomSession();
+        
         // Redirect to home or booking page
         setTimeout(() => {
           router.push("/");
@@ -85,7 +93,7 @@ export default function AuthTabs() {
       }
     })();
     // Only run when session/status change
-  }, [status, session, router]);
+  }, [nextAuthStatus, nextAuthSession, router, refetchCustomSession]);
 
   // -----------------------
   // EMAIL/PASSWORD SIGN-IN
@@ -110,6 +118,13 @@ export default function AuthTabs() {
 
       if (result.success) {
         toast.success("Logged in successfully!");
+        // Refetch session to get user data
+        try {
+          await refetchCustomSession();
+        } catch (sessionError) {
+          console.error("Error refetching session:", sessionError);
+          // Continue anyway - cookies are set
+        }
         // Redirect to home or booking page
         setTimeout(() => {
           router.push("/");
@@ -164,6 +179,8 @@ export default function AuthTabs() {
         });
 
         if (loginResult.success) {
+          // Refetch session to get user data
+          await refetchCustomSession();
           setTimeout(() => {
             router.push("/");
             router.refresh();
@@ -183,7 +200,23 @@ export default function AuthTabs() {
   // -----------------------
   // If logged in (Google OR email/pass)
   // -----------------------
-  if (status === "authenticated") {
+  // Show loading state while checking sessions
+  if (nextAuthStatus === "loading" || customSessionLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#fafafa]">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600"></div>
+          <p className="mt-4 text-gray-600" style={{ fontFamily: 'var(--font-inter)' }}>
+            Loading...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isSignedIn) {
+    const userEmail = customUser?.email || (nextAuthSession as any)?.user?.email || "User";
+    
     return (
       <div className="min-h-screen relative overflow-hidden">
         {/* Background gradients matching dashboard */}
@@ -225,7 +258,9 @@ export default function AuthTabs() {
               {/* Auth status */}
               <div className="max-w-md w-full">
                 <div className="bg-transparent p-6 border-l border-r border-black/10 text-center">
-                  <p className="mb-4 text-[#1a1c1e]" style={{ fontFamily: 'var(--font-inter)' }}>{`Signed in as ${(session as any)?.user?.email || "User"}`}</p>
+                  <p className="mb-4 text-[#1a1c1e]" style={{ fontFamily: 'var(--font-inter)' }}>
+                    {`Signed in as ${userEmail}`}
+                  </p>
 
                   <button
                     onClick={async () => {
@@ -237,7 +272,7 @@ export default function AuthTabs() {
                       localStorage.removeItem("refresh");
                       localStorage.removeItem("google_exchanged");
                       // Sign out from NextAuth if used
-                      if (status === "authenticated") {
+                      if (nextAuthStatus === "authenticated") {
                         signOut();
                       }
                       toast.success("Signed out successfully");

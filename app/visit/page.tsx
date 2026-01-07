@@ -112,7 +112,7 @@ export default function VisitPaidha() {
             </h2>
           </div>
           <p 
-            className="text-sm md:text-base text-gray-600 leading-relaxed max-w-3xl mx-auto text-center"
+            className="text-sm text-gray-600 leading-relaxed max-w-3xl mx-auto text-center"
             style={{ fontFamily: 'var(--font-inter)' }}
           >
             Paidha is a vibrant border town in the Zombo District of West Nile,
@@ -297,7 +297,7 @@ function CategorySection({ title, description, images }: CategorySectionProps) {
               <img
                 src={url}
                 alt={`${title} image ${i + 1}`}
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                className="w-full h-full object-cover rounded-lg transition-transform duration-700 group-hover:scale-110"
               />
             </div>
           ))}

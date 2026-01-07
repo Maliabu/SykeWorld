@@ -36,7 +36,7 @@ export default function Hero() {
             
             {/* Description Text */}
             <p 
-              className="text-sm md:text-base text-gray-600 max-w-2xl mx-auto leading-relaxed"
+              className="text-sm text-gray-600 max-w-2xl mx-auto leading-relaxed"
               style={{ fontFamily: 'var(--font-inter)' }}
             >
               Where luxury meets serenity. Experience unparalleled comfort and exceptional service in the heart of elegance. Your perfect escape awaits.
@@ -87,7 +87,7 @@ export default function Hero() {
           </div>
           
           {/* Booking Form for Small/Medium: Positioned below hero with small overlap */}
-          <div className="relative -mt-16 md:-mt-20 mb-8 md:mb-12 md:block lg:hidden">
+          <div className="relative -mt-16 md:-mt-20 mb-4 md:mb-6 md:block lg:hidden">
             <div className="w-full max-w-md mx-auto px-4">
               <div className="backdrop-blur-md bg-white/90 border-l border-r border-black/10">
                 <BookingForm />

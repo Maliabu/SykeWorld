@@ -75,34 +75,36 @@ export default function GalleryPage() {
             Gallery
           </h1>
           <p 
-            className="text-sm md:text-base text-gray-600 max-w-3xl mx-auto leading-relaxed"
+            className="text-sm text-gray-600 max-w-3xl mx-auto leading-relaxed"
             style={{ fontFamily: 'var(--font-inter)' }}
           >
             Explore our beautiful spaces and amenities
           </p>
         </div>
 
-        <div className="flex flex-col md:flex-row gap-8">
-          {/* Categories Sidebar */}
-          <div className="md:w-1/4 flex flex-col gap-0">
-            {categories.map((cat, idx) => (
-              <button
-                key={cat.id ?? `cat-${idx}`}
-                onClick={() => setActiveCategory(cat.name)}
-                className={`text-left px-6 py-4 font-medium transition-all ${
-                  activeCategory === cat.name
-                    ? "bg-amber-600 text-white"
-                    : "text-[#1a1c1e] border-t border-b border-black/10 hover:bg-black/5 hover:border-black/20"
-                }`}
-                style={{ fontFamily: 'var(--font-inter)' }}
-              >
-                {cat.name}
-              </button>
-            ))}
+        <div className="flex flex-col gap-8">
+          {/* Categories Tabs - Horizontal Scrollable Row */}
+          <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
+            <div className="flex gap-2 min-w-max md:flex-wrap md:min-w-0">
+              {categories.map((cat, idx) => (
+                <button
+                  key={cat.id ?? `cat-${idx}`}
+                  onClick={() => setActiveCategory(cat.name)}
+                  className={`whitespace-nowrap px-6 py-3 font-medium transition-all rounded-lg ${
+                    activeCategory === cat.name
+                      ? "bg-amber-600 text-white"
+                      : "text-[#1a1c1e] border border-black/10 hover:bg-black/5 hover:border-black/20"
+                  }`}
+                  style={{ fontFamily: 'var(--font-inter)' }}
+                >
+                  {cat.name}
+                </button>
+              ))}
+            </div>
           </div>
 
-          {/* Images Grid */}
-          <div className="md:w-3/4">
+          {/* Images Grid - Full Width */}
+          <div className="w-full">
             {activeImages.length > 0 ? (
               <div className="grid grid-cols-3 grid-rows-auto gap-4 auto-rows-[150px] grid-flow-dense">
                 {activeImages

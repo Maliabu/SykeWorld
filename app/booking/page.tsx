@@ -5,7 +5,7 @@ import { toast, Toaster } from "sonner";
 import { FaStar, FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import Container from "../Home/Container";
 import Link from "next/link";
-import { getAllRooms, createBooking } from "@/lib/actions/bookings";
+import { getAvailableRoomTypes, createBooking, findAvailableRoomForType } from "@/lib/actions/bookings";
 import { useSession as useCustomSession } from "@/lib/hooks/useSession";
 import { useSession as useNextAuthSession, signOut } from "next-auth/react";
 import { AlertCircle } from "lucide-react";
@@ -102,36 +102,44 @@ function BookingPageContent() {
     });
   }, [router]);
 
-  // rooms list (fetched)
-  const [rooms, setRooms] = useState<any[]>([]);
+  // room types list (fetched)
+  const [roomTypes, setRoomTypes] = useState<any[]>([]);
   const [carouselIndex, setCarouselIndex] = useState(0);
 
   // form
   const [form, setForm] = useState({
     name: "",
     email: "",
-    room: "",
+    roomType: "",
     checkIn: "",
     checkOut: "",
     guests: 1,
     specialRequests: "",
   });
 
-  // Pre-fill form from query params (from availability page)
+  // Pre-fill form from query params (from availability page or rooms page)
   useEffect(() => {
-    const roomId = searchParams.get("roomId");
+    const roomTypeId = searchParams.get("roomTypeId");
+    const roomTypeName = searchParams.get("roomTypeName");
     const checkIn = searchParams.get("checkIn");
     const checkOut = searchParams.get("checkOut");
     const guests = searchParams.get("guests");
 
-    if (roomId || checkIn || checkOut || guests) {
+    if (roomTypeId || checkIn || checkOut || guests) {
       setForm((p) => ({
         ...p,
-        room: roomId || p.room,
+        // Always set roomType from URL if present (will be validated when room types load)
+        roomType: roomTypeId || p.roomType,
         checkIn: checkIn || p.checkIn,
         checkOut: checkOut || p.checkOut,
         guests: guests ? parseInt(guests) : p.guests,
       }));
+    }
+
+    // Store room type name in state for display purposes
+    if (roomTypeName) {
+      // This will be used to highlight/select the room type when it loads
+      // The actual selection happens in the room types loading effect
     }
   }, [searchParams]);
 
@@ -153,41 +161,103 @@ function BookingPageContent() {
     }
   }, [user, nextAuthSession]);
 
+  // Fetch available room types based on selected dates and guests
   useEffect(() => {
-    // fetch rooms using server actions
     (async () => {
       try {
-        const result = await getAllRooms();
+        const result = await getAvailableRoomTypes({
+          checkIn: form.checkIn || undefined,
+          checkOut: form.checkOut || undefined,
+          guests: form.guests || undefined,
+        });
         if (result.error) {
           console.error(result.error);
-          toast.error("Could not load rooms");
+          if (form.checkIn && form.checkOut) {
+            toast.error("Could not load available room types");
+          }
           return;
         }
-        setRooms(
-          (result.rooms || []).map((r: any) => ({
-            id: r.id,
-            title: r.roomType?.name || "",
-            priceValue: Number(r.roomType?.basePrice || 0),
-            price: `UGX ${Number(r.roomType?.basePrice || 0)}/night`,
-            maxGuests: r.roomType?.maxGuests || 2,
-            image: r.images?.[0]?.image || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Crect fill='%23e5e7eb' width='400' height='300'/%3E%3Ctext fill='%239ca3af' font-family='sans-serif' font-size='18' x='50%25' y='50%25' text-anchor='middle' dy='.3em'%3ENo Image%3C/text%3E%3C/svg%3E",
-          }))
-        );
+        const defaultImage = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Crect fill='%23e5e7eb' width='400' height='300'/%3E%3Ctext fill='%239ca3af' font-family='sans-serif' font-size='18' x='50%25' y='50%25' text-anchor='middle' dy='.3em'%3ENo Image%3C/text%3E%3C/svg%3E";
+        const types = (result.roomTypes || []).map((rt: any) => ({
+          id: rt.id,
+          title: rt.name || "",
+          priceValue: Number(rt.basePrice || 0),
+          price: `UGX ${Number(rt.basePrice || 0)}/night`,
+          maxGuests: rt.maxGuests || 2,
+          image: (rt.image && rt.image.trim() !== "") ? rt.image : defaultImage,
+        }));
+        setRoomTypes(types);
         setCarouselIndex(0);
+        
+        // Auto-select room type from URL if it's available
+        const roomTypeIdFromUrl = searchParams.get("roomTypeId");
+        const roomTypeNameFromUrl = searchParams.get("roomTypeName");
+        
+        if (roomTypeIdFromUrl || roomTypeNameFromUrl) {
+          let urlRoomType = null;
+          
+          // First try to find by ID if provided and not empty
+          if (roomTypeIdFromUrl && roomTypeIdFromUrl.trim() !== "") {
+            urlRoomType = types.find((t: any) => String(t.id) === String(roomTypeIdFromUrl));
+          }
+          
+          // If not found by ID (or ID is empty), try to find by name
+          if (!urlRoomType && roomTypeNameFromUrl) {
+            const decodedName = decodeURIComponent(roomTypeNameFromUrl).toLowerCase().trim();
+            console.log("Searching for room by name:", decodedName, "Available types:", types.map((t: any) => t.title));
+            urlRoomType = types.find((t: any) => {
+              const roomName = t.title.toLowerCase().trim();
+              return roomName === decodedName || roomName.includes(decodedName) || decodedName.includes(roomName);
+            });
+            if (urlRoomType) {
+              console.log("Found room type by name:", urlRoomType.title, "ID:", urlRoomType.id);
+            } else {
+              console.log("Room type not found by name");
+            }
+          }
+          
+          // Set the room type in the form if found
+          if (urlRoomType) {
+            const roomTypeId = String(urlRoomType.id);
+            console.log("Setting form.roomType to:", roomTypeId);
+            setForm((p) => {
+              if (String(p.roomType) !== roomTypeId) {
+                return { ...p, roomType: roomTypeId };
+              }
+              return p;
+            });
+          }
+        }
+        
+        // If current selection is no longer available and no URL param, clear it
+        if (form.roomType && !roomTypeIdFromUrl && !roomTypeNameFromUrl && !types.find((t: any) => String(t.id) === String(form.roomType))) {
+          setForm((p) => ({ ...p, roomType: "" }));
+        }
       } catch (err) {
         console.error(err);
-        toast.error("Could not load rooms");
+        if (form.checkIn && form.checkOut) {
+          toast.error("Could not load available room types");
+        }
       }
     })();
-  }, []);
+  }, [form.checkIn, form.checkOut, form.guests, searchParams]);
 
-  const update = (k: string, v: any) => setForm((p) => ({ ...p, [k]: v }));
+  const update = (k: string, v: any) => {
+    setForm((p) => {
+      const updated = { ...p, [k]: v };
+      // If check-in date is updated and checkout date is now invalid, clear checkout
+      if (k === "checkIn" && updated.checkOut && updated.checkOut <= v) {
+        updated.checkOut = "";
+      }
+      return updated;
+    });
+  };
 
   // validation (simple)
   const validateStep1 = () => {
     if (!form.name || form.name.length < 2) return "Enter a valid name";
     if (!form.email || !form.email.includes("@")) return "Enter a valid email";
-    if (!form.room) return "Choose a room";
+    if (!form.roomType) return "Choose a room type";
     if (!form.checkIn) return "Select check-in date";
     if (!form.checkOut) return "Select check-out date";
     if (form.checkOut <= form.checkIn) return "Check-out must be after check-in";
@@ -205,8 +275,8 @@ function BookingPageContent() {
     }
   })();
 
-  const selectedRoom = rooms.find((r) => String(r.id) === String(form.room));
-  const totalAmount = selectedRoom ? selectedRoom.priceValue * nights : 0;
+  const selectedRoomType = roomTypes.find((r) => String(r.id) === String(form.roomType));
+  const totalAmount = selectedRoomType ? selectedRoomType.priceValue * nights : 0;
 
   // Store total amount in localStorage for Navbar to access
   useEffect(() => {
@@ -219,9 +289,13 @@ function BookingPageContent() {
 
   // carousel
   const prevCarousel = () =>
-    setCarouselIndex((i) => (i - 1 + Math.max(1, rooms.length)) % Math.max(1, rooms.length));
-  const nextCarousel = () => setCarouselIndex((i) => (i + 1) % Math.max(1, rooms.length));
-  const displayedRooms = rooms.concat(rooms).slice(carouselIndex, carouselIndex + 3);
+    setCarouselIndex((i) => (i - 1 + Math.max(1, roomTypes.length)) % Math.max(1, roomTypes.length));
+  const nextCarousel = () => setCarouselIndex((i) => (i + 1) % Math.max(1, roomTypes.length));
+  // Use modulo to wrap around without duplicating the array
+  const displayedRooms = Array.from({ length: Math.min(3, roomTypes.length) }, (_, i) => {
+    const index = (carouselIndex + i) % roomTypes.length;
+    return roomTypes[index];
+  });
 
   // submit booking (multistep final)
   const handleSubmit = async (e?: React.FormEvent) => {
@@ -266,8 +340,22 @@ function BookingPageContent() {
     setLoading(true);
     
     try {
+      // Find an available room of the selected type
+      const roomResult = await findAvailableRoomForType({
+        roomTypeId: form.roomType,
+        checkIn: form.checkIn,
+        checkOut: form.checkOut,
+      });
+
+      if (roomResult.error || !roomResult.roomId) {
+        toast.error(roomResult.error || "No available room found. Please try different dates.");
+        isSubmittingRef.current = false;
+        setLoading(false);
+        return;
+      }
+
       const result = await createBooking({
-        roomId: form.room,
+        roomId: roomResult.roomId,
         checkIn: form.checkIn,
         checkOut: form.checkOut,
         guests: form.guests,
@@ -406,10 +494,11 @@ function BookingPageContent() {
                         Check-in Date
                       </label>
                       <input 
-                        className="w-full bg-transparent border-b border-gray-400/50 px-0 py-3 text-[#1a1c1e] placeholder-gray-500 focus:outline-none focus:border-b-amber-600 transition-all" 
+                        className="w-full bg-transparent border border-gray-400/50 rounded-lg px-4 py-3 text-[#1a1c1e] placeholder-gray-500 focus:outline-none focus:border-amber-600 focus:ring-1 focus:ring-amber-600 transition-all" 
                         type="date" 
                         value={form.checkIn} 
-                        onChange={(e) => update("checkIn", e.target.value)} 
+                        onChange={(e) => update("checkIn", e.target.value)}
+                        min={new Date().toISOString().split('T')[0]}
                         style={{ fontFamily: 'var(--font-inter)' }}
                       />
                     </div>
@@ -421,10 +510,11 @@ function BookingPageContent() {
                         Check-out Date
                       </label>
                       <input 
-                        className="w-full bg-transparent border-b border-gray-400/50 px-0 py-3 text-[#1a1c1e] placeholder-gray-500 focus:outline-none focus:border-b-amber-600 transition-all" 
+                        className="w-full bg-transparent border border-gray-400/50 rounded-lg px-4 py-3 text-[#1a1c1e] placeholder-gray-500 focus:outline-none focus:border-amber-600 focus:ring-1 focus:ring-amber-600 transition-all" 
                         type="date" 
                         value={form.checkOut} 
-                        onChange={(e) => update("checkOut", e.target.value)} 
+                        onChange={(e) => update("checkOut", e.target.value)}
+                        min={form.checkIn || new Date().toISOString().split('T')[0]}
                         style={{ fontFamily: 'var(--font-inter)' }}
                       />
                     </div>
@@ -436,7 +526,7 @@ function BookingPageContent() {
                         Number of Guests
                       </label>
                       <input 
-                        className="w-full bg-transparent border-b border-gray-400/50 px-0 py-3 text-[#1a1c1e] placeholder-gray-500 focus:outline-none focus:border-b-amber-600 transition-all" 
+                        className="w-full bg-transparent border border-gray-400/50 rounded-lg px-4 py-3 text-[#1a1c1e] placeholder-gray-500 focus:outline-none focus:border-amber-600 focus:ring-1 focus:ring-amber-600 transition-all" 
                         type="number" 
                         min="1" 
                         value={form.guests} 
@@ -470,7 +560,7 @@ function BookingPageContent() {
                         Full Name
                       </label>
                       <input 
-                        className="w-full bg-transparent border-b border-gray-400/50 px-0 py-3 text-[#1a1c1e] placeholder-gray-500 focus:outline-none focus:border-b-amber-600 transition-all" 
+                        className="w-full bg-transparent border border-gray-400/50 rounded-lg px-4 py-3 text-[#1a1c1e] placeholder-gray-500 focus:outline-none focus:border-amber-600 focus:ring-1 focus:ring-amber-600 transition-all" 
                         placeholder="Enter your full name" 
                         value={form.name} 
                         onChange={(e) => update("name", e.target.value)} 
@@ -485,7 +575,7 @@ function BookingPageContent() {
                         Email Address
                       </label>
                       <input 
-                        className="w-full bg-transparent border-b border-gray-400/50 px-0 py-3 text-[#1a1c1e] placeholder-gray-500 focus:outline-none focus:border-b-amber-600 transition-all" 
+                        className="w-full bg-transparent border border-gray-400/50 rounded-lg px-4 py-3 text-[#1a1c1e] placeholder-gray-500 focus:outline-none focus:border-amber-600 focus:ring-1 focus:ring-amber-600 transition-all" 
                         placeholder="your.email@example.com" 
                         type="email"
                         value={form.email} 
@@ -500,16 +590,27 @@ function BookingPageContent() {
                       className="block text-xs uppercase tracking-widest text-black/60 font-medium mb-2"
                       style={{ fontFamily: 'var(--font-inter)' }}
                     >
-                      Select Room
+                      Select Room Type
                     </label>
                     <select 
-                      className="w-full bg-transparent border-b border-gray-400/50 px-0 py-3 text-[#1a1c1e] focus:outline-none focus:border-b-amber-600 transition-all" 
-                      value={form.room} 
-                      onChange={(e) => update("room", e.target.value)}
+                      className="w-full bg-transparent border border-gray-400/50 rounded-lg px-4 py-3 text-[#1a1c1e] focus:outline-none focus:border-amber-600 focus:ring-1 focus:ring-amber-600 transition-all" 
+                      value={form.roomType} 
+                      onChange={(e) => update("roomType", e.target.value)}
                       style={{ fontFamily: 'var(--font-inter)' }}
+                      disabled={!form.checkIn || !form.checkOut}
                     >
-                      <option value="" className="bg-white">Choose your preferred room</option>
-                      {rooms.map((r) => <option key={r.id} value={r.id} className="bg-white">{r.title} — {r.price}</option>)}
+                      <option value="" className="bg-white">
+                        {!form.checkIn || !form.checkOut 
+                          ? "Select check-in and check-out dates first" 
+                          : roomTypes.length === 0 
+                          ? "No rooms available for selected dates" 
+                          : "Choose your preferred room type"}
+                      </option>
+                      {roomTypes.map((r) => (
+                        <option key={r.id} value={r.id} className="bg-white">
+                          {r.title} — {r.price} (up to {r.maxGuests} guests)
+                        </option>
+                      ))}
                     </select>
                   </div>
                   
@@ -521,7 +622,7 @@ function BookingPageContent() {
                       Special Requests
                     </label>
                     <textarea 
-                      className="w-full bg-transparent border-b border-gray-400/50 px-0 py-3 text-[#1a1c1e] placeholder-stone-400 focus:outline-none focus:border-b-amber-600 transition-all resize-none" 
+                      className="w-full bg-transparent border border-gray-400/50 rounded-lg px-4 py-3 text-[#1a1c1e] placeholder-stone-400 focus:outline-none focus:border-amber-600 focus:ring-1 focus:ring-amber-600 transition-all resize-none" 
                       placeholder="Any special requests or preferences..." 
                       rows={4} 
                       value={form.specialRequests} 
@@ -561,7 +662,7 @@ function BookingPageContent() {
                       </div>
                       <div className="col-span-2">
                         <div className="text-sm text-stone-400 mb-1">Room</div>
-                        <div className="font-semibold text-[#1a1c1e]">{selectedRoom?.title ?? "—"}</div>
+                        <div className="font-semibold text-[#1a1c1e]">{selectedRoomType?.title ?? "—"}</div>
                       </div>
                       <div>
                         <div className="text-sm text-stone-400 mb-1">Check-in</div>
@@ -634,10 +735,18 @@ function BookingPageContent() {
                 <Link href='/rooms'>
                 <div className="relative group">
                   <div className="flex gap-4 overflow-x-auto">
-                    {displayedRooms.map((room, i) => (
-                      <div key={i} className="min-w-[180px] sm:min-w-[200px] flex-shrink-0 bg-black/2 border border-black/10 cursor-pointer hover:border-black/20 transition-all">
-                        <div className="relative w-full h-48 overflow-hidden">
-                          <img src={room.image} className="w-full h-full object-cover transition-transform duration-700 hover:scale-110" />
+                    {displayedRooms.length > 0 ? displayedRooms.map((room, i) => (
+                      <div key={`${room.id}-${i}`} className="min-w-[180px] sm:min-w-[200px] flex-shrink-0 bg-black/2 border border-black/10 cursor-pointer hover:border-black/20 transition-all">
+                        <div className="relative w-full h-48 overflow-hidden bg-gray-100">
+                          <img 
+                            src={room.image} 
+                            alt={room.title}
+                            className="w-full h-full object-cover transition-transform duration-700 hover:scale-110"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Crect fill='%23e5e7eb' width='400' height='300'/%3E%3Ctext fill='%239ca3af' font-family='sans-serif' font-size='18' x='50%25' y='50%25' text-anchor='middle' dy='.3em'%3ENo Image%3C/text%3E%3C/svg%3E";
+                            }}
+                          />
                         </div>
                         <div className="p-3">
                           <div 
@@ -654,7 +763,11 @@ function BookingPageContent() {
                           </div>
                         </div>
                       </div>
-                    ))}
+                    )) : (
+                      <div className="min-w-[180px] sm:min-w-[200px] flex-shrink-0 p-4 text-center text-gray-500">
+                        <p className="text-sm">No rooms available</p>
+                      </div>
+                    )}
                   </div>
 
                   <button 

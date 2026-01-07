@@ -20,7 +20,12 @@ export default function FeatureCard({ icon, title, description }: FeatureCardPro
   };
 
   return (
-    <div className="flex flex-col items-center bg-white rounded-lg text-center p-10">
+    <div className="flex flex-col items-center bg-white rounded-lg text-center p-10 relative overflow-hidden">
+      <div 
+        className="absolute inset-0 opacity-[0.12] bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: 'url(/images/bg.jpeg)' }}
+      />
+      <div className="relative z-10 w-full">
       {icon ? (
         <img src={icon} alt={title} height={50} width={50} className="mb-8" />
       ) : (
@@ -42,6 +47,7 @@ export default function FeatureCard({ icon, title, description }: FeatureCardPro
       >
         {description}
       </p>
+      </div>
     </div>
   );
 }

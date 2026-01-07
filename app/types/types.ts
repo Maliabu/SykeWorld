@@ -6,7 +6,7 @@ export interface RoomService {
 }
 
 export interface RoomType {
-  id: number;
+  id: number | string; // Can be number or UUID string
   name: string;
   description?: string;
   basePrice: number;

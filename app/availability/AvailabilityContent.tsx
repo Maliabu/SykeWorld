@@ -291,7 +291,9 @@ export default function AvailabilityContent() {
 
                     {/* Book Button */}
                     <Link
-                      href={`/booking?roomId=${room.id}&checkIn=${checkIn}&checkOut=${checkOut}&guests=${guests}`}
+                      href={`/booking?roomTypeId=${room.roomType?.id ?? ""}&roomTypeName=${encodeURIComponent(
+                        room.roomType?.name ?? ""
+                      )}&checkIn=${checkIn}&checkOut=${checkOut}&guests=${guests}`}
                       className="block w-full text-center bg-amber-600 hover:bg-amber-700 text-white px-6 py-3 font-medium transition-colors"
                       style={{ fontFamily: 'var(--font-inter)' }}
                     >

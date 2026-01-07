@@ -71,7 +71,7 @@ export default function Footer() {
               Stay Connected
             </h2>
             <p 
-              className="text-sm md:text-base text-gray-600 max-w-2xl mx-auto leading-relaxed"
+              className="text-sm text-gray-600 max-w-2xl mx-auto leading-relaxed"
               style={{ fontFamily: 'var(--font-inter)' }}
             >
               Don't miss out on what's new! Keep in the loop with our latest updates.
@@ -119,7 +119,7 @@ export default function Footer() {
                     className="w-10 h-8"
                   />
                   <div 
-                    className="text-2xl capitalize text-orange-400" 
+                    className="text-2xl capitalize text-[#1a1c1e]" 
                     style={{ 
                       fontFamily: "'Cooper Black', serif", 
                       letterSpacing: '0.01em',
@@ -181,12 +181,15 @@ export default function Footer() {
               <div className="space-y-4 text-sm text-gray-600" style={{ fontFamily: 'var(--font-inter)' }}>
                 <div>
                   <p className="text-[#1a1c1e] font-medium mb-1">Location</p>
-                  <p>123 Luxury Ave, Paradise City</p>
+                  <p>Syk Jad International Limited</p>
+                  <p>Arua Road</p>
+                  <p>West Nile, Paidha, +256</p>
+                  <p>Uganda</p>
                 </div>
                 <div>
                   <p className="text-[#1a1c1e] font-medium mb-1">Phone</p>
-                  <p>+256 770 000 787</p>
-                  <p>+256 770 000 787</p>
+                  <p>+256 782-360252</p>
+                  <p>+256 760-633312</p>
                 </div>
                 <div>
                   <p className="text-[#1a1c1e] font-medium mb-1">Email</p>
